@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+		 bootstrap="src/Test/bootstrap.php"
+		 colors="true"
+		 cacheDirectory=".phpunit.cache">
+	<testsuites>
+		<!-- Test classes use a Test* prefix rather than PHPUnit's default *Test
+			 suffix, so they are listed explicitly. -->
+		<testsuite name="Cog">
+			<!-- TestCodegen runs first: it generates the ORM layer the rest of the
+				 suite relies on (see src/Test/CodegenFixture.php). -->
+			<file>src/Test/TestCodegen.php</file>
+			<file>src/Test/TestCodegenHelpers.php</file>
+			<file>src/Test/TestBase.php</file>
+			<file>src/Test/TestBaseApplication.php</file>
+			<file>src/Test/TestConvertNotation.php</file>
+			<file>src/Test/TestController.php</file>
+			<file>src/Test/TestDatabase.php</file>
+			<file>src/Test/TestDatabaseResult.php</file>
+			<file>src/Test/TestExceptions.php</file>
+			<file>src/Test/TestFileSystem.php</file>
+			<file>src/Test/TestKernel.php</file>
+			<file>src/Test/TestNamespaceUtil.php</file>
+			<file>src/Test/TestPath.php</file>
+			<file>src/Test/TestQuery.php</file>
+			<file>src/Test/TestQueryBuilder.php</file>
+			<file>src/Test/TestQueryClauses.php</file>
+			<file>src/Test/TestQueryJoins.php</file>
+			<file>src/Test/TestStringUtils.php</file>
+			<file>src/Test/TestTemplate.php</file>
+			<file>src/Test/TestType.php</file>
+			<file>src/Test/TestUtil.php</file>
+		</testsuite>
+	</testsuites>
+	<php>
+		<!-- Connection details for the `cog_test` database used by TestDatabase.
+			 Override them by copying this file to phpunit.xml (which is ignored
+			 by git) or by exporting the variables in the environment. -->
+		<env name="COG_TEST_DB_SERVER" value="localhost"/>
+		<env name="COG_TEST_DB_NAME" value="cog_test"/>
+		<env name="COG_TEST_DB_USER" value="root"/>
+		<env name="COG_TEST_DB_PASSWORD" value=""/>
+	</php>
+	<source>
+		<include>
+			<directory>src</directory>
+		</include>
+		<exclude>
+			<directory>src/Test</directory>
+			<!-- Copied Symfony code, kept verbatim in its original 4-space style
+				 (see CLAUDE.md). Not ours to test, so not ours to count. -->
+			<directory>src/Command/Descriptor</directory>
+			<file>src/Command/ContainerDebugCommand.php</file>
+			<!-- Code generator output. These live outside <include> today, but
+				 they are named here so widening the include never starts
+				 measuring generated classes against hand-written coverage. -->
+			<directory>generated</directory>
+			<directory>app/Data</directory>
+			<directory>app/Type</directory>
+			<!-- Codegen templates: .tpl.php fragments, not loadable classes. -->
+			<directory>codegen</directory>
+		</exclude>
+	</source>
+</phpunit>

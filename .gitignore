@@ -1,0 +1,12 @@
+.env
+.env.*
+.DS_Store
+/.idea
+/codegen.xml
+/vendor
+/composer.lock
+/phpunit.xml
+/.phpunit.cache
+/.phpunit.codegen
+/cache
+/generated

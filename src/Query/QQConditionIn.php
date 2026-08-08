@@ -1,0 +1,52 @@
+<?php
+
+namespace Cog\Query;
+
+use Cog;
+use Cog\Exceptions\InvalidCastException;
+use Cog\Type;
+
+class QQConditionIn extends QQConditionComparison {
+
+	public function __construct(QQNode $queryNode, $mixValuesArray) {
+		$this->queryNode = $queryNode;
+		if (!$queryNode->parentNode) {
+			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
+		}
+
+		if ($mixValuesArray instanceof QQNamedValue) {
+			$this->mixOperand = $mixValuesArray;
+		} elseif ($mixValuesArray instanceof QQSubQueryNode) {
+			$this->mixOperand = $mixValuesArray;
+		} else {
+			try {
+				$this->mixOperand = Type::cast($mixValuesArray, Type::ARRAY);
+			} catch (Cog\Exceptions\CogException $exception) {
+				$exception->incrementOffset();
+				$exception->incrementOffset();
+				throw $exception;
+			}
+		}
+	}
+
+	/** @inheritdoc */
+	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
+		$mixOperand = $this->mixOperand;
+
+		if ($mixOperand instanceof QQNamedValue) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN (' . $mixOperand->parameter() . ')');
+		} else if ($mixOperand instanceof QQSubQueryNode) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN ' . $mixOperand->getColumnAlias($queryBuilder));
+		} else {
+			$parameters = [];
+			foreach ($mixOperand as $mixParameter) {
+				$parameters[] = $queryBuilder->database->sqlVariable($mixParameter);
+			}
+			if (\count($parameters)) {
+				$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN (' . implode(',', $parameters) . ')');
+			} else {
+				$queryBuilder->addWhereItem('1=0');
+			}
+		}
+	}
+}
