@@ -4,6 +4,7 @@ namespace Cog\Test;
 
 use Cog\BaseApplication;
 use Cog\BaseConfig;
+use Cog\Enum\Environment;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\ErrorHandler\ErrorHandler;
@@ -21,6 +22,22 @@ final class MockedApplication extends BaseApplication {
 
 	/** Directories getRoutes() scans; the base class returns none. */
 	public static array $routesDirs = [];
+
+	/** When set, createConfig() hands this back instead of building a default one. */
+	public static ?BaseConfig $configFactoryResult = null;
+
+	/** What config() held at the moment initializeErrorHandling() ran, or null if it hasn't. */
+	public static ?BaseConfig $configAtErrorHandling = null;
+
+	protected static function createConfig(Environment $environment, bool $debug, bool $cache): BaseConfig {
+		return static::$configFactoryResult ?? parent::createConfig($environment, $debug, $cache);
+	}
+
+	protected static function initializeErrorHandling(): ErrorHandler {
+		static::$configAtErrorHandling = static::config();
+
+		return parent::initializeErrorHandling();
+	}
 
 	public static function getRoutesDirs(): array {
 		return static::$routesDirs;

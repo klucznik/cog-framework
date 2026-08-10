@@ -49,6 +49,8 @@ class TestBaseApplication extends TestCase {
 		MockedApplication::setContainer($this->container);
 		MockedApplication::setConfig($this->config);
 		MockedApplication::$routesDirs = $this->routesDirs;
+		MockedApplication::$configFactoryResult = null;
+		MockedApplication::$configAtErrorHandling = null;
 
 		if ($this->tempDir !== '') {
 			(new Filesystem())->remove($this->tempDir);
@@ -104,6 +106,35 @@ class TestBaseApplication extends TestCase {
 		$this->assertSame(dirname(__DIR__) . '/cache', $config->dirCache);
 		$this->assertSame(dirname(__DIR__) . '/templates', $config->dirTemplates);
 		$this->assertDirectoryDoesNotExist($config->dirTemplates);
+	}
+
+	/**
+	 * initialize() takes its config from the createConfig() hook, so a subclass can
+	 * install its own BaseConfig subclass rather than having the base one forced on it.
+	 */
+	public function testInitializeUsesCreateConfigOverride() {
+		$config = new BaseConfig(Environment::TEST, false, false, $this->makeTempDir(), '');
+		MockedApplication::$configFactoryResult = $config;
+
+		MockedApplication::initialize(Environment::DEV, true, false);
+		$this->restoreErrorHandlers();
+
+		$this->assertSame($config, MockedApplication::config());
+	}
+
+	/**
+	 * The config has to be in place before the first lifecycle step, not after
+	 * initialize() returns - initializeErrorHandling() and initializeContainer()
+	 * both read directories off it.
+	 */
+	public function testInitializeInstallsConfigBeforeErrorHandling() {
+		$config = new BaseConfig(Environment::TEST, false, false, $this->makeTempDir(), '');
+		MockedApplication::$configFactoryResult = $config;
+
+		MockedApplication::initialize(Environment::DEV, true, false);
+		$this->restoreErrorHandlers();
+
+		$this->assertSame($config, MockedApplication::$configAtErrorHandling);
 	}
 
 	public function testInitializeBuildsCompiledContainer() {

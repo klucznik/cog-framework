@@ -99,6 +99,27 @@ abstract class BaseApplication extends Base {
 	}
 
 	/**
+	 * Builds the config object installed on static::$config before any lifecycle
+	 * step runs. Subclasses override this to supply their own BaseConfig subclass
+	 * with additional directories - initializeErrorHandling() and
+	 * initializeContainer() both read config(), so it has to exist by then.
+	 *
+	 * @param Environment $environment
+	 * @param bool $debug
+	 * @param bool $cache
+	 * @return BaseConfig
+	 */
+	protected static function createConfig(Environment $environment, bool $debug, bool $cache): BaseConfig {
+		return new BaseConfig(
+			$environment,
+			$debug,
+			$cache,
+			__DIR__ . '/cache',
+			__DIR__ . '/templates'
+		);
+	}
+
+	/**
 	 * This should be the first call to initialize all the static variables
 	 * The application object also has static methods that are miscellaneous web
 	 * development utilities, etc.
@@ -110,13 +131,7 @@ abstract class BaseApplication extends Base {
 	 * @return void
 	 */
 	public static function initialize(Environment $environment, bool $debug = true, bool $cache = false): void {
-		static::$config = new BaseConfig(
-			$environment,
-			$debug,
-			$cache,
-			__DIR__ . '/cache',
-			__DIR__ . '/templates'
-		);
+		static::$config = static::createConfig($environment, $debug, $cache);
 
 		static::initializeErrorHandling();
 		static::initializeContainer();
