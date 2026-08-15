@@ -43,7 +43,9 @@ is additionally pulled in through composer's `files` autoload.
 - PHP >= 8.3. Newer code uses typed properties and **typed class constants**
   (`public const string`, `private const array`); older files such as `src/Type.php` and
   `src/Database/FieldType.php` still have untyped constants. Match the file you are editing.
-- `declare(strict_types=1)` is **not** repo-wide - only five files have it. Do not add it broadly.
+- `declare(strict_types=1)` on **new** files. It is not repo-wide - only five files in `src/`
+  have it - and it should not be retrofitted onto existing ones as a drive-by change, since
+  it turns silent scalar coercion into a `TypeError` in code never exercised under it.
 - No `readonly` anywhere in `src/`. Do not introduce it unprompted.
 - Plain camelCase members in framework code. The Hungarian prefixes (`str`, `int`, `flt`, `bln`,
   `dtt`, `obj`, from `Cog\Util\ConvertNotation::prefixFromType()`) belong to **generated ORM output
