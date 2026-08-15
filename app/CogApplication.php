@@ -55,14 +55,6 @@ abstract class CogApplication extends BaseApplication {
 	public static function initialize(Environment $environment, bool $debug = true, bool $cache = false): void {
 		parent::initialize($environment, $debug, $cache);
 
-		static::$config = new BaseConfig(
-			$environment,
-			$debug,
-			$cache,
-			__DIR__ . '/cache',
-			__DIR__ . '/templates'
-		);
-
 		if (!ini_get('date.timezone')) {
 			date_default_timezone_set('UTC');
 		}
