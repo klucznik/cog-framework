@@ -250,9 +250,6 @@ class QQNode extends QQBaseNode {
 		}
 
 		if ($this->type === FieldType::BIT) {
-			if (function_exists('_t')) {
-				return sprintf('(null === %s)? "" : ((%s)? "%s" : "%s")', $toReturn, $toReturn, _t('cog.true'), _t('cog.false'));
-			}
 			return sprintf('(null === %s)? "" : ((%s)? "%s" : "%s")', $toReturn, $toReturn, 'true', 'false');
 		}
 
