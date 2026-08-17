@@ -10,7 +10,6 @@ use Cog\Query\QQClause;
 use Cog\Query\QQCondition;
 use Cog\Query\QQNamedValue;
 use Cog\Type;
-use Cog\Util\StringUtils;
 
 /**
  * Every database adapter must implement the following 5 classes (all which are abstract):
@@ -128,6 +127,14 @@ abstract class Base extends Cog\Base {
 
 	abstract public function sqlSortByVariable(string $sortByInfo): ?string;
 
+	/**
+	 * Escapes a string for use inside a quoted SQL literal, using the driver's
+	 * connection-charset-aware escaping.
+	 * @param string $text
+	 * @return string
+	 */
+	abstract public function escapeString(string $text): string;
+
 	public function __get($name) {
 		switch ($name) {
 			case 'escapeIdentifierBegin':
@@ -187,6 +194,11 @@ abstract class Base extends Cog\Base {
 		if ($this->profiling) {
 			$this->enableProfiling();
 		}
+
+		// Connect eagerly: a constructed adapter always holds a live connection,
+		// which escapeString() relies on, and a bad configuration fails here
+		// rather than inside the first query.
+		$this->connect();
 	}
 
 	/**
@@ -343,7 +355,7 @@ abstract class Base extends Cog\Base {
 		}
 
 		// Assume it's some kind of string value
-		return $toReturn . sprintf("'%s'", StringUtils::addslashes($data));
+		return $toReturn . sprintf("'%s'", $this->escapeString($data));
 	}
 
 	public function prepareStatement(string $query, array $parameterArray): array|string {

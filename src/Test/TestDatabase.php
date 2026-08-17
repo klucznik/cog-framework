@@ -447,6 +447,13 @@ class TestDatabase extends TestCase {
 		$this->assertNull($this->database->sqlSortByVariable(''));
 	}
 
+	/** Escaping goes through the driver, so it follows the connection charset. */
+	public function testEscapeString() {
+		$this->assertEquals("O\\'Brien", $this->database->escapeString("O'Brien"));
+		$this->assertEquals('say \\"what\\"', $this->database->escapeString('say "what"'));
+		$this->assertEquals('a\\\\b', $this->database->escapeString('a\\b'));
+	}
+
 	public function testSqlSortByVariableRejectsSemicolon() {
 		$this->expectException(\Exception::class);
 		$this->database->sqlSortByVariable('id; DROP TABLE person');

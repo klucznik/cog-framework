@@ -69,6 +69,10 @@ class MySqliAdapter extends Cog\Database\Base {
 	}
 
 	public function connect(): void {
+		if ($this->connectedFlag) {
+			return;
+		}
+
 		// Connect to the Database Server
 		// A failed connection throws from the constructor since PHP 8.1, so the
 		// driver exception is translated here for the same reason it is in query().
@@ -89,11 +93,17 @@ class MySqliAdapter extends Cog\Database\Base {
 		$this->connectedFlag = true; // Update "Connected" Flag
 		$this->nonQuery('SET AUTOCOMMIT=1;'); // Set to AutoCommit
 
-		if (array_key_exists('encoding', $this->configArray)) { // Set NAMES (if applicable)
-			$this->nonQuery('SET NAMES ' . $this->configArray['encoding'] . ';');
+		if (array_key_exists('encoding', $this->configArray)) {
+			// set_charset() rather than SET NAMES: real_escape_string() only
+			// follows the connection charset when it is set through the API.
+			try {
+				$this->mySqli->set_charset($this->configArray['encoding']);
+			} catch (\mysqli_sql_exception $exception) {
+				throw new MySqliException($exception->getMessage(), $exception->getCode(), '');
+			}
 		}
 
-		if (array_key_exists('timezone', $this->configArray)) { // Set NAMES (if applicable)
+		if (array_key_exists('timezone', $this->configArray)) { // Set time zone (if applicable)
 			$this->nonQuery('SET time_zone = "' . $this->configArray['timezone'] . '";');
 		}
 
@@ -124,10 +134,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	 * @throws MySqliException
 	 */
 	public function query(string $query, bool $saveProfilingInfo = true): MySqliResult {
-		if (!$this->connectedFlag) { // Connect if applicable
-			$this->connect();
-		}
-
 		// perform the Query
 		// mysqli reports errors by throwing since PHP 8.1, so the driver exception
 		// has to be translated here as well as checked for - otherwise a failing
@@ -163,11 +169,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	 * @throws MySqliException
 	 */
 	public function multiQuery(string $query): array {
-		// Connect if Applicable
-		if (!$this->connectedFlag) {
-			$this->connect();
-		}
-
 		// Log Query (for Profiling, if applicable)
 		$this->logQuery($query);
 
@@ -191,11 +192,6 @@ class MySqliAdapter extends Cog\Database\Base {
 
 	/** @inheritdoc */
 	public function nonQuery(string $sql, bool $saveProfilingInfo = true): void {
-		// Connect if Applicable
-		if (!$this->connectedFlag) {
-			$this->connect();
-		}
-
 		// Perform the Query
 		try {
 			$this->mySqli->query($sql);
@@ -216,10 +212,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	}
 
 	public function getTables(): array {
-		if (!$this->connectedFlag) { // Connect if Applicable
-			$this->connect();
-		}
-
 		// Use the MySQL5 Information Schema to get a list of all the tables in this database (excluding views, etc.)
 		$databaseName = $this->database;
 
@@ -241,10 +233,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	}
 
 	public function getFieldsForTable(string $tableName): array {
-		if (!$this->connectedFlag) { // Connect if Applicable
-			$this->connect();
-		}
-
 		$result = $this->query(sprintf('SELECT * FROM %s%s%s LIMIT 1', $this->escapeIdentifierBegin, $tableName, $this->escapeIdentifierEnd));
 		return $result->fetchFields();
 	}
@@ -256,31 +244,26 @@ class MySqliAdapter extends Cog\Database\Base {
 	public function close(): void {
 		if ($this->connectedFlag) {
 			$this->mySqli->close();
+			$this->connectedFlag = false;
 		}
 	}
 
-	public function transactionBegin(): void {
-		if (!$this->connectedFlag) { // Connect if Applicable
-			$this->connect();
-		}
+	public function escapeString(string $text): string {
+		return $this->mySqli->real_escape_string($text);
+	}
 
+	public function transactionBegin(): void {
 		// Set to AutoCommit
 		$this->nonQuery('SET AUTOCOMMIT=0;');
 	}
 
 	public function transactionCommit(): void {
-		if (!$this->connectedFlag) { // Connect if Applicable
-			$this->connect();
-		}
 		$this->nonQuery('COMMIT;');
 		// Set to AutoCommit
 		$this->nonQuery('SET AUTOCOMMIT=1;');
 	}
 
 	public function transactionRollback(): void {
-		if (!$this->connectedFlag) { // Connect if Applicable
-			$this->connect();
-		}
 		$this->nonQuery('ROLLBACK;');
 		// Set to AutoCommit
 		$this->nonQuery('SET AUTOCOMMIT=1;');
@@ -554,10 +537,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	}
 
 	private function getCreateStatementForTable(string $tableName): array|string {
-		if (!$this->connectedFlag) { // Connect if applicable
-			$this->connect();
-		}
-
 		// Use the MySQL "SHOW CREATE TABLE" functionality to get the table's Create statement
 		$result = $this->query(sprintf('SHOW CREATE TABLE `%s`', $tableName));
 		$row = $result->fetchRow();
@@ -592,10 +571,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	 * @throws CogException
 	 */
 	public function explainStatement(string $sql): ?MySqliResult {
-		if (!$this->connectedFlag) { // Connect if applicable
-			$this->connect();
-		}
-
 		if ($this->mySqli->server_version >= 50603) {
 			return $this->query('EXPLAIN ' . $sql);
 		}
@@ -617,9 +592,6 @@ class MySqliAdapter extends Cog\Database\Base {
 	 * @throws MySqliException
 	 */
 	protected function isTimeProfilingSupported(): bool {
-		if (!$this->connectedFlag) { // Connect if applicable
-			$this->connect();
-		}
 		return $this->mySqli->server_version >= 50037;
 	}
 
