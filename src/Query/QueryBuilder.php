@@ -10,10 +10,14 @@ use Cog;
  * @property-read string $rootTableName
  * @property-read string[] $columnAliasArray
  * @property-read QQBaseNode $expandAsArrayNode
+ * @property-read bool $suppressSelectExpansion
  */
 class QueryBuilder extends Cog\Base {
 	/** @var string[] */
 	protected array $selectArray = [];
+
+	/** @var string[] plain column expressions that must join the GROUP BY under ONLY_FULL_GROUP_BY */
+	protected array $groupBySelectArray = [];
 
 	/** @var string[] */
 	protected array $columnAliasArray = [];
@@ -47,6 +51,8 @@ class QueryBuilder extends Cog\Base {
 	protected $expandAsArrayNode;
 	/** @var bool */
 	protected $countOnlyFlag;
+	/** @var bool */
+	protected $aggregationFlag;
 
 	/** @var Cog\Database\Base */
 	protected $database;
@@ -86,9 +92,20 @@ class QueryBuilder extends Cog\Base {
 			$this->columnAliasArray[$fullAlias] = $columnAlias;
 		}
 
-		$this->selectArray[$fullAlias] = sprintf('%s%s%s.%s%s%s AS %s%s%s',
+		$expression = sprintf('%s%s%s.%s%s%s',
 			$this->escapeIdentifierBegin, $tableAlias, $this->escapeIdentifierEnd,
-			$this->escapeIdentifierBegin, $columnName, $this->escapeIdentifierEnd,
+			$this->escapeIdentifierBegin, $columnName, $this->escapeIdentifierEnd);
+
+		// Under ONLY_FULL_GROUP_BY every selected plain column has to appear in the
+		// GROUP BY clause; getStatement() merges these in. The query methods only add
+		// columns to an aggregate query when the full primary key is grouped, so the
+		// extra grouping terms leave the groups unchanged.
+		if ($this->aggregationFlag && $this->database->onlyFullGroupBy) {
+			$this->groupBySelectArray[] = $expression;
+		}
+
+		$this->selectArray[$fullAlias] = sprintf('%s AS %s%s%s',
+			$expression,
 			$this->escapeIdentifierBegin, $columnAlias, $this->escapeIdentifierEnd);
 	}
 
@@ -289,6 +306,10 @@ class QueryBuilder extends Cog\Base {
 		$this->countOnlyFlag = true;
 	}
 
+	public function setAggregationFlag(): void {
+		$this->aggregationFlag = true;
+	}
+
 	/**
 	 * @param string $name
 	 * @param QQSubQueryNode $node
@@ -371,7 +392,13 @@ class QueryBuilder extends Cog\Base {
 
 		// Additional Ordering/Grouping/Having clauses
 		if (count($this->groupByArray)) {
-			$sql .= "\r\nGROUP BY\r\n    " . implode(",\r\n    ", $this->groupByArray);
+			$groupByArray = $this->groupByArray;
+			foreach ($this->groupBySelectArray as $expression) {
+				if (!in_array($expression, $groupByArray, true)) {
+					$groupByArray[] = $expression;
+				}
+			}
+			$sql .= "\r\nGROUP BY\r\n    " . implode(",\r\n    ", $groupByArray);
 		}
 		if (count($this->havingArray)) {
 			$having = implode("\r\n    ", $this->havingArray);
@@ -405,6 +432,8 @@ class QueryBuilder extends Cog\Base {
 				return $this->columnAliasArray;
 			case 'expandAsArrayNode':
 				return $this->expandAsArrayNode;
+			case 'suppressSelectExpansion':
+				return $this->aggregationFlag && $this->database->onlyFullGroupBy;
 
 			default:
 				try {

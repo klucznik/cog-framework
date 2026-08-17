@@ -25,21 +25,29 @@
 		// Create/Build out the QueryBuilder object with <?= $table->className ?>-specific SELECT and FROM fields
 		$queryBuilder = new QueryBuilder($database, '<?= $table->name ?>');
 
-		$addAllFieldsToSelect = true;
-		if ($database->onlyFullGroupBy) {
-			// see if we have any group by or aggregation clauses, if yes, don't add the fields to select clause
-			if ($optionalClauses instanceof QQAggregationClause || $optionalClauses instanceof QQGroupBy) {
-				$addAllFieldsToSelect = false;
-			} elseif (is_array($optionalClauses)) {
-				foreach ($optionalClauses as $clause) {
-					if ($clause instanceof QQAggregationClause || $clause instanceof QQGroupBy) {
-						$addAllFieldsToSelect = false;
-						break;
-					}
-				}
+		// see if we have any group by or aggregation clauses; under ONLY_FULL_GROUP_BY
+		// such a query may only keep this table's fields in the select clause when the
+		// full primary key is grouped, making the fields functionally dependent on it
+		$hasAggregation = false;
+		$groupedColumns = [];
+		foreach (is_array($optionalClauses) ? $optionalClauses : [$optionalClauses] as $clause) {
+			if ($clause instanceof QQGroupBy) {
+				$hasAggregation = true;
+				$groupedColumns = array_merge($groupedColumns, $clause->rootColumnNames());
+			} elseif ($clause instanceof QQAggregationClause) {
+				$hasAggregation = true;
 			}
 		}
+		if ($hasAggregation) {
+			$queryBuilder->setAggregationFlag();
+		}
 
+<?php if ($table->primaryKeyColumnArray) { ?>
+		$addAllFieldsToSelect = !($hasAggregation && $database->onlyFullGroupBy
+			&& array_diff([<?= implode(', ', array_map(static fn($column) => var_export($column->name, true), $table->primaryKeyColumnArray)) ?>], $groupedColumns));
+<?php } else { ?>
+		$addAllFieldsToSelect = !($hasAggregation && $database->onlyFullGroupBy);
+<?php } ?>
 		if ($addAllFieldsToSelect) {
 			<?= $table->className ?>::getSelectFields($queryBuilder, null, QQ::extractSelectClause($optionalClauses));
 		}

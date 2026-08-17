@@ -413,7 +413,8 @@ class TestDatabase extends TestCase {
 		$this->assertEquals('`', $this->database->escapeIdentifierEnd);
 		$this->assertEquals(0, $this->database->databaseIndex);
 		$this->assertTrue($this->database->profiling);
-		$this->assertFalse($this->database->onlyFullGroupBy);
+		$sqlMode = $this->database->query('SELECT @@SESSION.sql_mode;')->fetchRow()[0];
+		$this->assertSame(str_contains($sqlMode, 'ONLY_FULL_GROUP_BY'), $this->database->onlyFullGroupBy);
 		$this->assertIsArray($this->database->profile);
 	}
 

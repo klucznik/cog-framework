@@ -123,7 +123,7 @@ class QQNode extends QQBaseNode {
 				// Next, Join the Appropriate Table
 				$this->addJoinTable($queryBuilder, $strJoinTableAlias, $strParentAlias, $objJoinCondition);
 
-				if ($blnExpandSelection) {
+				if ($blnExpandSelection && !$queryBuilder->suppressSelectExpansion) {
 					call_user_func([$this->classNameQualified, 'getSelectFields'], $queryBuilder, $strJoinTableAlias, $objSelect);
 				}
 			}
@@ -185,7 +185,7 @@ class QQNode extends QQBaseNode {
 		}
 
 		// Next, Expand the Selection Fields for this Table (if applicable)
-		if ($expandSelection) {
+		if ($expandSelection && !$queryBuilder->suppressSelectExpansion) {
 			call_user_func([$this->classNameQualified, 'getSelectFields'], $queryBuilder, $strJoinTableAlias, $select);
 		}
 

@@ -103,6 +103,11 @@ class MySqliAdapter extends Cog\Database\Base {
 			}
 		}
 
+		// Detect ONLY_FULL_GROUP_BY so the query layer knows not to add
+		// ungrouped columns to the select list of aggregate queries.
+		$row = $this->query('SELECT @@SESSION.sql_mode;', false)->fetchRow();
+		$this->onlyFullGroupBy = str_contains($row[0], 'ONLY_FULL_GROUP_BY');
+
 		if (array_key_exists('timezone', $this->configArray)) { // Set time zone (if applicable)
 			$this->nonQuery('SET time_zone = "' . $this->configArray['timezone'] . '";');
 		}

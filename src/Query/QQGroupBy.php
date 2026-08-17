@@ -61,6 +61,22 @@ class QQGroupBy extends QQClause {
 		throw new Cog\Exceptions\CogException('No parameters passed in to Expand clause', 3);
 	}
 
+	/**
+	 * Names of the grouped columns that live directly on the query's root table.
+	 * Lets the query methods decide whether the root table's fields stay functionally
+	 * dependent on the grouping (i.e. the full primary key is grouped) under ONLY_FULL_GROUP_BY.
+	 * @return string[]
+	 */
+	public function rootColumnNames(): array {
+		$names = [];
+		foreach ($this->objNodeArray as $node) {
+			if ($node->isTopLevelLeafNode()) {
+				$names[] = $node->name;
+			}
+		}
+		return $names;
+	}
+
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
 		$length = count($this->objNodeArray);

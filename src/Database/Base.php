@@ -40,8 +40,8 @@ use Cog\Type;
  * @property-read string $username
  * @property-read string $password
  *
- * @property-read boolean $onlyFullGroupBy database adapter sub-classes can override and set this property to true
- *      to prevent the behavior of automatically adding all the columns to the select clause when the query has an aggregation clause.
+ * @property-read boolean $onlyFullGroupBy set by database adapter sub-classes at connect time when the server enforces
+ *      ONLY_FULL_GROUP_BY, to prevent the behavior of automatically adding all the columns to the select clause when the query has an aggregation clause.
  */
 abstract class Base extends Cog\Base {
 
