@@ -5,7 +5,7 @@ produces typed model classes from an existing MySQL schema.
 
 ## Requirements
 
-- PHP 8.3 or newer
+- PHP 8.5 or newer
 - Extensions: `mbstring`, `json`, `dom`, `libxml`, `mysqli`, `simplexml`
 
 ## Installation
