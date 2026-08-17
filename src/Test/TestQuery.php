@@ -407,6 +407,17 @@ class TestQuery extends QueryTestCase {
 		$this->assertCount(1, $people);
 	}
 
+	public function testNamedValueBetween() {
+		$people = Person::queryArray(
+			QQ::between($this->person()->id, QQ::namedValue('lo'), QQ::namedValue('hi')),
+			null,
+			['lo' => 1, 'hi' => 2]
+		);
+
+		$this->assertQueryContains('`t0`.`id` BETWEEN 1 AND 2');
+		$this->assertCount(2, $people);
+	}
+
 	public function testNamedValueIsEscaped() {
 		$people = Person::queryArray(
 			QQ::equal($this->person()->name, QQ::namedValue('name')),

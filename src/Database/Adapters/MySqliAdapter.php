@@ -54,7 +54,7 @@ class MySqliAdapter extends Cog\Database\Base {
 
 	public function sqlSortByVariable(string $sortByInfo): ?string {
 		// Setup sorting information (if applicable) via a ORDER BY clause
-		if ($sortByInfo === '') {
+		if ($sortByInfo !== '') {
 			if (str_contains($sortByInfo, ';')) {
 				throw new \Exception('Invalid Semicolon in ORDER BY Info');
 			}

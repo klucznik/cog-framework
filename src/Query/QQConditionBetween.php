@@ -18,21 +18,28 @@ class QQConditionBetween extends QQConditionComparison {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
-		try {
-			$this->mixOperand = Type::cast($strMinValue, Type::STRING);
-			$this->mixOperandTwo = Type::cast($strMaxValue, Type::STRING);
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			$exception->incrementOffset();
-			throw $exception;
-		}
-
 		if ($strMinValue instanceof QQNamedValue) {
 			$this->mixOperand = $strMinValue;
+		} else {
+			try {
+				$this->mixOperand = Type::cast($strMinValue, Type::STRING);
+			} catch (Cog\Exceptions\CogException $exception) {
+				$exception->incrementOffset();
+				$exception->incrementOffset();
+				throw $exception;
+			}
 		}
 
 		if ($strMaxValue instanceof QQNamedValue) {
 			$this->mixOperandTwo = $strMaxValue;
+		} else {
+			try {
+				$this->mixOperandTwo = Type::cast($strMaxValue, Type::STRING);
+			} catch (Cog\Exceptions\CogException $exception) {
+				$exception->incrementOffset();
+				$exception->incrementOffset();
+				throw $exception;
+			}
 		}
 	}
 

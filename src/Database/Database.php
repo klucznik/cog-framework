@@ -9,7 +9,7 @@ use Cog\Util\StringUtils;
 abstract class Database {
 
 	/** @var string url pointing to the database queries profile page */
-	public static string $urlProfilePage = '"/profile.php';
+	public static string $urlProfilePage = '/profile.php';
 
 	/**
 	 * An array of Cog\Database\Database objects, as initialized by initializeDatabaseConnections()
@@ -133,19 +133,17 @@ abstract class Database {
 	 * @return void
 	 */
 	public static function dumpConfig(): void {
-		if (self::$databases) {
-			foreach (self::$databases as $key => $object) {
-				dump(self::dumpConfigSafely($key));
-			}
+		foreach (self::$databases as $index => $database) {
+			dump([
+				'index' => $index,
+				'adapter' => $database->adapter,
+				'server' => $database->server,
+				'port' => $database->port,
+				'database' => $database->database,
+				'username' => $database->username,
+				'password' => '********', // Don't display database password
+				'profiling' => $database->profiling,
+			]);
 		}
-	}
-
-	public static function dumpConfigSafely(int $index): ?array {
-		if (self::$databases && defined('DB_CONNECTION_' . $index)) {
-			$database = unserialize(constant('DB_CONNECTION_' . $index), ['allowed_classes' => false]);
-			$database['password'] = '********'; // Don't display database password
-			return $database;
-		}
-		return null;
 	}
 }

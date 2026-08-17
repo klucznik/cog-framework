@@ -443,7 +443,13 @@ class TestDatabase extends TestCase {
 	public function testSqlLimitAndSortVariables() {
 		$this->assertNull($this->database->sqlLimitVariablePrefix('1,2'));
 		$this->assertEquals('LIMIT 1,2', $this->database->sqlLimitVariableSuffix('1,2'));
-		$this->assertNull($this->database->sqlSortByVariable('`id` ASC'));
+		$this->assertEquals('ORDER BY id ASC', $this->database->sqlSortByVariable('id ASC'));
+		$this->assertNull($this->database->sqlSortByVariable(''));
+	}
+
+	public function testSqlSortByVariableRejectsSemicolon() {
+		$this->expectException(\Exception::class);
+		$this->database->sqlSortByVariable('id; DROP TABLE person');
 	}
 
 	/**

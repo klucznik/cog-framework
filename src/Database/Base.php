@@ -251,7 +251,7 @@ abstract class Base extends Cog\Base {
 
 			// Push it onto the profiling information array
 			$profile = compact('backtrace', 'query');
-			if (count($timeInfo)) {
+			if ($timeInfo) {
 				$profile['timeInfo'] = $timeInfo;
 			}
 			$this->profileArray[] = $profile;
@@ -299,45 +299,15 @@ abstract class Base extends Cog\Base {
 
 				// Do a "Reverse Equality"
 				if ($reverseEquality) {
-					if ($data === null) {
-						return 'IS NOT NULL';
-					}
-					if ($data === true) {
-						return '= 0';
-					}
-					if ($data === false) {
-						return '!= 0';
-					}
-
-					return '';
+					return $data ? '= 0' : '!= 0';
 				}
 
 				// Do a "Normal Equality"
-				if ($data === null) {
-					return 'IS NULL';
-				}
-				if ($data === true) {
-					return '!= 0';
-				}
-				if ($data === false) {
-					return '= 0';
-				}
-
-				return '';
+				return $data ? '!= 0' : '= 0';
 			}
 
 			// Don't include an equality
-			if ($data === null) {
-				return 'NULL';
-			}
-			if ($data === true) {
-				return '1';
-			}
-			if ($data === false) {
-				return '0';
-			}
-
-			return '';
+			return $data ? '1' : '0';
 		}
 
 		// Check for Equality Inclusion
