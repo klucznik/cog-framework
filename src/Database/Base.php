@@ -366,7 +366,7 @@ abstract class Base extends Cog\Base {
 					$parameters[] = $this->sqlVariable($parameter);
 				}
 
-				$query = str_replace(chr(QQNamedValue::DELIMITER_CODE) . '{' . $key . '}', implode(',', $parameters) . ')', $query);
+				$query = str_replace(chr(QQNamedValue::DELIMITER_CODE) . '{' . $key . '}', implode(',', $parameters), $query);
 			} else {
 				$query = str_replace([
 					chr(QQNamedValue::DELIMITER_CODE) . '{=' . $key . '=}',

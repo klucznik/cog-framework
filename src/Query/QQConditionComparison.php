@@ -24,13 +24,6 @@ abstract class QQConditionComparison extends QQCondition {
 		} elseif ($operand instanceof QQClause) {
 			throw new InvalidCastException('Comparison operand cannot be a QQClause', 3);
 		} elseif (!($operand instanceof QQNode)) {
-//				try {
-//					$this->mixOperand = Type::Cast($mixOperand, $objQueryNode->type);
-//				} catch (\Cog\CogException\CogException $exception) {
-//					$exception->incrementOffset();
-//					$exception->incrementOffset();
-//					throw $exception;
-//				}
 			$this->mixOperand = $operand;
 		} else {
 			if (!$operand->parentNode) {

@@ -304,14 +304,14 @@ class TestDatabase extends TestCase {
 		);
 	}
 
-	/** An array parameter expands to a comma separated list and supplies the closing bracket. */
+	/** An array parameter expands to a comma separated list. */
 	public function testPrepareStatementWithArray() {
 		$delimiter = chr(QQNamedValue::DELIMITER_CODE);
 
 		$this->assertEquals(
 			'SELECT * FROM `person` WHERE `id` IN (1,2,3)',
 			$this->database->prepareStatement(
-				sprintf('SELECT * FROM `person` WHERE `id` IN (%s{ids}', $delimiter),
+				sprintf('SELECT * FROM `person` WHERE `id` IN (%s{ids})', $delimiter),
 				['ids' => [1, 2, 3]]
 			)
 		);

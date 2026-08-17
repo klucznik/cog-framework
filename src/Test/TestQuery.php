@@ -418,6 +418,17 @@ class TestQuery extends QueryTestCase {
 		$this->assertCount(2, $people);
 	}
 
+	public function testNamedValueIn() {
+		$people = Person::queryArray(
+			QQ::in($this->person()->id, QQ::namedValue('ids')),
+			null,
+			['ids' => [1, 2]]
+		);
+
+		$this->assertQueryContains('`t0`.`id` IN (1,2)');
+		$this->assertCount(2, $people);
+	}
+
 	public function testNamedValueIsEscaped() {
 		$people = Person::queryArray(
 			QQ::equal($this->person()->name, QQ::namedValue('name')),
