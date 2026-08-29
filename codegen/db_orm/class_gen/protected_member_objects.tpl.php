@@ -42,7 +42,7 @@
 	 *
 	 * NOTE: Do not manually update this value
 	 */
-	protected bool $blnDirty<?= $objReverseReference->objectPropertyName ?> = null;
+	protected bool $blnDirty<?= $objReverseReference->objectPropertyName ?> = false;
 
 <?php } ?>
 <?php } ?>
