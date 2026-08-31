@@ -21,7 +21,7 @@ abstract class QQCondition extends Cog\Base {
 	/**
 	 * @return string
 	 */
-	public function __toString() {
+	public function __toString(): string {
 		return 'Cog\Query\QQCondition Object';
 	}
 
