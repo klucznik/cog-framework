@@ -49,7 +49,10 @@ abstract class VariableNameCreator {
 			}
 		}
 
-		if (trim($delimiter) === '') {
+		// No configured delimiter, and no matching codegen at all, both mean "fall
+		// back to the property name". $delimiter is still null in the latter case,
+		// which trim() has rejected since PHP 8.1.
+		if ($delimiter === null || trim($delimiter) === '') {
 			$delimiter = null;
 		}
 
