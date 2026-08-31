@@ -85,18 +85,6 @@ class QQNode extends QQBaseNode {
 		}
 	}
 
-	public function getAsManualSqlColumn() {
-		if ($this->tableName) {
-			return $this->tableName . '.' . $this->name;
-		}
-
-		if ($this->parentNode && $this->parentNode->tableName) {
-			return $this->parentNode->tableName . '.' . $this->name;
-		}
-
-		return $this->name;
-	}
-
 	public function isTopLevelLeafNode() {
 		return (\get_class($this) === 'Cog\Query\QQNode' && null === $this->parentNode->type);
 	}
@@ -193,77 +181,4 @@ class QQNode extends QQBaseNode {
 		return $strParentAlias . '__' . $this->alias;
 	}
 
-
-	// Helpers for Orm-generated DataGrids
-	protected function getDataGridHtmlHelper(array $nodeLabel, int $index) {
-		if (($index + 1) === \count($nodeLabel)) {
-			return $nodeLabel[$index];
-		}
-
-		return sprintf('(%s ? %s : null)', $nodeLabel[$index], $this->getDataGridHtmlHelper($nodeLabel, $index + 1));
-	}
-
-	public function getDataGridItem() {
-		// Array-ify Node Hierarchy
-		$nodeArray = [];
-
-		$nodeArray[] = $this;
-		while ($nodeArray[\count($nodeArray) - 1]->parentNode) {
-			$nodeArray[] = $nodeArray[\count($nodeArray) - 1]->parentNode;
-		}
-
-		$nodeArray = array_reverse($nodeArray, false);
-
-		// Go through the objNodeArray to build out the DataGridHtml
-
-		// Error Behavior
-		if (count($nodeArray) < 2) {
-			throw new Exception('Invalid Cog\Query\QQNode to getDataGridHtml on');
-		}
-		if (count($nodeArray) === 2) { // Simple Two-Step Node
-			$toReturn = '$_ITEM->' . $nodeArray[1]->propertyName;
-		}
-
-		// Complex N-Step Node
-		else {
-			$nodeLabelArray[0] = '$_ITEM->' . $nodeArray[1]->propertyName;
-			$count = \count($nodeArray);
-			for ($i = 2; $i < $count; $i++) {
-				$nodeLabelArray[$i - 1] = $nodeLabelArray[$i - 2] . '->' . $nodeArray[$i]->propertyName;
-			}
-
-			$toReturn = $this->getDataGridHtmlHelper($nodeLabelArray, 0);
-		}
-
-		return $toReturn;
-	}
-
-	public function getDataGridHtml() {
-		$toReturn = $this->getDataGridItem();
-
-		if ($this->type === FieldType::TIME) {
-			return sprintf('(%s) ? %s->toTimeString() : null', $toReturn, $toReturn);
-		}
-
-		if ($this->type === FieldType::DATE) {
-			return sprintf('(%s) ? %s->toDateString() : null', $toReturn, $toReturn);
-		}
-
-		if ($this->type === FieldType::BIT) {
-			return sprintf('(null === %s)? "" : ((%s)? "%s" : "%s")', $toReturn, $toReturn, 'true', 'false');
-		}
-
-		if (class_exists($this->classNameQualified)) {
-			return sprintf('(%s) ? %s->__toString() : null;', $toReturn, $toReturn);
-		}
-
-		return $toReturn;
-	}
-
-	public function getDataGridOrderByNode() {
-		if ($this instanceof QQReverseReferenceNode) {
-			return $this->primaryKeyNode;
-		}
-		return $this;
-	}
 }

@@ -91,33 +91,4 @@ class QQOrderBy extends QQClause {
 		return 'Cog\Query\QQOrderBy Clause';
 	}
 
-	/**
-	 * This is used primarily by datagrids wanting to use the "old Beta 2" style of
-	 * Manual Queries. This allows a datagrid to use QQ::orderBy even though
-	 * the manually-written Load method takes in Beta 2 string-based SortByCommand information.
-	 *
-	 * @return string
-	 */
-	public function getAsManualSql() {
-		$orderByArray = [];
-
-		$length = count($this->objNodeArray);
-		for ($index = 0; $index < $length; $index++) {
-			$orderByCommand = $this->objNodeArray[$index]->getAsManualSqlColumn();
-
-			// Check to see if they want a ASC/DESC declarator
-			if (($index + 1) < $length && !$this->objNodeArray[$index + 1] instanceof QQNode) {
-				if (!$this->objNodeArray[$index + 1] || (strtoupper(trim($this->objNodeArray[$index + 1])) === 'DESC')) {
-					$orderByCommand .= ' DESC';
-				} else {
-					$orderByCommand .= ' ASC';
-				}
-				$index++;
-			}
-
-			$orderByArray[] = $orderByCommand;
-		}
-
-		return implode(',', $orderByArray);
-	}
 }

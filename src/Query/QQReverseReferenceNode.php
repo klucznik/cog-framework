@@ -44,18 +44,4 @@ class QQReverseReferenceNode extends QQNode {
 		return null;
 	}
 
-	public function getExpandArrayAlias() {
-//			$objNode = $this;
-//			$objChildTableNode = $this->_childTableNode;
-//			$strToReturn = $objChildTableNode->name . '__' . $objChildTableNode->primaryKey;
-		$strToReturn = $this->name . '__' . $this->primaryKey;
-
-		$objNode = $this->parentNode;
-		while ($objNode) {
-			$strToReturn = $objNode->name . '__' . $strToReturn;
-			$objNode = $objNode->parentNode;
-		}
-
-		return $strToReturn;
-	}
 }
