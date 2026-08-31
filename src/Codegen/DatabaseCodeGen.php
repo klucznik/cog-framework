@@ -1056,7 +1056,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 	/**
 	 * Override method to perform a property "Get"
-	 * This will get the value of $strName
+	 * This will get the value of $name
 	 *
 	 * @param string $name Name of the property to get
 	 * @return mixed

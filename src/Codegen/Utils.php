@@ -33,7 +33,7 @@ abstract class Utils {
 	 * @param string|null $tagName
 	 * @param string $attributeName
 	 * @param string $type
-	 * @return mixed the return type depends on the Type you pass in to $strType
+	 * @return mixed the return type depends on the Type you pass in to $type
 	 * @throws CogException
 	 */
 	public static function lookupSetting(\SimpleXmlElement $node, ?string $tagName, string $attributeName, string $type = Type::STRING): mixed {

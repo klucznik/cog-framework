@@ -28,7 +28,7 @@ class MySqliField extends Cog\Database\FieldBase {
 
 					$this->default = $row['Default'];
 					// Calculate MaxLength of this column (e.g. if it's a varchar, calculate length of varchar
-					// NOTE: $mixFieldData->max_length in the MySQL spec is **DIFFERENT**
+					// NOTE: $fieldData->max_length in the MySQL spec is **DIFFERENT**
 					$lengthArray = explode('(', $row['Type']);
 					if (count($lengthArray) > 1 && strtolower($lengthArray[0]) !== 'enum' && strtolower($lengthArray[0]) !== 'set' ) {
 						$lengthArray = explode(')', $lengthArray[1]);

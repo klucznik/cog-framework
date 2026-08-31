@@ -301,14 +301,14 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 
 	/**
 	 * @param string $tableName
-	 * @param string $strColumnName
+	 * @param string $columnName
 	 * @param string $referencedTableName
 	 * @return string
 	 */
-	protected function calculateObjectPropertyName(string $tableName, string $strColumnName, string $referencedTableName): string {
+	protected function calculateObjectPropertyName(string $tableName, string $columnName, string $referencedTableName): string {
 		return sprintf('%s%s%s',
 			$this->associatedObjectPrefix,
-			$this->calculateObjectDescription($tableName, $strColumnName, $referencedTableName, false),
+			$this->calculateObjectDescription($tableName, $columnName, $referencedTableName, false),
 			$this->associatedObjectSuffix);
 	}
 

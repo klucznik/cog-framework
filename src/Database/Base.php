@@ -292,10 +292,10 @@ abstract class Base extends Cog\Base {
 	}
 
 	/**
-	 * Properly escapes $mixData to be used as a SQL query parameter.
+	 * Properly escapes $data to be used as a SQL query parameter.
 	 * If IncludeEquality is set (usually not), then include an equality operator.
 	 * So for most data, it would just be "=".  But, for example,
-	 * if $mixData is NULL, then most RDBMS's require the use of "IS".
+	 * if $data is NULL, then most RDBMS's require the use of "IS".
 	 *
 	 * @param mixed $data
 	 * @param boolean $includeEquality whether to include an equality operator

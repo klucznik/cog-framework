@@ -14,7 +14,7 @@ use ReflectionException;
  */
 abstract class Base {
 	/**
-	 * Override method to perform a property "Get" This will get the value of $strName
+	 * Override method to perform a property "Get" This will get the value of $name
 	 * All inherited objects that call __get() should always fall through
 	 * to calling parent::__get() in a try/catch statement catching for CallerExceptions.
 	 *
