@@ -28,8 +28,10 @@ class TestCodegen extends TestCase {
 	private const array TABLE_CLASSES = [
 		'asset' => 'Asset',
 		'blog_post' => 'BlogPost',
+		'category' => 'Category',
 		'obj' => 'Obj',
 		'person' => 'Person',
+		'person_profile' => 'PersonProfile',
 		'tag' => 'Tag',
 	];
 
@@ -307,5 +309,134 @@ class TestCodegen extends TestCase {
 		$this->assertTrue($blogPost->hasProperty('intAuthorId'), 'BlogPostGen is missing the author_id column property');
 		$this->assertTrue($blogPost->hasProperty('objAuthor'), 'BlogPostGen is missing the Author associated object');
 		$this->assertTrue($blogPost->hasMethod('loadArrayByAuthorId'), 'BlogPostGen is missing loadArrayByAuthorId()');
+	}
+
+	//
+	// The reference shapes `category`, `person_profile` and `person_person_assn`
+	// were added to the schema for: a self-reference, a reference to a type table,
+	// a foreign key not named *_id, a one-to-one, and a self-joining association.
+	//
+
+	/** `category.parent_id` keys back to `category`, so the class references itself. */
+	public function testSelfReferencingForeignKey() {
+		$category = new \ReflectionClass('Generated\Data\CategoryGen');
+
+		$this->assertTrue($category->hasProperty('intParentId'), 'CategoryGen is missing the parent_id column property');
+		$this->assertTrue($category->hasProperty('objParent'), 'CategoryGen is missing the Parent associated object');
+		$this->assertTrue($category->hasMethod('loadArrayByParentId'), 'CategoryGen is missing loadArrayByParentId()');
+	}
+
+	/**
+	 * `category.owner` is a foreign key whose column is not named *_id, so the
+	 * reference gets an _object suffix to keep it apart from the integer column.
+	 */
+	public function testForeignKeyColumnNotNamedId() {
+		$category = new \ReflectionClass('Generated\Data\CategoryGen');
+
+		$this->assertTrue($category->hasProperty('intOwner'), 'CategoryGen is missing the owner column property');
+		$this->assertTrue($category->hasProperty('objOwnerObject'), 'CategoryGen is missing the OwnerObject associated object');
+	}
+
+	/** A reference to a `_type` table resolves to the generated Type class, not an ORM class. */
+	public function testReferenceToTypeTable() {
+		$category = new \ReflectionClass('Generated\Data\CategoryGen');
+
+		$this->assertTrue($category->hasProperty('intPriorityTypeId'), 'CategoryGen is missing the priority_type_id property');
+		$this->assertFalse($category->hasProperty('objPriorityType'), 'a type reference should not become an associated object');
+	}
+
+	/**
+	 * `person_profile.person_id` is UNIQUE, so Person gets one adjoined object -
+	 * a writable magic property - rather than the read-only array a non-unique
+	 * reverse reference produces. `blog_post.author_id` is the contrast.
+	 */
+	public function testUniqueForeignKeyGivesASingleReverseReference() {
+		$generated = file_get_contents(CodegenFixture::getBuildPath('generated/Data/PersonGen.php'));
+
+		$this->assertStringContainsString('@property PersonProfile $personProfile', $generated);
+		$this->assertStringNotContainsString('$personProfileArray', $generated);
+
+		// The non-unique reverse reference on the same class is an array, and read-only
+		$this->assertStringContainsString('@property-read BlogPost[] $_blogPostAsAuthorArray', $generated);
+	}
+
+	/** The adjoined object is saved with its parent, which needs a dirty flag to track. */
+	public function testUniqueReverseReferenceIsSavedWithItsParent() {
+		$person = new \ReflectionClass('Generated\Data\PersonGen');
+
+		$dirtyFlags = array_filter(
+			array_map(static fn (\ReflectionProperty $property): string => $property->getName(), $person->getProperties()),
+			static fn (string $name): bool => stripos($name, 'dirty') !== false && stripos($name, 'personprofile') !== false
+		);
+
+		$this->assertNotEmpty($dirtyFlags, 'PersonGen has no dirty flag for the adjoined PersonProfile');
+	}
+
+	/**
+	 * `person_person_assn` joins `person` to itself. Both sides would otherwise
+	 * generate identically named methods, so the column names prefix them apart.
+	 */
+	public function testGraphAssociationMethodsArePrefixedApart() {
+		$person = new \ReflectionClass('Generated\Data\PersonGen');
+
+		$associationMethods = array_filter(
+			array_map(static fn (\ReflectionMethod $method): string => $method->getName(), $person->getMethods()),
+			static fn (string $name): bool => str_contains($name, 'associate') || str_contains($name, 'Associate')
+		);
+
+		$this->assertNotEmpty($associationMethods, 'PersonGen has no association methods for person_person_assn');
+
+		// The two sides must not collide
+		$this->assertSame(count($associationMethods), count(array_unique($associationMethods)));
+		$this->assertTrue(class_exists('Generated\Node\QQNodePersonPerson'), 'missing the person -> person association node');
+	}
+
+	//
+	// Type table with extra columns
+	//
+
+	/** `priority_type` carries two columns beyond the id/name pair a type table requires. */
+	public function testTypeTableWithExtraColumns() {
+		$this->assertFileExists(CodegenFixture::getBuildPath('generated/Type/PriorityTypeGen.php'));
+
+		$priorityType = new \ReflectionClass('App\Type\PriorityType');
+
+		$this->assertSame(1, $priorityType->getConstant('LOW'));
+		$this->assertSame(2, $priorityType->getConstant('NORMAL'));
+		$this->assertSame(3, $priorityType->getConstant('URGENT'));
+	}
+
+	/**
+	 * The extra-column accessors read the id they were passed. They used to emit
+	 * the class name in PascalCase as the variable name while the parameter was
+	 * camelCase, so the lookup used an undefined variable and every call was a
+	 * TypeError - invisible until a type table actually had extra columns.
+	 */
+	public function testTypeTableExtraColumnAccessorsUseTheirArgument() {
+		$generated = file_get_contents(CodegenFixture::getBuildPath('generated/Type/PriorityTypeGen.php'));
+
+		$this->assertStringContainsString('$ExtraColumnValuesArray[$priorityTypeId]', $generated);
+		$this->assertStringNotContainsString('$ExtraColumnValuesArray[$PriorityTypeId]', $generated);
+	}
+
+	/**
+	 * The extra-column accessors are named like the ToString/ToToken pair they sit
+	 * beside, rather than carrying the column name's leading lowercase through into
+	 * the method name.
+	 */
+	public function testTypeTableExtraColumnAccessorNaming() {
+		$priorityType = new \ReflectionClass('App\Type\PriorityType');
+
+		$this->assertTrue($priorityType->hasMethod('ToString'));
+		$this->assertTrue($priorityType->hasMethod('ToToken'));
+		$this->assertTrue($priorityType->hasMethod('ToSortOrder'), 'PriorityType is missing ToSortOrder()');
+		$this->assertTrue($priorityType->hasMethod('ToIsDefault'), 'PriorityType is missing ToIsDefault()');
+	}
+
+	/** And they actually return the row's value for that column. */
+	public function testTypeTableExtraColumnAccessorsReturnTheirValue() {
+		$this->assertSame('20', \App\Type\PriorityType::ToSortOrder(\App\Type\PriorityType::NORMAL));
+		$this->assertSame('10', \App\Type\PriorityType::ToSortOrder(\App\Type\PriorityType::URGENT));
+		$this->assertSame('1', \App\Type\PriorityType::ToIsDefault(\App\Type\PriorityType::NORMAL));
 	}
 }

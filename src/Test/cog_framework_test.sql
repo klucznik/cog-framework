@@ -7,7 +7,11 @@
 --     `person` row.
 --   * src/Test/TestCodegen.php - the classes the code generator produces from
 --     it, which is why the schema deliberately covers a type table (`blog_type`),
---     an association table (`tag_obj_assn`), a `timestamp` column used for
+--     a type table with extra columns (`priority_type`), an association table
+--     (`tag_obj_assn`), a graph association joining one table to itself
+--     (`person_person_assn`), a self-referencing foreign key and a foreign key
+--     whose column is not named `*_id` (`category`), a one-to-one through a
+--     unique foreign key (`person_profile`), a `timestamp` column used for
 --     optimistic locking (`blog_post.modification_date`) and a
 --     `DEFAULT CURRENT_TIMESTAMP` column (`obj.creation_date`).
 --
@@ -127,6 +131,76 @@ CREATE TABLE `tag_obj_assn` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- priority_type: a type table carrying extra columns beyond the required
+-- integer PK and unique VARCHAR name. Those extras become additional properties
+-- on the generated Type class, which is a different code path in
+-- analyzeTypeTable() from a plain two-column type table like blog_type.
+--
+CREATE TABLE `priority_type` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(100) NOT NULL,
+	`sort_order` INT UNSIGNED NOT NULL DEFAULT 0,
+	`is_default` TINYINT(1) NOT NULL DEFAULT 0,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- category: three reference shapes the other tables do not have.
+--   * `parent_id` points back at `category`, so the generated class references
+--     itself and the object descriptions have to be disambiguated.
+--   * `priority_type_id` points at a type table, which makes the reference a
+--     type reference rather than an object one.
+--   * `owner` is a foreign key whose column name does not end in `_id`, so the
+--     generator appends _object to the reference name to keep it apart from the
+--     integer column it was mapped from.
+--
+CREATE TABLE `category` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`parent_id` INT UNSIGNED NULL,
+	`priority_type_id` INT UNSIGNED NOT NULL,
+	`owner` INT UNSIGNED NULL,
+	`name` VARCHAR(100) NOT NULL,
+	PRIMARY KEY (`id`),
+	KEY `parent_id` (`parent_id`),
+	KEY `priority_type_id` (`priority_type_id`),
+	KEY `owner` (`owner`),
+	CONSTRAINT `category_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `category` (`id`),
+	CONSTRAINT `category_priority_type_id` FOREIGN KEY (`priority_type_id`) REFERENCES `priority_type` (`id`),
+	CONSTRAINT `category_owner` FOREIGN KEY (`owner`) REFERENCES `person` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- person_profile: a one-to-one. The foreign key at `person_id` is UNIQUE, which
+-- makes the reverse reference on Person a single object rather than an array -
+-- a different branch from every other reverse reference in this schema.
+--
+CREATE TABLE `person_profile` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`person_id` INT UNSIGNED NOT NULL,
+	`bio` TEXT,
+	`website` VARCHAR(255) NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `person_id` (`person_id`),
+	CONSTRAINT `person_profile_person_id` FOREIGN KEY (`person_id`) REFERENCES `person` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- person_person_assn: a graph association - both foreign keys point at the same
+-- table. tag_obj_assn joins two different tables, so it never exercises the
+-- prefix calculation that keeps the two sides of a self-join apart (`person` and
+-- `friend` here) rather than generating two identically named methods.
+--
+CREATE TABLE `person_person_assn` (
+	`person_id` INT UNSIGNED NOT NULL,
+	`friend_id` INT UNSIGNED NOT NULL,
+	PRIMARY KEY (`person_id`, `friend_id`),
+	KEY `friend_id` (`friend_id`),
+	CONSTRAINT `person_person_assn_person_id` FOREIGN KEY (`person_id`) REFERENCES `person` (`id`),
+	CONSTRAINT `person_person_assn_friend_id` FOREIGN KEY (`friend_id`) REFERENCES `person` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- Data. The first `person` row is asserted field by field in
 -- testQueryFetchAssoc and testQueryFetch.
 --
@@ -162,3 +236,22 @@ INSERT INTO `tag_obj_assn` (`tag_id`, `obj_id`) VALUES
 	(1, 1),
 	(2, 1),
 	(3, 2);
+
+INSERT INTO `priority_type` (`id`, `name`, `sort_order`, `is_default`) VALUES
+	(1, 'Low', 30, 0),
+	(2, 'Normal', 20, 1),
+	(3, 'Urgent', 10, 0);
+
+INSERT INTO `category` (`id`, `parent_id`, `priority_type_id`, `owner`, `name`) VALUES
+	(1, NULL, 2, 1, 'Root'),
+	(2, 1, 3, 2, 'Announcements'),
+	(3, 1, 1, NULL, 'Archive');
+
+INSERT INTO `person_profile` (`id`, `person_id`, `bio`, `website`) VALUES
+	(1, 1, 'Maintainer of the framework.', 'https://example.test/adam'),
+	(2, 2, 'Occasional contributor.', NULL);
+
+INSERT INTO `person_person_assn` (`person_id`, `friend_id`) VALUES
+	(1, 2),
+	(1, 3),
+	(2, 3);
