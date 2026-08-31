@@ -127,6 +127,9 @@ class <?= $table->className ?>Gen extends Base implements IteratorAggregate {
 	<?php include __DIR__ . '/property_set.tpl.php'; ?>
 
 
+	<?php include __DIR__ . '/property_isset.tpl.php'; ?>
+
+
 	/**
 	 * Lookup a VirtualAttribute value (if applicable).  Returns null if none found.
 	 * @param string $name
