@@ -4,7 +4,7 @@ namespace Cog\Query;
 
 class QQNamedValue extends QQNode {
 
-	public const DELIMITER_CODE = 3;
+	public const int DELIMITER_CODE = 3;
 
 	public function __construct($name) {
 		$this->name = $name;

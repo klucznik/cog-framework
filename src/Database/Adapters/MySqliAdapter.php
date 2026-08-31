@@ -13,7 +13,7 @@ use mysqli;
  * @property-read integer $affectedRows
  */
 class MySqliAdapter extends Cog\Database\Base {
-	public const ADAPTER = 'MySql Improved Database Adapter';
+	public const string ADAPTER = 'MySql Improved Database Adapter';
 
 	protected mysqli $mySqli;
 

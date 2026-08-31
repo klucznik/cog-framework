@@ -47,7 +47,7 @@ abstract class Base extends Cog\Base {
 
 
 	/** Adapter name, must be updated for all Adapters */
-	public const ADAPTER = 'Generic Database Adapter (Abstract)';
+	public const string ADAPTER = 'Generic Database Adapter (Abstract)';
 
 	/** @var int Database Index according to the configuration file */
 	protected int $databaseIndex;

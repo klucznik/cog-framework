@@ -50,13 +50,13 @@ use Symfony\Component\String\UnicodeString;
  */
 abstract class Type {
 
-	public const STRING = 'string';
-	public const INTEGER = 'integer';
-	public const FLOAT = 'double';
-	public const BOOLEAN = 'boolean';
-	public const OBJECT = 'object';
-	public const ARRAY = 'array';
-	public const DATETIME = 'Carbon';
+	public const string STRING = 'string';
+	public const string INTEGER = 'integer';
+	public const string FLOAT = 'double';
+	public const string BOOLEAN = 'boolean';
+	public const string OBJECT = 'object';
+	public const string ARRAY = 'array';
+	public const string DATETIME = 'Carbon';
 
 	/**
 	 * @param mixed $item

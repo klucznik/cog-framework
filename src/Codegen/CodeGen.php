@@ -31,7 +31,7 @@ abstract class CodeGen extends Base {
 	// Invalid Type names -- these are reserved words which cannot be Type names in any user type table
 	// Invalid Table names -- these are reserved words which cannot be used as any table name
 	//please refer to : http://php.net/manual/en/reserved.php
-	protected const PHP_RESERVED_WORDS = 'new, null, break, return, switch, self, case, const, clone, continue, declare, default, echo, else, ' .
+	protected const string PHP_RESERVED_WORDS = 'new, null, break, return, switch, self, case, const, clone, continue, declare, default, echo, else, ' .
 		'elseif, empty, exit, eval, if, try, throw, catch, public, private, protected, function, extends, foreach, for, while, do, var, ' .
 		'class, static, abstract, isset, unset, implements, interface, instanceof, include, include_once, require, require_once, ' .
 		'abstract, and, or, xor, array, list, false, true, global, parent, print, exception, namespace, goto, final, endif, endswitch, ' .

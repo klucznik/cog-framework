@@ -21,7 +21,7 @@ abstract class CodeGenRunner extends Base {
 	// This will output the current evaluated template/statement to the screen
 	// On "eval" errors, you can click on the "View Rendered Page" to see what currently
 	// is being evaluated, which should hopefully aid in template debugging.
-	public const DEBUG_MODE = false;
+	public const bool DEBUG_MODE = false;
 
 	/**
 	 * This static array contains an array of active and executed codegen objects, based
