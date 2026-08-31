@@ -196,7 +196,6 @@ class TestCodegenHelpers extends TestCase {
 
 		$this->assertSame('objAuthor', VariableNameCreator::referenceVariableNameFromColumn($column));
 		$this->assertSame('author', VariableNameCreator::referencePropertyNameFromColumn($column));
-		$this->assertSame('Author', VariableNameCreator::referencePropertyNameUpperCaseFromColumn($column));
 	}
 
 	/** Reverse references are named after the table they come back from. */

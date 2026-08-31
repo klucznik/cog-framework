@@ -468,13 +468,6 @@ class TestCodegenValueObjects extends TestCase {
 		);
 	}
 
-	public function testFormLabelVariableNameForColumn() {
-		$this->assertSame(
-			'lblFirstName',
-			VariableNameCreator::formLabelVariableNameForColumn($this->column('first_name'))
-		);
-	}
-
 	/** The translation name drops the three-character control prefix. */
 	public function testTranslationNameForColumn() {
 		$this->assertSame('firstName', VariableNameCreator::translationNameForColumn($this->column('first_name')));

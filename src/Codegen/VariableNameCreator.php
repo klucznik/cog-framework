@@ -115,15 +115,6 @@ abstract class VariableNameCreator {
 	}
 
 	/**
-	 * @deprecated nothing calls this - kept for templates that might, remove once that is ruled out
-	 * @param Column $column
-	 * @return string
-	 */
-	public static function referencePropertyNameUpperCaseFromColumn(Column $column): string {
-		return ConvertNotation::pascalCase(self::referenceColumnNameFromColumn($column));
-	}
-
-	/**
 	 * @param Column $column
 	 * @return string
 	 */
@@ -141,15 +132,6 @@ abstract class VariableNameCreator {
 			Type::DATETIME => sprintf('cal%s', $column->propertyNameUppercase),
 			default => sprintf('txt%s', $column->propertyNameUppercase),
 		};
-	}
-
-	/**
-	 * @deprecated nothing calls this - kept for templates that might, remove once that is ruled out
-	 * @param Column $column
-	 * @return string
-	 */
-	public static function formLabelVariableNameForColumn(Column $column): string {
-		return 'lbl' . $column->propertyNameUppercase;
 	}
 
 	/**
