@@ -6,8 +6,7 @@ use Cog;
 
 class QQExpandVirtualNode extends QQClause {
 
-	/** @var QQVirtualNode */
-	protected $node;
+	protected QQVirtualNode $node;
 
 	public function __construct(QQVirtualNode $node) {
 		$this->node = $node;

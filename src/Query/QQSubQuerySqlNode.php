@@ -4,11 +4,10 @@ namespace Cog\Query;
 
 class QQSubQuerySqlNode extends QQSubQueryNode {
 
-	/** @var string */
-	protected $sql;
+	protected string $sql;
 
 	/** @var QQNode[]|null */
-	protected $objParentQueryNodes;
+	protected ?array $parentQueryNodes = null;
 
 	/**
 	 * QQSubQuerySqlNode constructor.
@@ -16,7 +15,7 @@ class QQSubQuerySqlNode extends QQSubQueryNode {
 	 * @param QQNode[]|null $parentQueryNodes
 	 */
 	public function __construct($sql, $parentQueryNodes = null) {
-		$this->objParentQueryNodes = $parentQueryNodes;
+		$this->parentQueryNodes = $parentQueryNodes;
 		$this->sql = $sql;
 	}
 
@@ -28,10 +27,10 @@ class QQSubQuerySqlNode extends QQSubQueryNode {
 	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
 		$strSql = $this->sql;
 
-		$count = count($this->objParentQueryNodes);
+		$count = count($this->parentQueryNodes);
 		for ($intIndex = 1; $intIndex < $count; $intIndex++) {
-			if (null !== $this->objParentQueryNodes[$intIndex]) {
-				$strSql = str_replace('{' . $intIndex . '}', $this->objParentQueryNodes[$intIndex]->getColumnAlias($queryBuilder), $strSql);
+			if (null !== $this->parentQueryNodes[$intIndex]) {
+				$strSql = str_replace('{' . $intIndex . '}', $this->parentQueryNodes[$intIndex]->getColumnAlias($queryBuilder), $strSql);
 			}
 		}
 		return '(' . $strSql . ')';

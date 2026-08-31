@@ -8,10 +8,10 @@ namespace Cog\Query;
  */
 class QQHavingClause extends QQClause {
 
-	protected $objNode;
+	protected QQSubQueryNode $node;
 
 	public function __construct(QQSubQueryNode $objSubQueryDefinition) {
-		$this->objNode = $objSubQueryDefinition;
+		$this->node = $objSubQueryDefinition;
 	}
 
 	public function getAttributeName() {
@@ -21,7 +21,7 @@ class QQHavingClause extends QQClause {
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
 		$queryBuilder->addHavingItem(
-			$this->objNode->getColumnAlias($queryBuilder)
+			$this->node->getColumnAlias($queryBuilder)
 		);
 	}
 

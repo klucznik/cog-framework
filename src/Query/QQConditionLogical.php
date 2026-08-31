@@ -7,10 +7,10 @@ use Cog;
 abstract class QQConditionLogical extends QQCondition {
 
 	/** @var QQCondition[] */
-	protected $objConditionArray;
+	protected array $conditionArray;
 
 	public function __construct($mixParameterArray) {
-		$this->objConditionArray = $this->collapseConditions($mixParameterArray);
+		$this->conditionArray = $this->collapseConditions($mixParameterArray);
 	}
 
 	/**
@@ -44,18 +44,18 @@ abstract class QQConditionLogical extends QQCondition {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$length = count($this->objConditionArray);
+		$length = count($this->conditionArray);
 
 		if ($length) {
 			$queryBuilder->addWhereItem('(');
 
 			for ($i = 0; $i < $length; $i++) {
-				if (!($this->objConditionArray[$i] instanceof QQCondition)) {
+				if (!($this->conditionArray[$i] instanceof QQCondition)) {
 					throw new Cog\Exceptions\CogException($this->operator . ' clause has elements that are not Conditions');
 				}
 
 				try {
-					$this->objConditionArray[$i]->updateQueryBuilder($queryBuilder);
+					$this->conditionArray[$i]->updateQueryBuilder($queryBuilder);
 				} catch (Cog\Exceptions\CogException $exception) {
 					$exception->incrementOffset();
 					throw $exception;

@@ -15,9 +15,9 @@ use Cog\Type;
 class QQLimitInfo extends QQClause {
 
 	/** @var int */
-	protected $maxRowCount;
+	protected int $maxRowCount = 0;
 	/** @var int */
-	protected $offset;
+	protected int $offset = 0;
 
 	/**
 	 * QQLimitInfo constructor.

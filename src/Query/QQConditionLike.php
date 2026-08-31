@@ -15,10 +15,10 @@ class QQConditionLike extends QQConditionComparison {
 		}
 
 		if ($strValue instanceof QQNamedValue) {
-			$this->mixOperand = $strValue;
+			$this->operand = $strValue;
 		} else {
 			try {
-				$this->mixOperand = Type::cast($strValue, Type::STRING);
+				$this->operand = Type::cast($strValue, Type::STRING);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();
@@ -29,11 +29,11 @@ class QQConditionLike extends QQConditionComparison {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$mixOperand = $this->mixOperand;
-		if ($mixOperand instanceof QQNamedValue) {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' LIKE ' . $mixOperand->parameter());
+		$operand = $this->operand;
+		if ($operand instanceof QQNamedValue) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' LIKE ' . $operand->parameter());
 		} else {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' LIKE ' . $queryBuilder->database->sqlVariable($mixOperand));
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' LIKE ' . $queryBuilder->database->sqlVariable($operand));
 		}
 	}
 }

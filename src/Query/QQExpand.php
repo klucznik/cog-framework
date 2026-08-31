@@ -7,14 +7,11 @@ use Cog\Exceptions\InvalidCastException;
 
 class QQExpand extends QQClause {
 
-	/** @var QQNode */
-	protected $node;
+	protected QQNode $node;
 
-	/** @var QQCondition|null */
-	protected $joinCondition;
+	protected ?QQCondition $joinCondition = null;
 
-	/** @var QQSelect|null */
-	protected $select;
+	protected ?QQSelect $select = null;
 
 	/**
 	 * QQExpand constructor.

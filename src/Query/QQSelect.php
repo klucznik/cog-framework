@@ -4,26 +4,26 @@ namespace Cog\Query;
 
 class QQSelect extends QQClause {
 
-	protected $arrNodeObj = [];
-	protected $blnSkipPrimaryKey = false;
+	protected array $nodeArray = [];
+	protected bool $skipPrimaryKey = false;
 
-	public function __construct($arrNodeObj) {
-		$this->arrNodeObj = $arrNodeObj;
+	public function __construct($nodeArray) {
+		$this->nodeArray = $nodeArray;
 	}
 
 	public function addSelectItems(QueryBuilder $objBuilder, $strTableName, $strAliasPrefix) {
-		foreach ($this->arrNodeObj as $objNode) {
-			$objBuilder->addSelectItem($strTableName, $objNode->name, $strAliasPrefix . $objNode->name);
+		foreach ($this->nodeArray as $node) {
+			$objBuilder->addSelectItem($strTableName, $node->name, $strAliasPrefix . $node->name);
 		}
 	}
 
 	public function merge(?QQSelect $objSelect = null) {
 		if ($objSelect) {
-			foreach ($objSelect->arrNodeObj as $objNode) {
-				$this->arrNodeObj[] = $objNode;
+			foreach ($objSelect->nodeArray as $node) {
+				$this->nodeArray[] = $node;
 			}
-			if ($objSelect->blnSkipPrimaryKey) {
-				$this->blnSkipPrimaryKey = true;
+			if ($objSelect->skipPrimaryKey) {
+				$this->skipPrimaryKey = true;
 			}
 		}
 	}
@@ -32,14 +32,14 @@ class QQSelect extends QQClause {
 	 * @return boolean
 	 */
 	public function skipPrimaryKey() {
-		return $this->blnSkipPrimaryKey;
+		return $this->skipPrimaryKey;
 	}
 
 	/**
-	 * @param boolean $blnSkipPrimaryKey
+	 * @param boolean $skipPrimaryKey
 	 */
-	public function setSkipPrimaryKey($blnSkipPrimaryKey) {
-		$this->blnSkipPrimaryKey = $blnSkipPrimaryKey;
+	public function setSkipPrimaryKey($skipPrimaryKey) {
+		$this->skipPrimaryKey = $skipPrimaryKey;
 	}
 
 	/** @inheritdoc */

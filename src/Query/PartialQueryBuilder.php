@@ -9,7 +9,7 @@ namespace Cog\Query;
  */
 class PartialQueryBuilder extends QueryBuilder {
 
-	protected $parentBuilder;
+	protected QueryBuilder $parentBuilder;
 
 	public function __construct(QueryBuilder $queryBuilder) {
 		parent::__construct($queryBuilder->database, $queryBuilder->rootTableName);

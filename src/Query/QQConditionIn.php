@@ -15,12 +15,12 @@ class QQConditionIn extends QQConditionComparison {
 		}
 
 		if ($mixValuesArray instanceof QQNamedValue) {
-			$this->mixOperand = $mixValuesArray;
+			$this->operand = $mixValuesArray;
 		} elseif ($mixValuesArray instanceof QQSubQueryNode) {
-			$this->mixOperand = $mixValuesArray;
+			$this->operand = $mixValuesArray;
 		} else {
 			try {
-				$this->mixOperand = Type::cast($mixValuesArray, Type::ARRAY);
+				$this->operand = Type::cast($mixValuesArray, Type::ARRAY);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();
@@ -31,15 +31,15 @@ class QQConditionIn extends QQConditionComparison {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$mixOperand = $this->mixOperand;
+		$operand = $this->operand;
 
-		if ($mixOperand instanceof QQNamedValue) {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN (' . $mixOperand->parameter() . ')');
-		} else if ($mixOperand instanceof QQSubQueryNode) {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN ' . $mixOperand->getColumnAlias($queryBuilder));
+		if ($operand instanceof QQNamedValue) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN (' . $operand->parameter() . ')');
+		} else if ($operand instanceof QQSubQueryNode) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN ' . $operand->getColumnAlias($queryBuilder));
 		} else {
 			$parameters = [];
-			foreach ($mixOperand as $mixParameter) {
+			foreach ($operand as $mixParameter) {
 				$parameters[] = $queryBuilder->database->sqlVariable($mixParameter);
 			}
 			if (\count($parameters)) {

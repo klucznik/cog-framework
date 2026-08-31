@@ -43,27 +43,23 @@ class QueryBuilder extends Cog\Base {
 	protected array $havingArray = [];
 	/** @var QQVirtualNode[] */
 	protected array $virtualNodeArray = [];
-	/** @var string */
-	protected $limitInfo;
-	/** @var bool */
-	protected $distinctFlag;
-	/** @var QQBaseNode */
-	protected $expandAsArrayNode;
-	/** @var bool */
-	protected $countOnlyFlag;
-	/** @var bool */
-	protected $aggregationFlag;
+	/** The LIMIT clause, as either "count" or "offset,count". */
+	protected ?string $limitInfo = null;
 
-	/** @var Cog\Database\Base */
-	protected $database;
+	protected bool $distinctFlag = false;
 
-	/** @var string */
-	protected $rootTableName;
+	/** The root of the merged expansion tree, once any expandAsArray clause has run. */
+	protected ?QQBaseNode $expandAsArrayNode = null;
 
-	/** @var string */
-	protected $escapeIdentifierBegin;
-	/** @var string */
-	protected $escapeIdentifierEnd;
+	protected bool $countOnlyFlag = false;
+	protected bool $aggregationFlag = false;
+
+	protected Cog\Database\Base $database;
+
+	protected string $rootTableName;
+
+	protected string $escapeIdentifierBegin;
+	protected string $escapeIdentifierEnd;
 
 	/**
 	 * QueryBuilder constructor.

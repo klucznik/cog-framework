@@ -6,8 +6,7 @@ use Cog\Exceptions\CogException;
 
 class QQVirtualNode extends QQNode {
 
-	/** @var QQSubQueryNode|null */
-	protected $subQueryDefinition;
+	protected ?QQSubQueryNode $subQueryDefinition = null;
 
 	public function __construct($name, ?QQSubQueryNode $subQueryDefinition = null) {
 		$this->name = strtolower(trim($name));

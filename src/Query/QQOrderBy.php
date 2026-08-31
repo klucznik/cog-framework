@@ -8,10 +8,10 @@ use Cog\Exceptions\InvalidCastException;
 class QQOrderBy extends QQClause {
 
 	/** @var QQNode[] */
-	protected $objNodeArray;
+	protected array $nodeArray;
 
 	public function __construct($mixParameterArray) {
-		$this->objNodeArray = $this->collapseNodes($mixParameterArray);
+		$this->nodeArray = $this->collapseNodes($mixParameterArray);
 	}
 
 	/**
@@ -60,10 +60,10 @@ class QQOrderBy extends QQClause {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$length = count($this->objNodeArray);
+		$length = count($this->nodeArray);
 
 		for ($index = 0; $index < $length; $index++) {
-			$node = $this->objNodeArray[$index];
+			$node = $this->nodeArray[$index];
 			if ($node instanceof QQNode) {
 				$orderByCommand = $node->getColumnAlias($queryBuilder);
 			} else if ($node instanceof QQCondition) {
@@ -73,8 +73,8 @@ class QQOrderBy extends QQClause {
 			}
 
 			// Check to see if they want a ASC/DESC declarator
-			if (($index + 1) < $length && !$this->objNodeArray[$index + 1] instanceof QQNode) {
-				if (!$this->objNodeArray[$index + 1] || strtoupper(trim($this->objNodeArray[$index + 1])) === 'DESC') {
+			if (($index + 1) < $length && !$this->nodeArray[$index + 1] instanceof QQNode) {
+				if (!$this->nodeArray[$index + 1] || strtoupper(trim($this->nodeArray[$index + 1])) === 'DESC') {
 					$orderByCommand .= ' DESC';
 				} else {
 					$orderByCommand .= ' ASC';

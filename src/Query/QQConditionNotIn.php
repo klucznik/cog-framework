@@ -6,15 +6,15 @@ class QQConditionNotIn extends QQConditionIn {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$mixOperand = $this->mixOperand;
+		$operand = $this->operand;
 
-		if ($mixOperand instanceof QQNamedValue) {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT IN (' . $mixOperand->parameter() . ')');
-		} else if ($mixOperand instanceof QQSubQueryNode) {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT IN ' . $mixOperand->getColumnAlias($queryBuilder));
+		if ($operand instanceof QQNamedValue) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT IN (' . $operand->parameter() . ')');
+		} else if ($operand instanceof QQSubQueryNode) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT IN ' . $operand->getColumnAlias($queryBuilder));
 		} else {
 			$parameters = [];
-			foreach ($mixOperand as $mixParameter) {
+			foreach ($operand as $mixParameter) {
 				$parameters[] = $queryBuilder->database->sqlVariable($mixParameter);
 			}
 			if (\count($parameters)) {

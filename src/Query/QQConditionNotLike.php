@@ -6,11 +6,11 @@ class QQConditionNotLike extends QQConditionLike {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$mixOperand = $this->mixOperand;
-		if ($mixOperand instanceof QQNamedValue) {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT LIKE ' . $mixOperand->parameter());
+		$operand = $this->operand;
+		if ($operand instanceof QQNamedValue) {
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT LIKE ' . $operand->parameter());
 		} else {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT LIKE ' . $queryBuilder->database->sqlVariable($mixOperand));
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT LIKE ' . $queryBuilder->database->sqlVariable($operand));
 		}
 	}
 }

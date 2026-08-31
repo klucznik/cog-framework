@@ -6,11 +6,9 @@ use Cog;
 
 class QQExpandAsArray extends QQClause {
 
-	/** @var QQAssociationNode|QQReverseReferenceNode */
-	protected $node;
+	protected QQAssociationNode|QQReverseReferenceNode $node;
 
-	/** @var QQSelect|null */
-	protected $select;
+	protected ?QQSelect $select = null;
 
 	public function __construct($node, ?QQSelect $select = null) {
 		// Ensure that this is an Cog\Query\QQAssociationNode

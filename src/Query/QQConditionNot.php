@@ -6,17 +6,17 @@ use Cog;
 
 class QQConditionNot extends QQCondition {
 
-	protected $objCondition;
+	protected QQCondition $condition;
 
-	public function __construct(QQCondition $objCondition) {
-		$this->objCondition = $objCondition;
+	public function __construct(QQCondition $condition) {
+		$this->condition = $condition;
 	}
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
 		$queryBuilder->addWhereItem('(NOT');
 		try {
-			$this->objCondition->updateQueryBuilder($queryBuilder);
+			$this->condition->updateQueryBuilder($queryBuilder);
 		} catch (Cog\Exceptions\CogException $exception) {
 			$exception->incrementOffset();
 			throw $exception;

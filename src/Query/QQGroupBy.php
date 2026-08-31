@@ -8,11 +8,11 @@ use Cog\Exceptions\InvalidCastException;
 class QQGroupBy extends QQClause {
 
 	/** @var QQBaseNode[] */
-	protected $objNodeArray;
+	protected array $nodeArray;
 
 	/** @inheritdoc */
 	public function __construct($mixParameterArray) {
-		$this->objNodeArray = $this->collapseNodes($mixParameterArray);
+		$this->nodeArray = $this->collapseNodes($mixParameterArray);
 	}
 
 	/**
@@ -69,7 +69,7 @@ class QQGroupBy extends QQClause {
 	 */
 	public function rootColumnNames(): array {
 		$names = [];
-		foreach ($this->objNodeArray as $node) {
+		foreach ($this->nodeArray as $node) {
 			if ($node->isTopLevelLeafNode()) {
 				$names[] = $node->name;
 			}
@@ -79,10 +79,10 @@ class QQGroupBy extends QQClause {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$length = count($this->objNodeArray);
+		$length = count($this->nodeArray);
 
 		for ($index = 0; $index < $length; $index++) {
-			$queryBuilder->addGroupByItem($this->objNodeArray[$index]->getColumnAlias($queryBuilder));
+			$queryBuilder->addGroupByItem($this->nodeArray[$index]->getColumnAlias($queryBuilder));
 		}
 	}
 

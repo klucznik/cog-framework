@@ -6,8 +6,8 @@ use Cog\Exceptions\InvalidCastException;
 
 abstract class QQConditionComparison extends QQCondition {
 
-	public $queryNode;
-	public $mixOperand;
+	public QQNode $queryNode;
+	public mixed $operand = null;
 
 	public function __construct(QQNode $queryNode, $operand) {
 		$this->queryNode = $queryNode;
@@ -16,7 +16,7 @@ abstract class QQConditionComparison extends QQCondition {
 		}
 
 		if ($operand instanceof QQNamedValue) {
-			$this->mixOperand = $operand;
+			$this->operand = $operand;
 		} elseif ($operand instanceof QQAssociationNode) {
 			throw new InvalidCastException('Comparison operand cannot be an Association-based QQNode', 3);
 		} elseif ($operand instanceof QQCondition) {
@@ -24,17 +24,17 @@ abstract class QQConditionComparison extends QQCondition {
 		} elseif ($operand instanceof QQClause) {
 			throw new InvalidCastException('Comparison operand cannot be a QQClause', 3);
 		} elseif (!($operand instanceof QQNode)) {
-			$this->mixOperand = $operand;
+			$this->operand = $operand;
 		} else {
 			if (!$operand->isColumnBased()) {
 				throw new InvalidCastException('Unable to cast "' . $operand->getNodeName() . '" table to Column-based QQNode', 3);
 			}
-			$this->mixOperand = $operand;
+			$this->operand = $operand;
 		}
 	}
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . $this->operator . $this->queryNode->getValue($this->mixOperand, $queryBuilder));
+		$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . $this->operator . $this->queryNode->getValue($this->operand, $queryBuilder));
 	}
 }

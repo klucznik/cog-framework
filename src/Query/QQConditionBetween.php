@@ -8,7 +8,7 @@ use Cog\Type;
 
 class QQConditionBetween extends QQConditionComparison {
 
-	protected $mixOperandTwo;
+	protected mixed $operandTwo = null;
 
 	public function __construct(QQNode $queryNode, $strMinValue, $strMaxValue) {
 
@@ -19,10 +19,10 @@ class QQConditionBetween extends QQConditionComparison {
 		}
 
 		if ($strMinValue instanceof QQNamedValue) {
-			$this->mixOperand = $strMinValue;
+			$this->operand = $strMinValue;
 		} else {
 			try {
-				$this->mixOperand = Type::cast($strMinValue, Type::STRING);
+				$this->operand = Type::cast($strMinValue, Type::STRING);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();
@@ -31,10 +31,10 @@ class QQConditionBetween extends QQConditionComparison {
 		}
 
 		if ($strMaxValue instanceof QQNamedValue) {
-			$this->mixOperandTwo = $strMaxValue;
+			$this->operandTwo = $strMaxValue;
 		} else {
 			try {
-				$this->mixOperandTwo = Type::cast($strMaxValue, Type::STRING);
+				$this->operandTwo = Type::cast($strMaxValue, Type::STRING);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();
@@ -45,14 +45,14 @@ class QQConditionBetween extends QQConditionComparison {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$mixOperand = $this->mixOperand;
-		$mixOperandTwo = $this->mixOperandTwo;
-		if ($mixOperand instanceof QQNamedValue) {
-			/** @var QQNamedValue $mixOperand */
-			/** @var QQNamedValue $mixOperandTwo */
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $mixOperand->parameter() . ' AND ' . $mixOperandTwo->parameter());
+		$operand = $this->operand;
+		$operandTwo = $this->operandTwo;
+		if ($operand instanceof QQNamedValue) {
+			/** @var QQNamedValue $operand */
+			/** @var QQNamedValue $operandTwo */
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $operand->parameter() . ' AND ' . $operandTwo->parameter());
 		} else {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $queryBuilder->database->sqlVariable($mixOperand) . ' AND ' . $queryBuilder->database->sqlVariable($mixOperandTwo));
+			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $queryBuilder->database->sqlVariable($operand) . ' AND ' . $queryBuilder->database->sqlVariable($operandTwo));
 		}
 	}
 }
