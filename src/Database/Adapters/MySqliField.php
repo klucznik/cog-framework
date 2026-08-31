@@ -128,9 +128,10 @@ class MySqliField extends Cog\Database\FieldBase {
 				$this->type = FieldType::CHAR;
 				break;
 
-			case MYSQLI_TYPE_INTERVAL:
-				throw new \Exception('MySqli library: MYSQLI_TYPE_INTERVAL is not supported');
-				break;
+			// There is deliberately no MYSQLI_TYPE_INTERVAL case: the constant does
+			// not exist in the mysqli extension, so naming it made the switch throw
+			// "Undefined constant" for every type reaching this far - YEAR and the
+			// unsupported types below included - instead of the message meant for it.
 
 			case MYSQLI_TYPE_NULL:
 				throw new \Exception('MySqli library: MYSQLI_TYPE_NULL is not supported');
