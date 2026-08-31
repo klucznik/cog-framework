@@ -445,8 +445,8 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$toReturn = [];
 
 		if ($columnNameArray) {
-			foreach ($columnNameArray as $strColumnName) {
-				$toReturn[] = $table->columnArray[strtolower($strColumnName)];
+			foreach ($columnNameArray as $columnName) {
+				$toReturn[] = $table->columnArray[strtolower($columnName)];
 			}
 		}
 		return $toReturn;

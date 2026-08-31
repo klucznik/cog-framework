@@ -25,14 +25,14 @@ class QQSubQuerySqlNode extends QQSubQueryNode {
 	}
 
 	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
-		$strSql = $this->sql;
+		$sql = $this->sql;
 
 		$count = count($this->parentQueryNodes);
 		for ($index = 1; $index < $count; $index++) {
 			if (null !== $this->parentQueryNodes[$index]) {
-				$strSql = str_replace('{' . $index . '}', $this->parentQueryNodes[$index]->getColumnAlias($queryBuilder), $strSql);
+				$sql = str_replace('{' . $index . '}', $this->parentQueryNodes[$index]->getColumnAlias($queryBuilder), $sql);
 			}
 		}
-		return '(' . $strSql . ')';
+		return '(' . $sql . ')';
 	}
 }

@@ -241,15 +241,15 @@ class QQ {
 
 		if(is_array($clauses)) {
 			$hasSelects = false;
-			$objSelect = self::select();
-			foreach($clauses as $objClause) {
-				if ($objClause instanceof QQSelect) {
+			$select = self::select();
+			foreach($clauses as $clause) {
+				if ($clause instanceof QQSelect) {
 					$hasSelects = true;
-					$objSelect->merge($objClause);
+					$select->merge($clause);
 				}
 			}
 
-			return $hasSelects ? $objSelect : null;
+			return $hasSelects ? $select : null;
 		}
 
 		return null;

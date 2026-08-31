@@ -326,10 +326,10 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 		$referencedTableName = $this->stripPrefixFromTable($referencedTableName);
 
 		// Starting Point
-		$strToReturn = ConvertNotation::camelCase($tableName);
+		$toReturn = ConvertNotation::camelCase($tableName);
 
 		if ($pluralize) {
-			$strToReturn = Utils::pluralize($strToReturn);
+			$toReturn = Utils::pluralize($toReturn);
 		}
 
 		if ($tableName === $referencedTableName) {
@@ -338,7 +338,7 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 			// If Column Name is only the name of the referenced table, or the name of the referenced table with "_id",
 			// then the object description is simply based off the table name.
 			if ($columnName === $referencedTableName || $columnName === $referencedTableName . '_id') {
-				return sprintf('Child%s', $strToReturn);
+				return sprintf('Child%s', $toReturn);
 			}
 
 			// Rip out trailing "_id" if applicable
@@ -358,17 +358,17 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 
 			// Special case for Parent/Child
 			if ($columnName === 'Parent') {
-				return sprintf('Child%s', $strToReturn);
+				return sprintf('Child%s', $toReturn);
 			}
 
-			return sprintf('%sAs%s', $strToReturn, $columnName);
+			return sprintf('%sAs%s', $toReturn, $columnName);
 
 		}
 
 		// If Column Name is only the name of the referenced table, or the name of the referenced table with "_id",
 		// then the object description is simply based off the table name.
 		if ($columnName === $referencedTableName || $columnName === $referencedTableName . '_id') {
-			return $strToReturn;
+			return $toReturn;
 		}
 
 		// Rip out trailing "_id" if applicable
@@ -384,7 +384,7 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 		$columnName = str_replace('__', '_', $columnName);
 		$columnName = str_replace('__', '_', $columnName);
 
-		return sprintf('%sAs%s', $strToReturn, ConvertNotation::pascalCase($columnName));
+		return sprintf('%sAs%s', $toReturn, ConvertNotation::pascalCase($columnName));
 	}
 
 

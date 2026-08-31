@@ -154,13 +154,13 @@ class TableBase extends Cog\Base {
 			case 'manyToManyReferenceArray':
 				return $this->manyToManyReferenceArray;
 			case 'referenceCount':
-				$intCount = count($this->manyToManyReferenceArray);
+				$count = count($this->manyToManyReferenceArray);
 				foreach ($this->columnArray as $column) {
 					if ($column->reference) {
-						$intCount++;
+						$count++;
 					}
 				}
-				return $intCount;
+				return $count;
 			default:
 				try {
 					return parent::__get($name);

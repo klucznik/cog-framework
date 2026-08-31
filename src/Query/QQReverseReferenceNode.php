@@ -34,9 +34,9 @@ class QQReverseReferenceNode extends QQNode {
 		$this->propertyName = $propertyName;
 	}
 
-	protected function addJoinTable(QueryBuilder $queryBuilder, $joinTableAlias, $parentAlias, ?QQCondition $objJoinCondition = null) {
+	protected function addJoinTable(QueryBuilder $queryBuilder, $joinTableAlias, $parentAlias, ?QQCondition $joinCondition = null) {
 		$queryBuilder->addJoinItem($this->tableName, $joinTableAlias,
-			$parentAlias, $this->parentNode->primaryKey, $this->foreignKey, $objJoinCondition);
+			$parentAlias, $this->parentNode->primaryKey, $this->foreignKey, $joinCondition);
 	}
 
 	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {

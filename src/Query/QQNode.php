@@ -89,7 +89,7 @@ class QQNode extends QQBaseNode {
 		return (\get_class($this) === 'Cog\Query\QQNode' && null === $this->parentNode->type);
 	}
 
-	public function getTable(QueryBuilder $queryBuilder, bool $blnExpandSelection = false, ?QQCondition $objJoinCondition = null, ?QQSelect $objSelect = null) {
+	public function getTable(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
 		// Make sure our Root Tables Match
 		if ($this->rootTableName !== $queryBuilder->rootTableName) {
 			throw new CogException(
@@ -104,15 +104,15 @@ class QQNode extends QQBaseNode {
 
 		// Use the Helper to Iterate Through the Parent Chain and get the Parent Alias
 		try {
-			$parentAlias = $this->parentNode->getColumnAliasHelper($queryBuilder, $blnExpandSelection, $objSelect ? QQ::select() : null);
+			$parentAlias = $this->parentNode->getColumnAliasHelper($queryBuilder, $expandSelection, $select ? QQ::select() : null);
 
 			if ($this->tableName) {
 				$joinTableAlias = $parentAlias . '__' . ($this->alias ?: $this->name);
 				// Next, Join the Appropriate Table
-				$this->addJoinTable($queryBuilder, $joinTableAlias, $parentAlias, $objJoinCondition);
+				$this->addJoinTable($queryBuilder, $joinTableAlias, $parentAlias, $joinCondition);
 
-				if ($blnExpandSelection && !$queryBuilder->suppressSelectExpansion) {
-					call_user_func([$this->classNameQualified, 'getSelectFields'], $queryBuilder, $joinTableAlias, $objSelect);
+				if ($expandSelection && !$queryBuilder->suppressSelectExpansion) {
+					call_user_func([$this->classNameQualified, 'getSelectFields'], $queryBuilder, $joinTableAlias, $select);
 				}
 			}
 		} catch (CogException $exception) {
@@ -123,8 +123,8 @@ class QQNode extends QQBaseNode {
 		return $parentAlias;
 	}
 
-	public function getTableAlias(QueryBuilder $queryBuilder, bool $blnExpandSelection = false, ?QQCondition $objJoinCondition = null, ?QQSelect $objSelect = null) {
-		$table = $this->getTable($queryBuilder, $blnExpandSelection, $objJoinCondition, $objSelect);
+	public function getTableAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+		$table = $this->getTable($queryBuilder, $expandSelection, $joinCondition, $select);
 		return $queryBuilder->getTableAlias($table);
 	}
 
@@ -144,13 +144,13 @@ class QQNode extends QQBaseNode {
 	}
 
 	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
-		$strTableAlias = $this->getTableAlias($queryBuilder, $expandSelection, $joinCondition, $select);
+		$tableAlias = $this->getTableAlias($queryBuilder, $expandSelection, $joinCondition, $select);
 		// Pull the Begin and End Escape Identifiers from the Database Adapter
-		return $this->makeColumnAlias($queryBuilder, $strTableAlias);
+		return $this->makeColumnAlias($queryBuilder, $tableAlias);
 	}
 
-	protected function addJoinTable(QueryBuilder $queryBuilder, $joinTableAlias, $parentAlias, ?QQCondition $objJoinCondition = null) {
-		$queryBuilder->addJoinItem($this->tableName, $joinTableAlias, $parentAlias, $this->name, $this->primaryKey, $objJoinCondition);
+	protected function addJoinTable(QueryBuilder $queryBuilder, $joinTableAlias, $parentAlias, ?QQCondition $joinCondition = null) {
+		$queryBuilder->addJoinItem($this->tableName, $joinTableAlias, $parentAlias, $this->name, $this->primaryKey, $joinCondition);
 	}
 
 	public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null) {

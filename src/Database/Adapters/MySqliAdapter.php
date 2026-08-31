@@ -630,9 +630,9 @@ class MySqliAdapter extends Cog\Database\Base {
 
 			$timeInfo = [];
 			$queryTime = 0;
-			while ($mixRow = $profilingResult->fetchRow()) {
-				$timeInfo[$mixRow[0]] = $mixRow[1];
-				$queryTime += Type::cast($mixRow[1], Type::FLOAT);
+			while ($row = $profilingResult->fetchRow()) {
+				$timeInfo[$row[0]] = $row[1];
+				$queryTime += Type::cast($row[1], Type::FLOAT);
 			}
 			$timeInfo['total time'] = $queryTime;
 
