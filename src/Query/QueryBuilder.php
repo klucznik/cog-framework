@@ -417,7 +417,7 @@ class QueryBuilder extends Cog\Base {
 	}
 
 	/** @inheritDoc */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'database':
 				return $this->database;

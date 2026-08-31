@@ -127,7 +127,7 @@ class ManyToManyReference extends Cog\Base {
 	 * @return mixed
 	 * @throws CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'keyName':
 				return $this->keyName;

@@ -257,7 +257,7 @@ abstract class CodeGen extends Base {
 	 * @return mixed
 	 * @throws CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'errors':
 				return $this->errors;

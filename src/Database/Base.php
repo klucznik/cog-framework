@@ -133,7 +133,7 @@ abstract class Base extends Cog\Base {
 	 */
 	abstract public function escapeString(string $text): string;
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'escapeIdentifierBegin':
 				return $this->escapeIdentifierBegin;

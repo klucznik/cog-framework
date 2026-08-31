@@ -1062,7 +1062,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	 * @return mixed
 	 * @throws CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'tableArray':
 				return $this->tableArray;

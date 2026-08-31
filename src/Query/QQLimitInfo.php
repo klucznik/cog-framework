@@ -47,7 +47,7 @@ class QQLimitInfo extends QQClause {
 		return 'Cog\Query\QQLimitInfo Clause';
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'maxRowCount':
 				return $this->maxRowCount;

@@ -5,7 +5,7 @@
 /*
 	protected $strSomeNewProperty;
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'SomeNewProperty': return $this->strSomeNewProperty;
 

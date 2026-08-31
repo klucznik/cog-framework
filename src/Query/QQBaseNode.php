@@ -70,7 +70,7 @@ abstract class QQBaseNode extends Cog\Base {
 	 * @return mixed
 	 * @throws \Cog\Exceptions\CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'parentNode':
 				return $this->parentNode;

@@ -19,7 +19,7 @@ final class MockedBaseObject extends Base {
 	 * @return mixed
 	 * @throws CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'MagicProperty':
 				return $this->property;

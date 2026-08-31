@@ -13,7 +13,7 @@ abstract class DatabaseExceptionBase extends Cog\Exceptions\CogException {
 	protected int $errorNumber;
 	protected string $query;
 
-	public function __get(string $name) {
+	public function __get(string $name): mixed {
 		switch ($name) {
 			case 'errorNumber':
 				return $this->errorNumber;

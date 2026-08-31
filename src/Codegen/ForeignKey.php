@@ -27,7 +27,7 @@ class ForeignKey extends Cog\Base {
 		$this->referenceColumnNameArray = $referenceColumnNameArray;
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'keyName':
 				return $this->keyName;

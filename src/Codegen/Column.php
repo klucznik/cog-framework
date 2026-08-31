@@ -149,7 +149,7 @@ class Column extends Base {
 	 * @return mixed
 	 * @throws CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'ownerTable':
 				return $this->ownerTable;

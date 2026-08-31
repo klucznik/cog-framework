@@ -71,7 +71,7 @@ class QQNode<?= $table->className ?> extends QQNode {
 		parent::__construct($name, $propertyName, $type, $parentNode);
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 <?php foreach ($table->columnArray as $column) { ?>
 			case '<?= $column->propertyName ?>':

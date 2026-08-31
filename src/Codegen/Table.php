@@ -24,7 +24,7 @@ class Table extends TableBase {
 	 * @throws CogException
 	 *
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'ownerDbIndex':
 				return $this->ownerDbIndex;

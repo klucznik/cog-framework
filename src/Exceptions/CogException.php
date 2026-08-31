@@ -115,7 +115,7 @@ class CogException extends Exception {
 	 * @return array|int|mixed
 	 * @throws UndefinedPropertyException
 	 */
-	public function __get(string $name) {
+	public function __get(string $name): mixed {
 		switch ($name) {
 			case 'offset': return $this->offset;
 			// Arguments are left out: var_export() cannot render the circular
@@ -144,7 +144,7 @@ class CogException extends Exception {
 	 * @param string $name
 	 * @return bool
 	 */
-	public function __isset(string $name) {
+	public function __isset(string $name): bool {
 		return match ($name) {
 			'offset' => $this->offset !== null,
 			'backTrace', 'traceArray' => true,

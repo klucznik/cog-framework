@@ -117,7 +117,7 @@ class MySqliAdapter extends Cog\Database\Base {
 		}
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'affectedRows':
 				return $this->mySqli->affected_rows;

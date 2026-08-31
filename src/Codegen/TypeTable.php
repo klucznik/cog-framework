@@ -50,7 +50,7 @@ class TypeTable extends TableBase {
 	 * @return mixed
 	 * @throws CogException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'nameArray':
 				return $this->nameArray;

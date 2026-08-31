@@ -37,7 +37,7 @@ class QQNode<?= $table->className ?><?= $reference->objectDescriptionUppercase ?
 		parent::__construct($parentNode);
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case '<?= $reference->oppositePropertyName ?>':
 				return new QQNode('<?= $reference->oppositeColumn ?>', '<?= $reference->oppositePropertyName ?>', '<?= $reference->oppositeVariableType ?>', $this);

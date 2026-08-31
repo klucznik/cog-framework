@@ -22,7 +22,7 @@ abstract class Base {
 	 * @return mixed the returned property
 	 * @throws UndefinedPropertyException
 	 */
-	public function __get($name) {
+	public function __get($name): mixed {
 		try {
 			$reflection = new ReflectionClass($this);
 			throw new UndefinedPropertyException('GET', $reflection->getName(), $name);

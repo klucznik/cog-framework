@@ -65,7 +65,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 		}
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'affectedRows':
 				return $this->lastResult === null ? 0 : pg_affected_rows($this->lastResult);

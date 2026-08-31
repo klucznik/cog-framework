@@ -39,7 +39,7 @@ abstract class FieldBase extends Cog\Base {
 
 	protected string $type;
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'name':
 				return $this->name;

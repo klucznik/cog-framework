@@ -42,7 +42,7 @@ abstract class ResultBase extends Cog\Base {
 
 	abstract public function close(): void;
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 			case 'queryBuilder':
 				return $this->queryBuilder;

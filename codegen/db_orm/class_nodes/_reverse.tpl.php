@@ -45,7 +45,7 @@ class QQReverseReferenceNode<?= $table->className ?> extends QQReverseReferenceN
 		parent::__construct($parentNode, $name, $type, $foreignKey, $propertyName);
 	}
 
-	public function __get($name) {
+	public function __get($name): mixed {
 		switch ($name) {
 <?php foreach ($table->columnArray as $column) { ?>
 			case '<?= $column->propertyName ?>':
