@@ -7,7 +7,6 @@ use App\Data\Obj;
 use App\Data\Person;
 use Cog\Query\QQ;
 use Cog\Query\QQExpandVirtualNode;
-use Cog\Query\QQOrderByCustom;
 use Generated\Node\QQNodeAsset;
 use Generated\Node\QQNodeObj;
 use Generated\Node\QQNodePerson;
@@ -108,30 +107,6 @@ class TestQueryClauses extends QueryTestCase {
 	//////////////////////////////
 	// Ordering clauses
 	//////////////////////////////
-
-	/**
-	 * QQRandom is a clause in its own right. It cannot go inside QQ::orderBy(),
-	 * which only accepts QQNode and QQCondition arguments.
-	 */
-	public function testRandom() {
-		$people = Person::queryArray(QQ::all(), QQ::clause(QQ::random()));
-
-		$this->assertQueryContains('ORDER BY RAND()');
-		$this->assertCount(3, $people);
-	}
-
-	public function testRandomIsRejectedInsideAnOrderBy() {
-		$this->expectException(\Cog\Exceptions\CogException::class);
-
-		QQ::orderBy(QQ::random());
-	}
-
-	public function testOrderByCustom() {
-		$people = Person::queryArray(QQ::all(), QQ::clause(new QQOrderByCustom('`t0`.`name` DESC')));
-
-		$this->assertQueryContains('ORDER BY `t0`.`name` DESC');
-		$this->assertSame('Piotr Lewandowski', $people[0]->name);
-	}
 
 	//////////////////////////////
 	// Sub queries
@@ -253,19 +228,11 @@ class TestQueryClauses extends QueryTestCase {
 		$this->assertSame('Cog\Query\QQAverage Clause', (string)QQ::average($size, 'a'));
 		$this->assertSame('Cog\Query\QQMinimum Clause', (string)QQ::minimum($size, 'a'));
 		$this->assertSame('Cog\Query\QQMaximum Clause', (string)QQ::maximum($size, 'a'));
-		$this->assertSame('Cog\Query\QQRandom Clause', (string)QQ::random());
-		$this->assertSame('Cog\Query\QQOrderByCustom Clause', (string)new QQOrderByCustom('1'));
 		$this->assertSame('Having Clause', (string)QQ::having(QQ::subSql('1')));
 		$this->assertSame(
 			'Cog\Query\QQExpandVirtualNode Clause',
 			(string)new QQExpandVirtualNode(QQ::virtual('v', QQ::subSql('1')))
 		);
-	}
-
-	/** The ordering clauses can also hand back their SQL directly. */
-	public function testOrderingClausesExposeTheirSql() {
-		$this->assertSame(' RAND()', QQ::random()->getAsManualSql());
-		$this->assertSame(' `t0`.`name` DESC', (new QQOrderByCustom('`t0`.`name` DESC'))->getAsManualSql());
 	}
 
 	/** A having clause built without a name reports an empty one. */

@@ -229,10 +229,6 @@ class QQ {
 		return new QQDistinct();
 	}
 
-	public static function random() {
-		return new QQRandom();
-	}
-
 	/**
 	 * @param QQClause[]|QQClause|null $clauses
 	 * @return QQSelect Cog\Query\QQSelect clause containing all the nodes from all the QQSelect clauses
