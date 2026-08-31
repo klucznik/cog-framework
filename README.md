@@ -61,6 +61,21 @@ an autoloader for the resulting `Generated\` and `App\` classes. `TestCodegen`
 runs first and reports any generation failure; the rest of the suite can rely on
 the generated ORM layer being present.
 
+### PostgreSQL
+
+`TestPostgreSql` exercises the PostgreSQL adapter against a parallel fixture. It
+is optional - every test in it skips when the `pgsql` extension, the server or
+the fixture is missing, so the suite stays green without one. To run it, load the
+schema and let the `COG_TEST_PG_*` variables point at it:
+
+```bash
+createdb cog_framework_test && psql -d cog_framework_test -f src/Test/cog_framework_test_pg.sql
+```
+
+The adapter is not at parity with the MySQL one: PostgreSQL has no self-updating
+timestamp column, so the code generator emits no optimistic locking for a
+PostgreSQL schema. See the header of `src/Test/cog_framework_test_pg.sql`.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

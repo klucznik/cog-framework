@@ -31,6 +31,7 @@
 			<file>src/Test/TestKernel.php</file>
 			<file>src/Test/TestNamespaceUtil.php</file>
 			<file>src/Test/TestPath.php</file>
+			<file>src/Test/TestPostgreSql.php</file>
 			<file>src/Test/TestQuery.php</file>
 			<file>src/Test/TestQueryBuilder.php</file>
 			<file>src/Test/TestQueryClauses.php</file>
@@ -51,6 +52,15 @@
 		<env name="COG_TEST_DB_NAME" value="cog_framework_test"/>
 		<env name="COG_TEST_DB_USER" value="root"/>
 		<env name="COG_TEST_DB_PASSWORD" value=""/>
+		<!-- The PostgreSQL adapter is exercised against a second, optional
+			 database (src/Test/cog_framework_test_pg.sql). TestPostgreSql skips
+			 itself when the server or the fixture is missing, so these only
+			 matter if you work on that adapter. COG_TEST_PG_USER defaults to the
+			 current shell user, which is what a stock Homebrew install creates. -->
+		<env name="COG_TEST_PG_SERVER" value="127.0.0.1"/>
+		<env name="COG_TEST_PG_PORT" value="5432"/>
+		<env name="COG_TEST_PG_NAME" value="cog_framework_test"/>
+		<env name="COG_TEST_PG_PASSWORD" value=""/>
 	</php>
 	<source>
 		<include>
