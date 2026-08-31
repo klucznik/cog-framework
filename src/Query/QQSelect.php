@@ -11,18 +11,18 @@ class QQSelect extends QQClause {
 		$this->nodeArray = $nodeArray;
 	}
 
-	public function addSelectItems(QueryBuilder $objBuilder, $strTableName, $strAliasPrefix) {
+	public function addSelectItems(QueryBuilder $builder, $tableName, $aliasPrefix) {
 		foreach ($this->nodeArray as $node) {
-			$objBuilder->addSelectItem($strTableName, $node->name, $strAliasPrefix . $node->name);
+			$builder->addSelectItem($tableName, $node->name, $aliasPrefix . $node->name);
 		}
 	}
 
-	public function merge(?QQSelect $objSelect = null) {
-		if ($objSelect) {
-			foreach ($objSelect->nodeArray as $node) {
+	public function merge(?QQSelect $select = null) {
+		if ($select) {
+			foreach ($select->nodeArray as $node) {
 				$this->nodeArray[] = $node;
 			}
-			if ($objSelect->skipPrimaryKey) {
+			if ($select->skipPrimaryKey) {
 				$this->skipPrimaryKey = true;
 			}
 		}

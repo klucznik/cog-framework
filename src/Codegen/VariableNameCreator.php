@@ -56,8 +56,8 @@ abstract class VariableNameCreator {
 			$delimiter = null;
 		}
 
-		if ($delimiter && $column->comment && ($strLabelText = strstr($column->comment, $delimiter, true))) {
-			return str_replace("'", "\\'", $strLabelText);
+		if ($delimiter && $column->comment && ($labelText = strstr($column->comment, $delimiter, true))) {
+			return str_replace("'", "\\'", $labelText);
 		}
 
 		return ConvertNotation::wordsFromCamelCase($column->propertyName);

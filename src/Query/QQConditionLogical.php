@@ -9,23 +9,23 @@ abstract class QQConditionLogical extends QQCondition {
 	/** @var QQCondition[] */
 	protected array $conditionArray;
 
-	public function __construct($mixParameterArray) {
-		$this->conditionArray = $this->collapseConditions($mixParameterArray);
+	public function __construct($parameterArray) {
+		$this->conditionArray = $this->collapseConditions($parameterArray);
 	}
 
 	/**
-	 * @param $mixParameterArray
+	 * @param $parameterArray
 	 * @return QQCondition[]
 	 * @throws \Cog\Exceptions\CogException
 	 */
-	protected function collapseConditions($mixParameterArray): array {
+	protected function collapseConditions($parameterArray): array {
 
 		$conditionArray = [];
-		foreach ($mixParameterArray as $mixParameter) {
-			if (is_array($mixParameter)) {
-				$conditionArray = array_merge($conditionArray, $mixParameter);
+		foreach ($parameterArray as $parameter) {
+			if (is_array($parameter)) {
+				$conditionArray = array_merge($conditionArray, $parameter);
 			} else {
-				$conditionArray[] = $mixParameter;
+				$conditionArray[] = $parameter;
 			}
 		}
 

@@ -239,9 +239,9 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		// Table Type Identifiers
 		$typeTableSuffixList = Utils::lookupSetting($settingsXml, 'typeTableIdentifier', 'suffix');
 		$typeTableSuffixArray = explode(',', $typeTableSuffixList);
-		foreach ($typeTableSuffixArray as $strTypeTableSuffix) {
-			$this->typeTableSuffixArray[] = trim($strTypeTableSuffix);
-			$this->typeTableSuffixLengthArray[] = strlen(trim($strTypeTableSuffix));
+		foreach ($typeTableSuffixArray as $typeTableSuffix) {
+			$this->typeTableSuffixArray[] = trim($typeTableSuffix);
+			$this->typeTableSuffixLengthArray[] = strlen(trim($typeTableSuffix));
 		}
 		$this->associationTableSuffix = Utils::lookupSetting($settingsXml, 'associationTableIdentifier', 'suffix');
 		$this->associationTableSuffixLength = strlen($this->associationTableSuffix);
@@ -322,8 +322,8 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 				// Check to see if this table name exists anywhere else yet, and warn if it is
 				foreach (CodeGenRunner::$codegenArray as $codegen) {
 					if ($codegen instanceof self) {
-						foreach ($codegen->tableArray as $objPossibleDuplicate) {
-							if (strtolower($objPossibleDuplicate->name) === strtolower($tableName)) {
+						foreach ($codegen->tableArray as $possibleDuplicate) {
+							if (strtolower($possibleDuplicate->name) === strtolower($tableName)) {
 								$this->errors .= 'Duplicate Table Name Used: ' . $tableName . "\r\n";
 							}
 						}
@@ -382,8 +382,8 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 		// Analyze All the Association Tables
 		if ($this->associationTableNameArray) {
-			foreach ($this->associationTableNameArray as $strAssociationTableName) {
-				$this->analyzeAssociationTable($strAssociationTableName);
+			foreach ($this->associationTableNameArray as $associationTableName) {
+				$this->analyzeAssociationTable($associationTableName);
 			}
 		}
 
@@ -663,16 +663,16 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 				$extraPropertyArray[$row[0]] = [];
 				$size = count($row);
 				for ($i = 2; $i < $size; $i++) {
-					$strFieldName = $this->typeNameFromColumnName($fieldArray[$i]->name);
-					$extraFields[$i - 2] = $strFieldName;
-					$extraPropertyArray[$row[0]][$strFieldName] = $row[$i];
+					$fieldName = $this->typeNameFromColumnName($fieldArray[$i]->name);
+					$extraFields[$i - 2] = $fieldName;
+					$extraPropertyArray[$row[0]][$fieldName] = $row[$i];
 				}
 			}
 
-			foreach ($reservedWords as $strReservedWord) {
-				if (strtolower(trim($tokenArray[$row[0]])) === $strReservedWord) {
+			foreach ($reservedWords as $reservedWord) {
+				if (strtolower(trim($tokenArray[$row[0]])) === $reservedWord) {
 					$this->warnings .= sprintf("Warning: TypeTable %s contains a type name which is a reserved word: %s.  Appended _ to the beginning of it.\r\n",
-						$typeTable->name, $strReservedWord);
+						$typeTable->name, $reservedWord);
 					$tokenArray[$row[0]] = '_' . $tokenArray[$row[0]];
 				}
 			}
@@ -972,8 +972,8 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 			}
 
 			$tableNameToTest = strtolower(trim($table->name));
-			foreach ($reservedWords as $strReservedWord) {
-				if ($tableNameToTest === $strReservedWord) {
+			foreach ($reservedWords as $reservedWord) {
+				if ($tableNameToTest === $reservedWord) {
 					$this->errors .= sprintf("Table '%s' has a table name which is a PHP reserved word.\r\n", $table->name);
 					unset($this->tableArray[strtolower($table->name)]);
 					return;

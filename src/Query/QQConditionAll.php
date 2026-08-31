@@ -6,8 +6,8 @@ use Cog;
 
 class QQConditionAll extends QQCondition {
 
-	public function __construct($mixParameterArray) {
-		if (count($mixParameterArray)) {
+	public function __construct($parameterArray) {
+		if (count($parameterArray)) {
 			throw new Cog\Exceptions\CogException('All clause takes in no parameters', 3);
 		}
 	}

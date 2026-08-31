@@ -8,17 +8,17 @@ use Cog\Type;
 
 class QQConditionLike extends QQConditionComparison {
 
-	public function __construct(QQNode $queryNode, $strValue) {
+	public function __construct(QQNode $queryNode, $value) {
 		$this->queryNode = $queryNode;
 		if (!$queryNode->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
-		if ($strValue instanceof QQNamedValue) {
-			$this->operand = $strValue;
+		if ($value instanceof QQNamedValue) {
+			$this->operand = $value;
 		} else {
 			try {
-				$this->operand = Type::cast($strValue, Type::STRING);
+				$this->operand = Type::cast($value, Type::STRING);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();

@@ -91,8 +91,8 @@ class TableBase extends Cog\Base {
 
 	public function hasImmediateArrayExpansions(): bool {
 		$count = count($this->manyToManyReferenceArray);
-		foreach ($this->reverseReferenceArray as $objReverseReference) {
-			if (!$objReverseReference->unique) {
+		foreach ($this->reverseReferenceArray as $reverseReference) {
+			if (!$reverseReference->unique) {
 				$count++;
 			}
 		}

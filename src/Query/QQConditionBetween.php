@@ -10,7 +10,7 @@ class QQConditionBetween extends QQConditionComparison {
 
 	protected mixed $operandTwo = null;
 
-	public function __construct(QQNode $queryNode, $strMinValue, $strMaxValue) {
+	public function __construct(QQNode $queryNode, $minValue, $maxValue) {
 
 		$this->queryNode = $queryNode;
 
@@ -18,11 +18,11 @@ class QQConditionBetween extends QQConditionComparison {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
-		if ($strMinValue instanceof QQNamedValue) {
-			$this->operand = $strMinValue;
+		if ($minValue instanceof QQNamedValue) {
+			$this->operand = $minValue;
 		} else {
 			try {
-				$this->operand = Type::cast($strMinValue, Type::STRING);
+				$this->operand = Type::cast($minValue, Type::STRING);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();
@@ -30,11 +30,11 @@ class QQConditionBetween extends QQConditionComparison {
 			}
 		}
 
-		if ($strMaxValue instanceof QQNamedValue) {
-			$this->operandTwo = $strMaxValue;
+		if ($maxValue instanceof QQNamedValue) {
+			$this->operandTwo = $maxValue;
 		} else {
 			try {
-				$this->operandTwo = Type::cast($strMaxValue, Type::STRING);
+				$this->operandTwo = Type::cast($maxValue, Type::STRING);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();

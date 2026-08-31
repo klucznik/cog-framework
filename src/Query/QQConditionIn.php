@@ -8,19 +8,19 @@ use Cog\Type;
 
 class QQConditionIn extends QQConditionComparison {
 
-	public function __construct(QQNode $queryNode, $mixValuesArray) {
+	public function __construct(QQNode $queryNode, $valuesArray) {
 		$this->queryNode = $queryNode;
 		if (!$queryNode->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
-		if ($mixValuesArray instanceof QQNamedValue) {
-			$this->operand = $mixValuesArray;
-		} elseif ($mixValuesArray instanceof QQSubQueryNode) {
-			$this->operand = $mixValuesArray;
+		if ($valuesArray instanceof QQNamedValue) {
+			$this->operand = $valuesArray;
+		} elseif ($valuesArray instanceof QQSubQueryNode) {
+			$this->operand = $valuesArray;
 		} else {
 			try {
-				$this->operand = Type::cast($mixValuesArray, Type::ARRAY);
+				$this->operand = Type::cast($valuesArray, Type::ARRAY);
 			} catch (Cog\Exceptions\CogException $exception) {
 				$exception->incrementOffset();
 				$exception->incrementOffset();
@@ -39,8 +39,8 @@ class QQConditionIn extends QQConditionComparison {
 			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN ' . $operand->getColumnAlias($queryBuilder));
 		} else {
 			$parameters = [];
-			foreach ($operand as $mixParameter) {
-				$parameters[] = $queryBuilder->database->sqlVariable($mixParameter);
+			foreach ($operand as $parameter) {
+				$parameters[] = $queryBuilder->database->sqlVariable($parameter);
 			}
 			if (\count($parameters)) {
 				$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' IN (' . implode(',', $parameters) . ')');

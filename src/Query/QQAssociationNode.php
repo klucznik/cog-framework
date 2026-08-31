@@ -49,7 +49,7 @@ class QQAssociationNode extends QQBaseNode {
 		// Next, Expand the Selection Fields for this Table (if applicable)
 		// TODO: If/when we add assn-based attributes, possibly add selectionfields addition here?
 //				if ($blnExpandSelection) {
-//					call_user_func([$this->strClassName, 'GetSelectFields'], $objBuilder, $parentAlias . '__' . $this->strName);
+//					call_user_func([$this->strClassName, 'GetSelectFields'], $builder, $parentAlias . '__' . $this->strName);
 //				}
 
 		// Return the Parent Alias

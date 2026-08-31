@@ -28,9 +28,9 @@ class QQSubQuerySqlNode extends QQSubQueryNode {
 		$strSql = $this->sql;
 
 		$count = count($this->parentQueryNodes);
-		for ($intIndex = 1; $intIndex < $count; $intIndex++) {
-			if (null !== $this->parentQueryNodes[$intIndex]) {
-				$strSql = str_replace('{' . $intIndex . '}', $this->parentQueryNodes[$intIndex]->getColumnAlias($queryBuilder), $strSql);
+		for ($index = 1; $index < $count; $index++) {
+			if (null !== $this->parentQueryNodes[$index]) {
+				$strSql = str_replace('{' . $index . '}', $this->parentQueryNodes[$index]->getColumnAlias($queryBuilder), $strSql);
 			}
 		}
 		return '(' . $strSql . ')';

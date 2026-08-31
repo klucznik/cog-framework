@@ -147,11 +147,11 @@ abstract class Type {
 				settype($item, $type);
 
 				// Check to make sure the value hasn't changed significantly
-				$mixTest = $item;
-				settype($mixTest, gettype($original));
+				$test = $item;
+				settype($test, gettype($original));
 
 				// Has it?
-				if ($mixTest != $original) {
+				if ($test != $original) {
 					// Yes -- therefore this is an invalid cast
 					throw new InvalidCastException(sprintf('Unable to cast %s value to %s: %s', $itemType, $type, $original));
 				}

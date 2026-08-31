@@ -11,24 +11,24 @@ class QQGroupBy extends QQClause {
 	protected array $nodeArray;
 
 	/** @inheritdoc */
-	public function __construct($mixParameterArray) {
-		$this->nodeArray = $this->collapseNodes($mixParameterArray);
+	public function __construct($parameterArray) {
+		$this->nodeArray = $this->collapseNodes($parameterArray);
 	}
 
 	/**
-	 * @param $mixParameterArray
+	 * @param $parameterArray
 	 * @return array
 	 * @throws \Cog\Exceptions\CogException
 	 * @throws InvalidCastException
 	 */
-	protected function collapseNodes($mixParameterArray): array {
+	protected function collapseNodes($parameterArray): array {
 
 		$nodeArray = [];
-		foreach ($mixParameterArray as $mixParameter) {
-			if (is_array($mixParameter)) {
-				$nodeArray = array_merge($nodeArray, $mixParameter);
+		foreach ($parameterArray as $parameter) {
+			if (is_array($parameter)) {
+				$nodeArray = array_merge($nodeArray, $parameter);
 			} else {
-				$nodeArray[] = $mixParameter;
+				$nodeArray[] = $parameter;
 			}
 		}
 

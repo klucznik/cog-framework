@@ -14,8 +14,8 @@ class QQConditionNotIn extends QQConditionIn {
 			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT IN ' . $operand->getColumnAlias($queryBuilder));
 		} else {
 			$parameters = [];
-			foreach ($operand as $mixParameter) {
-				$parameters[] = $queryBuilder->database->sqlVariable($mixParameter);
+			foreach ($operand as $parameter) {
+				$parameters[] = $queryBuilder->database->sqlVariable($parameter);
 			}
 			if (\count($parameters)) {
 				$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' NOT IN (' . implode(',', $parameters) . ')');

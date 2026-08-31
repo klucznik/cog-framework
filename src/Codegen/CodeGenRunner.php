@@ -44,15 +44,15 @@ abstract class CodeGenRunner extends Base {
 	 * @return string
 	 */
 	public static function getSettingsXml(): string {
-		$strCrLf = "\r\n";
+		$crLf = "\r\n";
 
-		$toReturn = sprintf('<codegen>%s', $strCrLf);
-		$toReturn .= sprintf('	<name application="%s"/>%s', self::$applicationName, $strCrLf);
-		$toReturn .= sprintf('	<dataSources>%s', $strCrLf);
+		$toReturn = sprintf('<codegen>%s', $crLf);
+		$toReturn .= sprintf('	<name application="%s"/>%s', self::$applicationName, $crLf);
+		$toReturn .= sprintf('	<dataSources>%s', $crLf);
 		foreach (self::$codegenArray as $codegen) {
-			$toReturn .= $strCrLf . $codegen->getConfigXml();
+			$toReturn .= $crLf . $codegen->getConfigXml();
 		}
-		$toReturn .= sprintf('%s	</dataSources>%s', $strCrLf, $strCrLf);
+		$toReturn .= sprintf('%s	</dataSources>%s', $crLf, $crLf);
 		$toReturn .= '</codegen>';
 
 		return $toReturn;

@@ -10,8 +10,8 @@ class QQHavingClause extends QQClause {
 
 	protected QQSubQueryNode $node;
 
-	public function __construct(QQSubQueryNode $objSubQueryDefinition) {
-		$this->node = $objSubQueryDefinition;
+	public function __construct(QQSubQueryNode $subQueryDefinition) {
+		$this->node = $subQueryDefinition;
 	}
 
 	public function getAttributeName() {
