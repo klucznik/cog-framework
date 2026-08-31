@@ -65,7 +65,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
  */
 abstract class BaseApplication extends Base {
 
-	public const string FRAMEWORK_VERSION = '0.9.0';
+	public const string FRAMEWORK_VERSION = '0.9.1';
 
 	protected static BaseConfig $config;
 
