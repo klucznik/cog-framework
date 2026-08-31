@@ -105,9 +105,9 @@ foreach ($typeTable->tokenArray as $key => $value) { ?>
 	 * @return string
 	 * @throws \Cog\Exceptions\CogException
 	 */
-	public static function To<?= $strColName ?>($<?= $typeTable->classNameCamelCase ?>Id): string {
-		if (\array_key_exists($<?= $typeTable->classNameCamelCase ?>Id, <?= $typeTable->className ?>::$ExtraColumnValuesArray))
-			return <?= $typeTable->className ?>::$ExtraColumnValuesArray[$<?= $typeTable->className ?>Id]['<?= $strColName ?>'];
+	public static function To<?= ucfirst($strColName) ?>($<?= $typeTable->classNameCamelCase ?>Id): string {
+		if (\array_key_exists($<?= $typeTable->classNameCamelCase ?>Id, self::$ExtraColumnValuesArray))
+			return self::$ExtraColumnValuesArray[$<?= $typeTable->classNameCamelCase ?>Id]['<?= $strColName ?>'];
 		else
 			throw new \Cog\Exceptions\CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
 	}
