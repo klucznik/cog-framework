@@ -285,4 +285,41 @@ class QQ {
 			default => self::andCondition($conditions),
 		};
 	}
+
+	/**
+	 * The subset of a list query's clauses that belongs in the matching count query.
+	 *
+	 * count answers "how many rows match", which is what a client pages on - so the page window
+	 * has to come off, or a request for 2 rows per page is told there are 2 rows in total and the
+	 * paging collapses to one page. distinct has to stay: a condition that joins a reverse
+	 * reference multiplies rows, and a count that disagrees with the list it describes is worse
+	 * than either.
+	 *
+	 * Ordering goes for two reasons, neither of them cosmetic. QueryBuilder::getStatement() emits
+	 * ORDER BY whether or not the count-only flag is set, and `SELECT COUNT(*) ... ORDER BY col`
+	 * is an error under ONLY_FULL_GROUP_BY. It can also change the count outright: ordering on a
+	 * node reached through a reverse reference joins that table, multiplying rows exactly as
+	 * `expandAsArray` does below. Sort paths usually arrive from the client, so both are
+	 * reachable rather than theoretical.
+	 *
+	 * `expandAsArray` goes for the same reason as the page window: it is eager loading, not
+	 * matching. Its join multiplies the base row per child - a page with 5 tags counted 5 times -
+	 * so leaving it in reports a total no list can ever contain. A condition on the same reverse
+	 * reference still joins on its own, so dropping the clause cannot change which rows match.
+	 *
+	 * @param QQClause[]|QQClause|null $clauses
+	 * @return QQClause[]
+	 */
+	public static function clausesForCount(QQClause|array|null $clauses): array {
+		if ($clauses === null) {
+			return [];
+		}
+
+		return array_values(array_filter(
+			is_array($clauses) ? $clauses : [$clauses],
+			static fn($clause) => !$clause instanceof QQLimitInfo
+				&& !$clause instanceof QQOrderBy
+				&& !$clause instanceof QQExpandAsArray
+		));
+	}
 }

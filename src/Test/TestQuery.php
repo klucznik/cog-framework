@@ -13,6 +13,7 @@ use Cog\Query\QQ;
 use Cog\Query\QQConditionAll;
 use Cog\Query\QQConditionAnd;
 use Cog\Query\QQConditionEqual;
+use Cog\Query\QQDistinct;
 use Cog\Util\Utils;
 use Generated\Node\QQNodeAsset;
 use Generated\Node\QQNodeBlogPost;
@@ -262,6 +263,36 @@ class TestQuery extends QueryTestCase {
 		$people = Person::queryArray(QQ::conditionsArrayHelper($conditions));
 
 		$this->assertEquals(['Piotr Lewandowski'], self::pluck($people, 'name'));
+	}
+
+	public function testClausesForCountKeepsOnlyWhatChangesTheCount() {
+		$kept = QQ::clausesForCount([
+			QQ::distinct(),
+			QQ::limitInfo(2),
+			QQ::orderBy($this->person()->name),
+			QQ::expandAsArray($this->person()->blogPostAsAuthor),
+		]);
+
+		$this->assertCount(1, $kept);
+		$this->assertInstanceOf(QQDistinct::class, $kept[0]);
+
+		// a lone clause and no clauses at all are both normalised to a list
+		$this->assertSame([], QQ::clausesForCount(null));
+		$this->assertSame([], QQ::clausesForCount(QQ::limitInfo(2)));
+		$this->assertCount(1, QQ::clausesForCount(QQ::distinct()));
+	}
+
+	/**
+	 * The reason ordering is dropped rather than merely tidied away: an order by on a node reached
+	 * through a reverse reference joins that table, and the join multiplies the base row per child.
+	 * Sort paths generally arrive from the client, so this is reachable rather than theoretical.
+	 */
+	public function testClausesForCountDropsAnOrderByThatWouldMultiplyRows() {
+		$orderByReverseReference = [QQ::orderBy((new QQNodePerson)->blogPostAsAuthor->title)];
+
+		// 3 people, but person 1 wrote both blog posts
+		$this->assertSame(4, Person::queryCount(QQ::all(), $orderByReverseReference));
+		$this->assertSame(3, Person::queryCount(QQ::all(), QQ::clausesForCount($orderByReverseReference)));
 	}
 
 	public function testClauseFactory() {
