@@ -40,12 +40,9 @@ final class MockedBaseObject extends Base {
 				return true;
 
 			default:
-				try {
-					return parent::__isset($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				// Base declares no __isset: an unknown magic property is simply not
+				// set, which is what lets ?? fall through to __get.
+				return false;
 		}
 	}
 

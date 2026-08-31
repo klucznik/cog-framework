@@ -51,10 +51,6 @@ abstract class Base {
 		return null; // @codeCoverageIgnore
 	}
 
-	public function __isset($name) {
-		return false;
-	}
-
 	/**
 	 * This allows you to set any properties, given by a name-value pair list in $overrideArray.
 	 *

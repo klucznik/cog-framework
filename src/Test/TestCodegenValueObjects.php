@@ -203,6 +203,26 @@ class TestCodegenValueObjects extends TestCase {
 		$this->assertFalse($index->primaryKey);
 	}
 
+	/**
+	 * Null-coalescing reaches __get on a real Base subclass.
+	 *
+	 * These value objects declare __get and no __isset, which is what lets ?? fall
+	 * through. Base used to declare an __isset() returning false unconditionally,
+	 * and PHP consults that before __get - so `$index->keyName ?? $default` handed
+	 * back the default even with a key name set, silently. Removing it fixed every
+	 * Base subclass at once.
+	 *
+	 * isset() and empty() still report a magic property as unset; they do not
+	 * consult __get. That is a visible false answer rather than a silent wrong
+	 * value, which is why it is left alone.
+	 */
+	public function testNullCoalescingReachesTheMagicGetter() {
+		$index = new Index('ix_person_email');
+
+		$this->assertFalse(method_exists($index, '__isset'), 'an __isset here would break ?? again');
+		$this->assertSame('ix_person_email', $index->keyName ?? 'fallback');
+	}
+
 	public function testIndexUnknownPropertyThrows() {
 		$this->expectException(UndefinedPropertyException::class);
 

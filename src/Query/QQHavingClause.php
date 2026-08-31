@@ -17,8 +17,8 @@ class QQHavingClause extends QQClause {
 	/**
 	 * A having clause carries no attribute name of its own - it is raw SQL, not a
 	 * named expression like QQVirtualNode. This used to read a $strName property
-	 * that has never existed on the class; Base::__isset() returns false
-	 * unconditionally, so the ?? always took this branch anyway.
+	 * that has never existed on the class, which went unnoticed because Base
+	 * declared an __isset() returning false, so the ?? always took this branch.
 	 */
 	public function getAttributeName(): string {
 		return '';
