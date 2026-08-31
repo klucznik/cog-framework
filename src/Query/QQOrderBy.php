@@ -20,7 +20,7 @@ class QQOrderBy extends QQClause {
 	 * @throws CogException
 	 * @throws InvalidCastException
 	 */
-	protected function collapseNodes($parameterArray) {
+	protected function collapseNodes($parameterArray): array {
 
 		/** @var QQNode[] $nodeArray */
 		$nodeArray = [];

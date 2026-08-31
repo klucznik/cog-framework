@@ -28,11 +28,11 @@ class QQAssociationNode extends QQBaseNode {
 	 * instead. The abstract on QQBaseNode still has to be satisfied, so this states
 	 * the rule rather than carrying an unreachable copy of QQNode's implementation.
 	 */
-	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): ?string {
 		throw new InvalidCastException('Unable to cast "' . $this->name . '" association to a Column-based QQNode', 3);
 	}
 
-	public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null) {
+	public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null): string {
 		// Are we at the Parent Node?
 		if ($this->parentNode === null) {
 			// Yep -- Simply return the Parent Node Name

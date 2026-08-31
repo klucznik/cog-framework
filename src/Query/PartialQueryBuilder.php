@@ -19,11 +19,11 @@ class PartialQueryBuilder extends QueryBuilder {
 		$this->tableAliasArray = &$queryBuilder->tableAliasArray;
 	}
 
-	public function getWhereStatement() {
+	public function getWhereStatement(): string {
 		return implode(' ', $this->whereArray);
 	}
 
-	public function getFromStatement() {
+	public function getFromStatement(): string {
 		return implode(' ', $this->fromArray) . ' ' . implode(' ', $this->joinArray);
 	}
 }

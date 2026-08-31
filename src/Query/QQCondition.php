@@ -34,7 +34,7 @@ abstract class QQCondition extends Cog\Base {
 	 * @return string|null
 	 * @throws \Cog\Exceptions\CogException
 	 */
-	public function getWhereClause(QueryBuilder $queryBuilder, $processOnce = false) {
+	public function getWhereClause(QueryBuilder $queryBuilder, $processOnce = false): ?string {
 		if ($processOnce && $this->processed) {
 			return null;
 		}

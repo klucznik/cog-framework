@@ -24,7 +24,7 @@ class QQSubQuerySqlNode extends QQSubQueryNode {
 		return true;
 	}
 
-	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): ?string {
 		$sql = $this->sql;
 
 		$count = count($this->parentQueryNodes);

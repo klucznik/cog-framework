@@ -154,7 +154,7 @@ abstract class QQBaseNode extends Cog\Base {
 	 * @param QQSelect|null $select
 	 * @return mixed
 	 */
-	abstract public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null);
+	abstract public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null): string;
 
 	/**
 	 * @param QueryBuilder $queryBuilder
@@ -163,7 +163,7 @@ abstract class QQBaseNode extends Cog\Base {
 	 * @param QQSelect|null $select
 	 * @return mixed
 	 */
-	abstract public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null);
+	abstract public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): ?string;
 
 	/**
 	 * Merges a node tree into this node, building the child nodes. The node being received
@@ -175,7 +175,7 @@ abstract class QQBaseNode extends Cog\Base {
 	 * @param QQBaseNode $newNode
 	 * @throws \Cog\Exceptions\CogException
 	 */
-	public function mergeExpansionNode(QQBaseNode $newNode) {
+	public function mergeExpansionNode(QQBaseNode $newNode): void {
 		if (!$newNode || 0 === \count($newNode->childNodeArray)) {
 			return;
 		}
@@ -227,7 +227,7 @@ abstract class QQBaseNode extends Cog\Base {
 		return (string)$this->name;
 	}
 
-	public function extendedAlias() {
+	public function extendedAlias(): string {
 		$extendedAlias = $this->alias;
 		$node = $this;
 
@@ -238,7 +238,7 @@ abstract class QQBaseNode extends Cog\Base {
 		return $extendedAlias;
 	}
 
-	public function firstChild() {
+	public function firstChild(): ?QQBaseNode {
 		$array = $this->childNodeArray;
 		if ($array) {
 			return reset($array);

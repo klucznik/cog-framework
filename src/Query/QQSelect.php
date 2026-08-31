@@ -11,13 +11,13 @@ class QQSelect extends QQClause {
 		$this->nodeArray = $nodeArray;
 	}
 
-	public function addSelectItems(QueryBuilder $builder, $tableName, $aliasPrefix) {
+	public function addSelectItems(QueryBuilder $builder, $tableName, $aliasPrefix): void {
 		foreach ($this->nodeArray as $node) {
 			$builder->addSelectItem($tableName, $node->name, $aliasPrefix . $node->name);
 		}
 	}
 
-	public function merge(?QQSelect $select = null) {
+	public function merge(?QQSelect $select = null): void {
 		if ($select) {
 			foreach ($select->nodeArray as $node) {
 				$this->nodeArray[] = $node;
@@ -31,14 +31,14 @@ class QQSelect extends QQClause {
 	/**
 	 * @return boolean
 	 */
-	public function skipPrimaryKey() {
+	public function skipPrimaryKey(): bool {
 		return $this->skipPrimaryKey;
 	}
 
 	/**
 	 * @param boolean $skipPrimaryKey
 	 */
-	public function setSkipPrimaryKey($skipPrimaryKey) {
+	public function setSkipPrimaryKey($skipPrimaryKey): void {
 		$this->skipPrimaryKey = $skipPrimaryKey;
 	}
 

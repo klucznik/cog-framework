@@ -41,7 +41,7 @@ class QueryBuilder extends Cog\Base {
 	protected array $groupByArray = [];
 	/** @var string[] */
 	protected array $havingArray = [];
-	/** @var QQVirtualNode[] */
+	/** @var QQSubQueryNode[] keyed by lowercased virtual node name */
 	protected array $virtualNodeArray = [];
 	/** The LIMIT clause, as either "count" or "offset,count". */
 	protected ?string $limitInfo = null;
@@ -136,7 +136,7 @@ class QueryBuilder extends Cog\Base {
 	 * @param string $tableName
 	 * @return mixed|string
 	 */
-	public function getTableAlias($tableName) {
+	public function getTableAlias($tableName): string {
 		if (!array_key_exists($tableName, $this->tableAliasArray)) {
 			$tableAlias = 't' . $this->tableAliasCount++;
 			$this->tableAliasArray[$tableName] = $tableAlias;
@@ -316,10 +316,9 @@ class QueryBuilder extends Cog\Base {
 
 	/**
 	 * @param string $name
-	 * @return QQVirtualNode|mixed
 	 * @throws \Cog\Exceptions\CogException
 	 */
-	public function getVirtualNode($name) {
+	public function getVirtualNode($name): QQSubQueryNode {
 		$name = strtolower(trim($name));
 		if (array_key_exists($name, $this->virtualNodeArray)) {
 			return $this->virtualNodeArray[$name];

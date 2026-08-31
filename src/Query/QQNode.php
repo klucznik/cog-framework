@@ -85,11 +85,11 @@ class QQNode extends QQBaseNode {
 		}
 	}
 
-	public function isTopLevelLeafNode() {
+	public function isTopLevelLeafNode(): bool {
 		return (\get_class($this) === 'Cog\Query\QQNode' && null === $this->parentNode->type);
 	}
 
-	public function getTable(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+	public function getTable(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): string {
 		// Make sure our Root Tables Match
 		if ($this->rootTableName !== $queryBuilder->rootTableName) {
 			throw new CogException(
@@ -123,7 +123,7 @@ class QQNode extends QQBaseNode {
 		return $parentAlias;
 	}
 
-	public function getTableAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+	public function getTableAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): string {
 		$table = $this->getTable($queryBuilder, $expandSelection, $joinCondition, $select);
 		return $queryBuilder->getTableAlias($table);
 	}
@@ -133,7 +133,7 @@ class QQNode extends QQBaseNode {
 	 * @param string $tableAlias
 	 * @return string
 	 */
-	public function makeColumnAlias(QueryBuilder $queryBuilder, $tableAlias) {
+	public function makeColumnAlias(QueryBuilder $queryBuilder, $tableAlias): string {
 		$begin = $queryBuilder->database->escapeIdentifierBegin;
 		$end = $queryBuilder->database->escapeIdentifierEnd;
 
@@ -143,17 +143,17 @@ class QQNode extends QQBaseNode {
 		);
 	}
 
-	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): ?string {
 		$tableAlias = $this->getTableAlias($queryBuilder, $expandSelection, $joinCondition, $select);
 		// Pull the Begin and End Escape Identifiers from the Database Adapter
 		return $this->makeColumnAlias($queryBuilder, $tableAlias);
 	}
 
-	protected function addJoinTable(QueryBuilder $queryBuilder, $joinTableAlias, $parentAlias, ?QQCondition $joinCondition = null) {
+	protected function addJoinTable(QueryBuilder $queryBuilder, $joinTableAlias, $parentAlias, ?QQCondition $joinCondition = null): void {
 		$queryBuilder->addJoinItem($this->tableName, $joinTableAlias, $parentAlias, $this->name, $this->primaryKey, $joinCondition);
 	}
 
-	public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null) {
+	public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null): string {
 		// Are we at the Parent Node?
 		if ($this->parentNode === null) {
 			// Yep -- Simply return the Parent Node Name

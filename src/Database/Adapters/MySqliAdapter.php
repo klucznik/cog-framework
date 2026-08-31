@@ -274,7 +274,7 @@ class MySqliAdapter extends Cog\Database\Base {
 		$this->nonQuery('SET AUTOCOMMIT=1;');
 	}
 
-	public function getFoundRows() {
+	public function getFoundRows(): string {
 		if (array_key_exists('usefoundrows', $this->configArray) && $this->configArray['usefoundrows']) {
 			$result = $this->query('SELECT FOUND_ROWS();');
 			$row = $result->fetchArray();

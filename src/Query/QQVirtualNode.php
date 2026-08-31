@@ -26,7 +26,7 @@ class QQVirtualNode extends QQNode {
 	 * @return string
 	 * @throws CogException
 	 */
-	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
+	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): ?string {
 		if ($this->subQueryDefinition) {
 			$queryBuilder->setVirtualNode($this->name, $this->subQueryDefinition);
 			return $this->subQueryDefinition->getColumnAlias($queryBuilder);
@@ -44,7 +44,7 @@ class QQVirtualNode extends QQNode {
 	/**
 	 * @return string
 	 */
-	public function getAttributeName() {
+	public function getAttributeName(): string {
 		return $this->name;
 	}
 }
