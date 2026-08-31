@@ -43,7 +43,7 @@ class QQGroupBy extends QQClause {
 				throw new Cog\Exceptions\CogException('GroupBy clause parameters must all be QQNode objects', 3);
 			}
 
-			if (!$node->parentNode) {
+			if (!$node->isColumnBased()) {
 				throw new InvalidCastException('Unable to cast "' . $node->getNodeName() . '" table to Column-based QQNode', 4);
 			}
 

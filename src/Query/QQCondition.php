@@ -6,11 +6,10 @@ use Cog;
 
 abstract class QQCondition extends Cog\Base {
 
-	/** @var string */
-	protected $operator;
+	protected string $operator = '';
 
-	/** @var bool */
-	protected $processed;
+	/** Whether updateQueryBuilder() has already run, for the process-once clauses. */
+	protected bool $processed = false;
 
 	/**
 	 * @param QueryBuilder $queryBuilder

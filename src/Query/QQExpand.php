@@ -34,7 +34,7 @@ class QQExpand extends QQClause {
 			throw new Cog\Exceptions\CogException('Expand clause parameter must be a QQNode object', 2);
 		}
 
-		if (!$node->parentNode) {
+		if (!$node->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $node->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 

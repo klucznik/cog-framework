@@ -4,5 +4,5 @@ namespace Cog\Query;
 
 class QQConditionLessOrEqual extends QQConditionComparison {
 
-	protected $operator = ' <= ';
+	protected string $operator = ' <= ';
 }

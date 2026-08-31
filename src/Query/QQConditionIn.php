@@ -10,7 +10,7 @@ class QQConditionIn extends QQConditionComparison {
 
 	public function __construct(QQNode $queryNode, $mixValuesArray) {
 		$this->queryNode = $queryNode;
-		if (!$queryNode->parentNode) {
+		if (!$queryNode->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 

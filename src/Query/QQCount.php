@@ -4,7 +4,7 @@ namespace Cog\Query;
 
 class QQCount extends QQAggregationClause {
 
-	protected $functionName = 'COUNT';
+	protected string $functionName = 'COUNT';
 
 	/** @inheritdoc */
 	public function __toString(): string {

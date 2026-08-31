@@ -10,9 +10,13 @@ class QQVirtualNode extends QQNode {
 	protected $subQueryDefinition;
 
 	public function __construct($name, ?QQSubQueryNode $subQueryDefinition = null) {
-		$this->parentNode = true;
 		$this->name = strtolower(trim($name));
 		$this->subQueryDefinition = $subQueryDefinition;
+	}
+
+	/** Has no parent, but resolves to an expression of its own. */
+	public function isColumnBased(): bool {
+		return true;
 	}
 
 	/**

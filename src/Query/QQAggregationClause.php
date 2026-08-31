@@ -6,12 +6,11 @@ use Cog\Exceptions\InvalidCastException;
 
 abstract class QQAggregationClause extends QQClause {
 
-	/** @var QQNode */
-	protected $node;
-	/** @var string */
-	protected $attributeName;
-	/** @var string */
-	protected $functionName;
+	/** The constructor rejects anything that is not a column-based QQNode. */
+	protected QQNode $node;
+	protected string $attributeName;
+	/** Set by each concrete subclass. */
+	protected string $functionName;
 
 	/**
 	 * QQAggregationClause constructor.
@@ -30,7 +29,7 @@ abstract class QQAggregationClause extends QQClause {
 			throw new \Cog\Exceptions\CogException('Expand clause parameter must be a QQNode object', 2);
 		}
 
-		if (!$node->parentNode) {
+		if (!$node->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $node->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 

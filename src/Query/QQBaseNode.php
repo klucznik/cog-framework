@@ -25,29 +25,33 @@ use Cog\Type;
  */
 abstract class QQBaseNode extends Cog\Base {
 
-	/** @var QQBaseNode */
-	protected $parentNode;
-	/** @var string */
-	protected $type;
-	/** @var string */
-	protected $name;
-	/** @var string */
-	protected $alias;
-	/** @var string */
-	protected $propertyName;
-	/** @var string */
-	protected $rootTableName;
+	/** Null on a root table node, which is what ends every parent-chain walk. */
+	protected ?QQBaseNode $parentNode = null;
 
-	/** @var string */
-	protected $tableName;
-	/** @var string */
-	protected $primaryKey;
-	/** @var string */
-	protected $className = '';
-	protected $classNameQualified = '';
+	/**
+	 * The column's field type, or 'association' on an association node. Null on a
+	 * root table node - generated table nodes pass no type up to QQNode, and
+	 * getColumnAlias() branches on that null.
+	 */
+	protected ?string $type = null;
 
-	/** @var boolean used by expansion nodes */
-	protected $expandAsArray;
+	protected ?string $name = null;
+	protected ?string $alias = null;
+
+	/** Null on a root table node, for the same reason as $type. */
+	protected ?string $propertyName = null;
+
+	protected ?string $rootTableName = null;
+
+	/** Set on table, reference and association nodes; null on a plain column node. */
+	protected ?string $tableName = null;
+	protected ?string $primaryKey = null;
+
+	protected string $className = '';
+	protected string $classNameQualified = '';
+
+	/** Used by expansion nodes. */
+	protected bool $expandAsArray = false;
 
 	/**
 	 * Child nodes, keyed by name, as they are read off this one. Defaults to an
@@ -57,8 +61,9 @@ abstract class QQBaseNode extends Cog\Base {
 	 * @var QQBaseNode[]
 	 */
 	protected array $childNodeArray = [];
-	/** @var boolean */
-	protected $isType;
+
+	/** Whether the referenced table is a type table rather than an entity. */
+	protected bool $isType = false;
 
 	/**
 	 * @param string $name
@@ -194,6 +199,18 @@ abstract class QQBaseNode extends Cog\Base {
 				$this->childNodeArray[$childNode->name] = $childNode;
 			}
 		}
+	}
+
+	/**
+	 * Whether this node can stand in for a column.
+	 *
+	 * A root table node cannot: it names a table, which has no value to compare
+	 * against. Anything hanging off a parent can. The virtual and sub-query nodes
+	 * have no parent either, but resolve to an expression of their own, so they
+	 * override this - which is why they used to assign true to $parentNode.
+	 */
+	public function isColumnBased(): bool {
+		return $this->parentNode !== null;
 	}
 
 	/**

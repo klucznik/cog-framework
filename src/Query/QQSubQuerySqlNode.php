@@ -16,9 +16,13 @@ class QQSubQuerySqlNode extends QQSubQueryNode {
 	 * @param QQNode[]|null $parentQueryNodes
 	 */
 	public function __construct($sql, $parentQueryNodes = null) {
-		$this->parentNode = true;
 		$this->objParentQueryNodes = $parentQueryNodes;
 		$this->sql = $sql;
+	}
+
+	/** Has no parent, but resolves to an expression of its own. */
+	public function isColumnBased(): bool {
+		return true;
 	}
 
 	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {

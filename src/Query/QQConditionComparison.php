@@ -11,7 +11,7 @@ abstract class QQConditionComparison extends QQCondition {
 
 	public function __construct(QQNode $queryNode, $operand) {
 		$this->queryNode = $queryNode;
-		if (!$queryNode->parentNode) {
+		if (!$queryNode->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
@@ -26,7 +26,7 @@ abstract class QQConditionComparison extends QQCondition {
 		} elseif (!($operand instanceof QQNode)) {
 			$this->mixOperand = $operand;
 		} else {
-			if (!$operand->parentNode) {
+			if (!$operand->isColumnBased()) {
 				throw new InvalidCastException('Unable to cast "' . $operand->getNodeName() . '" table to Column-based QQNode', 3);
 			}
 			$this->mixOperand = $operand;

@@ -4,7 +4,7 @@ namespace Cog\Query;
 
 class QQConditionNotEqual extends QQConditionComparison {
 
-	protected $operator = ' != ';
+	protected string $operator = ' != ';
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {

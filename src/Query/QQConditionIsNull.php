@@ -8,7 +8,7 @@ class QQConditionIsNull extends QQConditionComparison {
 
 	public function __construct(QQNode $queryNode) {
 		$this->queryNode = $queryNode;
-		if (!$queryNode->parentNode) {
+		if (!$queryNode->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 	}

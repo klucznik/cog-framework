@@ -4,7 +4,7 @@ namespace Cog\Query;
 
 class QQMaximum extends QQAggregationClause {
 
-	protected $functionName = 'MAX';
+	protected string $functionName = 'MAX';
 
 	/** @inheritdoc */
 	public function __toString(): string {

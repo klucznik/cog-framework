@@ -4,7 +4,7 @@ namespace Cog\Query;
 
 class QQMinimum extends QQAggregationClause {
 
-	protected $functionName = 'MIN';
+	protected string $functionName = 'MIN';
 
 	/** @inheritdoc */
 	public function __toString(): string {

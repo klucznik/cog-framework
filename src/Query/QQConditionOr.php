@@ -4,5 +4,5 @@ namespace Cog\Query;
 
 class QQConditionOr extends QQConditionLogical {
 
-	protected $operator = 'OR';
+	protected string $operator = 'OR';
 }

@@ -44,7 +44,7 @@ class QQOrderBy extends QQClause {
 				if ($node instanceof QQReverseReferenceNode) {
 					throw new InvalidCastException('Cannot order by a ReverseReferenceNode: ' . $node->name, 4);
 				}
-				if ($node instanceof QQNode && !$node->parentNode) {
+				if ($node instanceof QQNode && !$node->isColumnBased()) {
 					throw new InvalidCastException('Unable to cast "' . $node->getNodeName() . '" table to Column-based QQNode', 4);
 				}
 				$previousIsNode = true;

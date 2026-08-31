@@ -4,7 +4,7 @@ namespace Cog\Query;
 
 class QQSum extends QQAggregationClause {
 
-	protected $functionName = 'SUM';
+	protected string $functionName = 'SUM';
 
 	/** @inheritdoc */
 	public function __toString(): string {

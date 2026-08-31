@@ -14,7 +14,7 @@ class QQConditionBetween extends QQConditionComparison {
 
 		$this->queryNode = $queryNode;
 
-		if (!$queryNode->parentNode) {
+		if (!$queryNode->isColumnBased()) {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
