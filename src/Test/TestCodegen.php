@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Asserts that the code generation performed by CodegenFixture during bootstrap
- * actually produced a usable ORM layer for the `cog_test` fixture database.
+ * actually produced a usable ORM layer for the `cog_framework_test` fixture database.
  *
  * This is the first file in the test suite on purpose: everything the generated
  * classes are used for downstream depends on it having worked, so when codegen
@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 class TestCodegen extends TestCase {
 
 	/**
-	 * ORM tables in cog_test.sql, and the class names they generate to.
+	 * ORM tables in cog_framework_test.sql, and the class names they generate to.
 	 *
 	 * `blog_type` is not here: the `_type` suffix makes it a type table, covered
 	 * by testGeneratedTypeClass. Neither is `tag_obj_assn`: the `_assn` suffix

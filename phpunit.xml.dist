@@ -18,6 +18,7 @@
 			<file>src/Test/TestController.php</file>
 			<file>src/Test/TestDatabase.php</file>
 			<file>src/Test/TestDatabaseResult.php</file>
+			<file>src/Test/TestDevProfile.php</file>
 			<file>src/Test/TestExceptions.php</file>
 			<file>src/Test/TestFileSystem.php</file>
 			<file>src/Test/TestKernel.php</file>
@@ -34,11 +35,11 @@
 		</testsuite>
 	</testsuites>
 	<php>
-		<!-- Connection details for the `cog_test` database used by TestDatabase.
+		<!-- Connection details for the `cog_framework_test` database used by TestDatabase.
 			 Override them by copying this file to phpunit.xml (which is ignored
 			 by git) or by exporting the variables in the environment. -->
 		<env name="COG_TEST_DB_SERVER" value="localhost"/>
-		<env name="COG_TEST_DB_NAME" value="cog_test"/>
+		<env name="COG_TEST_DB_NAME" value="cog_framework_test"/>
 		<env name="COG_TEST_DB_USER" value="root"/>
 		<env name="COG_TEST_DB_PASSWORD" value=""/>
 	</php>

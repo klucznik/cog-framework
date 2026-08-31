@@ -39,12 +39,12 @@ jobs:
         run: find src codegen -name '*.php' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
 
       - name: Load test schema
-        run: mysql --host=127.0.0.1 --user=root < src/Test/cog_test.sql
+        run: mysql --host=127.0.0.1 --user=root < src/Test/cog_framework_test.sql
 
       - name: Run test suite
         run: composer test
         env:
           COG_TEST_DB_SERVER: 127.0.0.1
-          COG_TEST_DB_NAME: cog_test
+          COG_TEST_DB_NAME: cog_framework_test
           COG_TEST_DB_USER: root
           COG_TEST_DB_PASSWORD: ''

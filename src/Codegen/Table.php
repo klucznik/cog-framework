@@ -6,7 +6,7 @@ use Cog\Exceptions\CogException;
 use Cog\Type;
 
 /**
- * Used by the QCubed Code Generator to describe a database Table
+ * Used by the Code Generator to describe a database Table
  * @package Codegen
  *
  * @property int $ownerDbIndex

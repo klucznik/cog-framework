@@ -8,8 +8,12 @@ use Cog\Util\StringUtils;
 
 abstract class Database {
 
-	/** @var string url pointing to the database queries profile page */
-	public static string $urlProfilePage = '/profile.php';
+	/**
+	 * Url the profiling link in the dev toolbar posts to - see displayProfilingHelper(). The
+	 * default is the route the shipped page is on (Cog\ExampleApp\Dev\DevController); an
+	 * application that puts its own copy somewhere else says so from its initialize().
+	 */
+	public static string $urlProfilePage = '/dev/profile';
 
 	/**
 	 * An array of Cog\Database\Database objects, as initialized by initializeDatabaseConnections()

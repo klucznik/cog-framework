@@ -7,7 +7,7 @@ use Cog\Database\Database;
 use Throwable;
 
 /**
- * Runs the code generator against the `cog_test` fixture database before the
+ * Runs the code generator against the `cog_framework_test` fixture database before the
  * rest of the suite executes.
  *
  * Everything happens inside a throwaway build directory (see BUILD_DIR) so the
@@ -245,7 +245,7 @@ abstract class CodegenFixture {
 			'adapter' => 'MySqli',
 			'server' => getenv('COG_TEST_DB_SERVER') ?: 'localhost',
 			'encoding' => 'UTF8',
-			'database' => getenv('COG_TEST_DB_NAME') ?: 'cog_test',
+			'database' => getenv('COG_TEST_DB_NAME') ?: 'cog_framework_test',
 			'username' => getenv('COG_TEST_DB_USER') ?: 'root',
 			'password' => getenv('COG_TEST_DB_PASSWORD') ?: '',
 			'profiling' => false,

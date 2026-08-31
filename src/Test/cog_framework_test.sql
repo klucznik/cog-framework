@@ -14,14 +14,14 @@
 -- Changing anything here means changing those assertions too.
 --
 -- Load it with:
---     mysql -u root -p < src/Test/cog_test.sql
+--     mysql -u root -p < src/Test/cog_framework_test.sql
 --
 -- All tables are InnoDB because the suite exercises transaction rollback and
 -- reads foreign keys, neither of which MyISAM supports.
 
-DROP DATABASE IF EXISTS `cog_test`;
-CREATE DATABASE `cog_test` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `cog_test`;
+DROP DATABASE IF EXISTS `cog_framework_test`;
+CREATE DATABASE `cog_framework_test` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `cog_framework_test`;
 
 --
 -- person: five columns and four indexes (PRIMARY, then `email`, `name`,

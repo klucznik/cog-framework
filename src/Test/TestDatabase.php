@@ -30,7 +30,7 @@ class TestDatabase extends TestCase {
 			'adapter' => 'MySqli',
 			'server' => getenv('COG_TEST_DB_SERVER') ?: 'localhost',
 			'encoding' => 'UTF8',
-			'database' => getenv('COG_TEST_DB_NAME') ?: 'cog_test',
+			'database' => getenv('COG_TEST_DB_NAME') ?: 'cog_framework_test',
 			'username' => getenv('COG_TEST_DB_USER') ?: 'root',
 			'password' => getenv('COG_TEST_DB_PASSWORD') ?: '',
 			'profiling' => true
@@ -407,7 +407,7 @@ class TestDatabase extends TestCase {
 
 	public function testMagicGet() {
 		$this->assertEquals('MySql Improved Database Adapter (MySqli)', $this->database->adapter);
-		$this->assertEquals(getenv('COG_TEST_DB_NAME') ?: 'cog_test', $this->database->database);
+		$this->assertEquals(getenv('COG_TEST_DB_NAME') ?: 'cog_framework_test', $this->database->database);
 		$this->assertEquals(getenv('COG_TEST_DB_SERVER') ?: 'localhost', $this->database->server);
 		$this->assertEquals('`', $this->database->escapeIdentifierBegin);
 		$this->assertEquals('`', $this->database->escapeIdentifierEnd);

@@ -19,7 +19,7 @@ use SimpleXMLElement;
  * Unit tests for the pure logic inside Cog\Codegen.
  *
  * TestCodegen covers the generator end to end: it asserts on the files produced
- * from the cog_test database. That catches a generator that broke, but not a
+ * from the cog_framework_test database. That catches a generator that broke, but not a
  * generator that renamed something - a wrong calculateObjectDescription() still
  * emits a file that lints clean, loads fine, and is simply called the wrong
  * thing. The naming rules are pinned here instead, one assertion per branch, and

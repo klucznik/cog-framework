@@ -14,7 +14,7 @@ composer test        # phpunit - runs the code generator first, via the bootstra
 ./cog list           # discover the available console commands
 ```
 
-The suite needs a reachable `cog_test` MySQL database; without it nothing runs. See README.
+The suite needs a reachable `cog_framework_test` MySQL database; without it nothing runs. See README.
 
 ## Layout
 
@@ -144,10 +144,10 @@ Rules that have already cost real bugs:
   generator is reported as a failed assertion instead of an unreadable bootstrap fatal.
 - Generation output goes to the git-ignored `.phpunit.codegen/`; `CodegenFixture::registerAutoloader()`
   maps `Generated\` and `App\` onto it so later tests can use the generated classes.
-- `src/Test/cog_test.sql` is a schema **contract**, asserted against by `TestDatabase` (table count,
+- `src/Test/cog_framework_test.sql` is a schema **contract**, asserted against by `TestDatabase` (table count,
   `person` indexes, `obj` foreign key) and by `TestCodegen` (type table, association table, timestamp
   column, `CURRENT_TIMESTAMP` column). Changing the schema means changing those assertions in the
-  same commit. Loading the file **drops and recreates** `cog_test`.
+  same commit. Loading the file **drops and recreates** `cog_framework_test`.
 - Credentials come from the `COG_TEST_DB_*` env vars; the local `phpunit.xml` override is git-ignored
   and holds real ones - never commit it.
 

@@ -76,6 +76,8 @@ abstract class CogApplication extends BaseApplication {
 		];
 
 		Database::initializeConnection($config, 1);
-		Database::$urlProfilePage = '/assets/php/_core/profile.php';
+		// the same value Database declares as its default - restated because this is the line an
+		// application overrides when its own copy of the profiling page lives somewhere else.
+		Database::$urlProfilePage = '/dev/profile';
 	}
 }

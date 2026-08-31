@@ -33,7 +33,7 @@ abstract class QueryTestCase extends TestCase {
 			'adapter' => 'MySqli',
 			'server' => getenv('COG_TEST_DB_SERVER') ?: 'localhost',
 			'encoding' => 'UTF8',
-			'database' => getenv('COG_TEST_DB_NAME') ?: 'cog_test',
+			'database' => getenv('COG_TEST_DB_NAME') ?: 'cog_framework_test',
 			'username' => getenv('COG_TEST_DB_USER') ?: 'root',
 			'password' => getenv('COG_TEST_DB_PASSWORD') ?: '',
 			'profiling' => true

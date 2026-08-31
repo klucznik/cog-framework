@@ -44,7 +44,7 @@ connection and output paths. Copy [`codegen.xml-dist`](codegen.xml-dist) to
 The suite runs against a MySQL fixture database. Load it once:
 
 ```bash
-mysql -u root -p < src/Test/cog_test.sql
+mysql -u root -p < src/Test/cog_framework_test.sql
 ```
 
 Connection details come from the `COG_TEST_DB_*` environment variables; override

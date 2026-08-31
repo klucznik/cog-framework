@@ -21,7 +21,7 @@ use Generated\Node\QQNodePerson;
 use Generated\Node\QQNodeTag;
 
 /**
- * Conditions and clauses, run through the generated ORM against the cog_test
+ * Conditions and clauses, run through the generated ORM against the cog_framework_test
  * fixture: 3 people, 2 objs, 2 blog posts, 2 assets, 3 tags.
  *
  * Every case asserts the emitted SQL as well as the rows that come back. The
