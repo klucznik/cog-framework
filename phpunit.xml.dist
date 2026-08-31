@@ -35,6 +35,7 @@
 			<file>src/Test/TestQueryBuilder.php</file>
 			<file>src/Test/TestQueryClauses.php</file>
 			<file>src/Test/TestQueryJoins.php</file>
+			<file>src/Test/TestQueryInternals.php</file>
 			<file>src/Test/TestStringUtils.php</file>
 			<file>src/Test/TestTemplate.php</file>
 			<file>src/Test/TestType.php</file>

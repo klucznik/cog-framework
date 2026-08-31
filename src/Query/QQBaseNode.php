@@ -49,8 +49,14 @@ abstract class QQBaseNode extends Cog\Base {
 	/** @var boolean used by expansion nodes */
 	protected $expandAsArray;
 
-	/* @var QQBaseNode[] */
-	protected $childNodeArray;
+	/**
+	 * Child nodes, keyed by name, as they are read off this one. Defaults to an
+	 * empty array rather than null: mergeExpansionNode() guards on count(), which
+	 * a null would fatal on instead of taking the guard.
+	 *
+	 * @var QQBaseNode[]
+	 */
+	protected array $childNodeArray = [];
 	/** @var boolean */
 	protected $isType;
 
