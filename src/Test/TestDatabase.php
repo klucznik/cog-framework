@@ -74,9 +74,9 @@ class TestDatabase extends TestCase {
 	public function testGetTables() {
 		$tables = $this->database->getTables();
 		$this->assertIsArray($tables);
-		$this->assertCount(11, $tables);
+		$this->assertCount(12, $tables);
 
-		foreach (range(0, 10) as $index) {
+		foreach (range(0, 11) as $index) {
 			$this->assertArrayHasKey($index, $tables);
 		}
 
@@ -84,6 +84,7 @@ class TestDatabase extends TestCase {
 		$this->assertContainsEquals('blog_post', $tables);
 		$this->assertContainsEquals('blog_type', $tables);
 		$this->assertContainsEquals('category', $tables);
+		$this->assertContainsEquals('empty_type', $tables);
 		$this->assertContainsEquals('obj', $tables);
 		$this->assertContainsEquals('person', $tables);
 		$this->assertContainsEquals('person_person_assn', $tables);
@@ -373,7 +374,7 @@ class TestDatabase extends TestCase {
 		$this->database->transactionCommit();
 
 		// The connection is usable again once the transaction is closed
-		$this->assertEquals(11, count($this->database->getTables()));
+		$this->assertEquals(12, count($this->database->getTables()));
 	}
 
 	public function testProfilingOutput() {

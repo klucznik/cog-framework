@@ -439,4 +439,21 @@ class TestCodegen extends TestCase {
 		$this->assertSame('10', \App\Type\PriorityType::ToSortOrder(\App\Type\PriorityType::URGENT));
 		$this->assertSame('1', \App\Type\PriorityType::ToIsDefault(\App\Type\PriorityType::NORMAL));
 	}
+
+	/**
+	 * A lookup table that has not been populated yet is an ordinary state, and the
+	 * generated Type class still has to be valid PHP. MAX_ID used to be emitted
+	 * from the loop variable of the constant loop above it, so with no rows it
+	 * emitted nothing at all - "const MAX_ID = ;" - and the generator aborted on
+	 * the undefined variable before ever writing the file.
+	 */
+	public function testEmptyTypeTableStillGenerates() {
+		$path = CodegenFixture::getBuildPath('generated/Type/EmptyTypeGen.php');
+
+		$this->assertFileExists($path);
+		$this->assertStringContainsString('const MAX_ID = 0;', file_get_contents($path));
+
+		$emptyType = new \ReflectionClass('App\Type\EmptyType');
+		$this->assertSame(0, $emptyType->getConstant('MAX_ID'));
+	}
 }

@@ -146,6 +146,18 @@ CREATE TABLE `priority_type` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- empty_type: a type table with no rows yet. A lookup table that has not been
+-- populated is an ordinary state, and the generated Type class has to be valid
+-- PHP regardless - MAX_ID in particular has to come out as a number.
+--
+CREATE TABLE `empty_type` (
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(100) NOT NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- category: three reference shapes the other tables do not have.
 --   * `parent_id` points back at `category`, so the generated class references
 --     itself and the object descriptions have to be disambiguated.

@@ -35,7 +35,7 @@ foreach ($typeTable->tokenArray as $key => $value) { ?>
 	public const <?= strtoupper($value) ?> = <?= $key ?>;
 <?php } ?>
 
-	public const MAX_ID = <?= $key ?>;
+	public const MAX_ID = <?= $typeTable->tokenArray ? max(array_keys($typeTable->tokenArray)) : 0 ?>;
 
 	public static $NameArray = [<?php if (count($typeTable->nameArray)) { ?>
 
