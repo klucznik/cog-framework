@@ -12,13 +12,20 @@
 				 suite relies on (see src/Test/CodegenFixture.php). -->
 			<file>src/Test/TestCodegen.php</file>
 			<file>src/Test/TestCodegenHelpers.php</file>
+			<file>src/Test/TestCodegenTemplates.php</file>
+			<file>src/Test/TestCodegenValueObjects.php</file>
 			<file>src/Test/TestBase.php</file>
 			<file>src/Test/TestBaseApplication.php</file>
+			<file>src/Test/TestCommands.php</file>
+			<file>src/Test/TestConsole.php</file>
 			<file>src/Test/TestConvertNotation.php</file>
 			<file>src/Test/TestController.php</file>
 			<file>src/Test/TestDatabase.php</file>
+			<file>src/Test/TestDatabaseField.php</file>
+			<file>src/Test/TestDatabaseProfiling.php</file>
 			<file>src/Test/TestDatabaseResult.php</file>
 			<file>src/Test/TestDevProfile.php</file>
+			<file>src/Test/TestEnvironment.php</file>
 			<file>src/Test/TestExceptions.php</file>
 			<file>src/Test/TestFileSystem.php</file>
 			<file>src/Test/TestKernel.php</file>

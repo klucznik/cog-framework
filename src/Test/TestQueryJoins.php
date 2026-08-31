@@ -10,6 +10,7 @@ use App\Data\Tag;
 use Cog\Exceptions\CogException;
 use Cog\Exceptions\InvalidCastException;
 use Cog\Query\QQ;
+use Cog\Query\QueryBuilder;
 use Generated\Node\QQNodeAsset;
 use Generated\Node\QQNodeBlogPost;
 use Generated\Node\QQNodeObj;
@@ -107,6 +108,71 @@ class TestQueryJoins extends QueryTestCase {
 		$objs = Obj::queryArray(QQ::in((new QQNodeObj())->tag->tag->name, ['php', 'testing']), QQ::distinct());
 
 		$this->assertEquals(['First object'], self::pluck($objs, 'label'));
+	}
+
+	//////////////////////////////
+	// Graph associations
+	//////////////////////////////
+	//
+	// `person_person_assn` joins `person` to itself. Both sides would otherwise
+	// generate identically named nodes, so the column names prefix them apart:
+	// `person` follows person_id -> friend_id, `parentPerson` follows the reverse.
+	//
+
+	/** Adam is friends with Maria and Piotr. */
+	public function testGraphAssociationJoin() {
+		$people = Person::queryArray(
+			QQ::equal((new QQNodePerson())->person->person->name, 'Maria Nowak'),
+			QQ::distinct()
+		);
+
+		$this->assertQueryContains('LEFT JOIN `person_person_assn`');
+		$this->assertEquals(['Adam Kluczyk'], self::pluck($people, 'name'));
+	}
+
+	/** The other side of the same association walks friend_id back to person_id. */
+	public function testGraphAssociationJoinFromTheOtherSide() {
+		$people = Person::queryArray(
+			QQ::equal((new QQNodePerson())->parentPerson->person->name, 'Adam Kluczyk'),
+			QQ::clause(QQ::distinct(), QQ::orderBy((new QQNodePerson())->name))
+		);
+
+		$this->assertQueryContains('LEFT JOIN `person_person_assn`');
+		$this->assertEquals(['Maria Nowak', 'Piotr Lewandowski'], self::pluck($people, 'name'));
+	}
+
+	/**
+	 * The two sides are distinct joins with distinct aliases, so using both in one
+	 * query must not collapse them into each other.
+	 */
+	public function testBothSidesOfAGraphAssociationInOneQuery() {
+		Person::queryArray(QQ::andCondition(
+			QQ::isNotNull((new QQNodePerson())->person->friendId),
+			QQ::isNotNull((new QQNodePerson())->parentPerson->personId)
+		));
+
+		$this->assertEquals(2, substr_count($this->lastQuery(), 'LEFT JOIN `person_person_assn`'));
+	}
+
+	/**
+	 * An association node names the join table, which has no columns to select, so
+	 * it can never stand in for a column. QQ's own signatures reject one first -
+	 * QQ::equal() type-hints QQNode, which an association node is not - so the
+	 * node's own guard is only reachable by calling it directly.
+	 */
+	public function testAssociationNodeIsRejectedByTheQueryApi() {
+		$this->expectException(\TypeError::class);
+
+		/** @noinspection PhpParamsInspection */
+		QQ::equal((new QQNodeObj())->tag, 1);
+	}
+
+	public function testAssociationNodeRefusesToActAsAColumn() {
+		$node = (new QQNodeObj())->tag;
+
+		$this->expectException(InvalidCastException::class);
+
+		$node->getColumnAlias($this->createStub(QueryBuilder::class));
 	}
 
 	//////////////////////////////

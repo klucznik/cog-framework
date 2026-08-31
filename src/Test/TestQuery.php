@@ -386,6 +386,99 @@ class TestQuery extends QueryTestCase {
 		$this->assertEquals('Adam Kluczyk', $people[0]->name);
 	}
 
+	/** More than one node narrows to exactly those columns, plus the primary key. */
+	public function testSelectSeveralColumns() {
+		Person::queryArray(QQ::all(), QQ::select($this->person()->name, $this->person()->email));
+
+		$this->assertQueryContains('`t0`.`name`');
+		$this->assertQueryContains('`t0`.`email`');
+		$this->assertQueryNotContains('`t0`.`password`');
+	}
+
+	/**
+	 * The primary key rides along by default so the row can be instantiated at all.
+	 * A select can opt out, which is what nested selects during expansion rely on.
+	 */
+	public function testSelectCanSkipThePrimaryKey() {
+		$select = QQ::select($this->person()->name);
+		$this->assertFalse($select->skipPrimaryKey());
+
+		$select->setSkipPrimaryKey(true);
+		$this->assertTrue($select->skipPrimaryKey());
+	}
+
+	/** Merging folds one select's nodes into another - how expansion combines them. */
+	public function testSelectMerge() {
+		$select = QQ::select($this->person()->name);
+		$select->merge(QQ::select($this->person()->email));
+
+		Person::queryArray(QQ::all(), $select);
+
+		$this->assertQueryContains('`t0`.`name`');
+		$this->assertQueryContains('`t0`.`email`');
+		$this->assertQueryNotContains('`t0`.`password`');
+	}
+
+	/** Merging a select that skips the primary key carries that decision over. */
+	public function testSelectMergeCarriesSkipPrimaryKey() {
+		$other = QQ::select($this->person()->email);
+		$other->setSkipPrimaryKey(true);
+
+		$select = QQ::select($this->person()->name);
+		$select->merge($other);
+
+		$this->assertTrue($select->skipPrimaryKey());
+	}
+
+	/** Merging nothing is a no-op rather than an error. */
+	public function testSelectMergeWithNull() {
+		$select = QQ::select($this->person()->name);
+		$select->merge(null);
+
+		Person::queryArray(QQ::all(), $select);
+
+		$this->assertQueryContains('`t0`.`name`');
+	}
+
+	//////////////////////////////
+	// Limit
+	//////////////////////////////
+
+	public function testLimit() {
+		$people = Person::queryArray(QQ::all(), QQ::clause(
+			QQ::orderBy($this->person()->id),
+			QQ::limitInfo(2)
+		));
+
+		$this->assertQueryContains('LIMIT 2');
+		$this->assertCount(2, $people);
+	}
+
+	/** With an offset the limit becomes the two-argument form. */
+	public function testLimitWithOffset() {
+		$people = Person::queryArray(QQ::all(), QQ::clause(
+			QQ::orderBy($this->person()->id),
+			QQ::limitInfo(2, 1)
+		));
+
+		$this->assertQueryContains('LIMIT 1,2');
+		$this->assertEquals(['Maria Nowak', 'Piotr Lewandowski'], self::pluck($people, 'name'));
+	}
+
+	public function testLimitInfoProperties() {
+		$limit = QQ::limitInfo(10, 5);
+
+		$this->assertSame(10, $limit->maxRowCount);
+		$this->assertSame(5, $limit->offset);
+	}
+
+	public function testLimitInfoUnknownPropertyThrows() {
+		$this->expectException(CogException::class);
+
+		/** @noinspection PhpExpressionResultUnusedInspection */
+		QQ::limitInfo(10)->noSuchProperty;
+	}
+
 	public function testAlias() {
 		$node = QQ::alias($this->person()->name, 'personName');
 
