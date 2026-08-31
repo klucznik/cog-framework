@@ -61,9 +61,7 @@ abstract class Base extends Cog\Base {
 	/** @var bool did we connect with the server */
 	protected bool $connectedFlag = false;
 
-	/** @var string */
 	protected string $escapeIdentifierBegin = '"';
-	/** @var string */
 	protected string $escapeIdentifierEnd = '"';
 
 	/** @var bool should be set in sub-classes as appropriate */

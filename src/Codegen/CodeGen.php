@@ -24,9 +24,7 @@ abstract class CodeGen extends Base {
 	/** @var string Class Name Suffix */
 	protected string $classSuffix = '';
 
-	/** @var string */
 	protected string $errors = '';
-	/** @var string */
 	protected string $warnings = '';
 
 	// PHP Reserved Words.  They make up:

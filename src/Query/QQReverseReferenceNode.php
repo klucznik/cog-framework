@@ -6,7 +6,6 @@ use Cog;
 
 class QQReverseReferenceNode extends QQNode {
 
-	/** @var QQBaseNode|null */
 	protected ?string $foreignKey = null;
 
 	/**
