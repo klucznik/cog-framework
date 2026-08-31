@@ -54,32 +54,6 @@
 			-->
 			<excludeTables pattern="" list=""/>
 			<includeTables pattern="" list=""/>
-
-			<!-- Virtual Foreign Key Relationships -->
-			<!--
-				There are two ways to define relationships.  To signify a virtual FK
-				relationship (for example, on foo.bar_id which would key to bar.id)
-				you can:
-
-				A) Simply define the relationship in the <relationships/> tag using
-				   the following format:
-					foo.bar_id => bar.id
-					bar.other_id => other.id
-					(with one relationship per line)
-				   Note that because the relationships data uses a ">" symbol, proper
-				   XML rules dictate that the content of the relationships script must
-				   be escaped with <![CDATA[ and ]]> tags.
-
-				B) You can define the relationships in totally separate relationships
-				   script file by using the <relationshipsScript/> tag, where you can
-				   specify a filepath and a format.  Format can either be:
-					qcodo - follows the same "foo.bar_id => bar.id" as above
-					sql - parses the script, looking for SQL-based ALTER TABLE statements like:
-				    	ALTER TABLE foo ADD CONSTRAINT blah FOREIGN KEY (bar_id) REFERENCES bar (id);
-			-->
-			<relationships><![CDATA[
-			]]></relationships>
-			<relationshipsScript filepath="" format="sql"/>
 		</database>
 	</dataSources>
 </codegen>

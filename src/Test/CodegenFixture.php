@@ -227,9 +227,6 @@ abstract class CodegenFixture {
 					<stripFromTableName prefix=""/>
 					<excludeTables pattern="" list=""/>
 					<includeTables pattern="" list=""/>
-					<relationships><![CDATA[
-					]]></relationships>
-					<relationshipsScript filepath="" format="sql"/>
 				</database>
 			</dataSources>
 		</codegen>

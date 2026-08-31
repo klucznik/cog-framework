@@ -63,23 +63,9 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	protected string $associatedObjectPrefix;
 	protected string $associatedObjectSuffix;
 
-	// Relationship Scripts
-	protected string $relationships;
-	protected bool $relationshipsIgnoreCase;
-
-	protected string $relationshipsScriptPath;
-	protected string $relationshipsScriptFormat;
-	protected bool $relationshipsScriptIgnoreCase;
-
-	/** @var string[] */
-	protected array $relationshipLinesQcodo = [];
-	/** @var string[] */
-	protected array $relationshipLinesSql = [];
-
 	// Type Table Items, Table Name and Column Name RegExp Patterns
 	protected string $patternTableName = '[[:alpha:]_][[:alnum:]_]*';
 	protected string $patternColumnName = '[[:alpha:]_][[:alnum:]_]*';
-	protected string $patternKeyName = '[[:alpha:]_][[:alnum:]_]*';
 
 	/**
 	 * @param string $tableName
@@ -119,39 +105,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		throw new CogException(sprintf('Column does not exist in %s: %s', $tableName, $columnName));
 	}
 
-	/**
-	 * Given a CASE INSENSITIVE table and column name, it will return TRUE if the Table/Column
-	 * exists ANYWHERE in the already analyzed database
-	 *
-	 * @param string $tableName
-	 * @param string $columnName
-	 * @return boolean true if it is found/validated
-	 */
-	public function validateTableColumn(string $tableName, string $columnName): bool {
-		$tableName = strtolower(trim($tableName));
-		$columnName = strtolower(trim($columnName));
-
-		if (array_key_exists($tableName, $this->tableArray)) {
-			$tableName = $this->tableArray[$tableName]->name;
-		} elseif (array_key_exists($tableName, $this->typeTableArray)) {
-			$tableName = $this->typeTableArray[$tableName]->name;
-		} elseif (array_key_exists($tableName, $this->associationTableNameArray)) {
-			$tableName = $this->associationTableNameArray[$tableName];
-		} else {
-			return false;
-		}
-
-		$objFieldArray = $this->database->getFieldsForTable($tableName);
-
-		foreach ($objFieldArray as $objField) {
-			if (strtolower(trim($objField->name)) === $columnName) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public function getTitle(): string {
 		if (array_key_exists($this->databaseIndex, Database::$databases)) {
 			$database = Database::$databases[$this->databaseIndex];
@@ -174,12 +127,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$toReturn .= sprintf('			<stripFromTableName prefix="%s"/>%s', $this->stripTablePrefix, $crLf);
 		$toReturn .= sprintf('			<excludeTables pattern="%s" list="%s"/>%s', $this->excludePattern, implode(',', $this->excludeListArray), $crLf);
 		$toReturn .= sprintf('			<includeTables pattern="%s" list="%s"/>%s', $this->includePattern, implode(',', $this->includeListArray), $crLf);
-		$toReturn .= sprintf('			<relationships>%s', $crLf);
-		if ($this->relationships) {
-			$toReturn .= sprintf('			%s%s', $this->relationships, $crLf);
-		}
-		$toReturn .= sprintf('			</relationships>%s', $crLf);
-		$toReturn .= sprintf('			<relationshipsScript filepath="%s" format="%s"/>%s', $this->relationshipsScriptPath, $this->relationshipsScriptFormat, $crLf);
 		$toReturn .= sprintf('		</database>%s', $crLf);
 		return $toReturn;
 	}
@@ -313,11 +260,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$includeList = Utils::lookupSetting($settingsXml, 'includeTables', 'list');
 		$this->includeListArray = array_map('trim', explode(',', $includeList));
 
-		// Relationship Scripts
-		$this->relationships = Utils::lookupSetting($settingsXml, 'relationships');
-		$this->relationshipsScriptPath = Utils::lookupSetting($settingsXml, 'relationshipsScript', 'filepath');
-		$this->relationshipsScriptFormat = Utils::lookupSetting($settingsXml, 'relationshipsScript', 'format');
-
 		// Column Comment for MetaControlLabel setting.
 		$this->commentMetaControlLabelDelimiter = Utils::lookupSetting($settingsXml, 'columnCommentForMetaControl', 'delimiter');
 
@@ -335,73 +277,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 					$attribute,
 					$namespace
 				);
-			}
-		}
-
-		// Aggregate RelationshipLinesQcodo and RelationshipLinesSql arrays
-		if ($this->relationships) {
-			$lines = explode("\n", strtolower($this->relationships));
-			$this->parseRelationshipLines($lines);
-		}
-
-		if ($this->relationshipsScriptPath) {
-			if (!file_exists($this->relationshipsScriptPath)) {
-				$this->errors .= sprintf("Cog\Codegen\CodeGen Settings XML Fatal Error: relationshipsScript filepath \"%s\" does not exist\r\n", $this->relationshipsScriptPath);
-			} else {
-				$script = strtolower(trim(file_get_contents($this->relationshipsScriptPath)));
-				switch (strtolower($this->relationshipsScriptFormat)) {
-					case 'qcodo':
-					case 'qcubed':
-						$lines = explode("\n", $script);
-						$this->parseRelationshipLines($lines);
-						break;
-
-					case 'sql':
-						// Separate all commands in the script (separated by ";")
-						$commands = explode(';', $script);
-						if ($commands) {
-							foreach ($commands as $command) {
-								$command = trim($command);
-
-								if ($command) {
-									// Take out all comment lines in the script
-									$lines = explode("\n", $command);
-									$command = '';
-									foreach ($lines as $line) {
-										$line = trim($line);
-										if (
-											$line &&
-											strncmp($line, '//', 2) !== 0 &&
-											strncmp($line, '--', 2) !== 0 &&
-											strncmp($line, '#', 1) !== 0
-										) {
-											$line = str_replace([
-												'        ',
-												'       ',
-												'      ',
-												'     ',
-												'    ',
-												'   ',
-												'  '
-											], ' ', $line);
-
-											$command .= $line . ' ';
-										}
-									}
-
-									$command = trim($command);
-									if ((strncmp($command, 'alter table', 11) === 0) && (str_contains($command, 'foreign key'))) {
-										$this->relationshipLinesSql[$command] = $command;
-									}
-								}
-							}
-						}
-						break;
-
-					default:
-						$this->errors .= sprintf("CodeGen Settings XML Fatal Error: relationshipsScript format \"%s\" is invalid (must be either \"qcubed\", \"qcodo\" or \"sql\")\r\n", $this->relationshipsScriptFormat);
-						break;
-				}
 			}
 		}
 
@@ -628,9 +503,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		}
 
 		$foreignKeyArray = $this->database->getForeignKeysForTable($tableName);
-
-		// Add to it, the list of Foreign Keys from any Relationships Script
-		$foreignKeyArray = $this->getForeignKeysFromRelationshipsScript($tableName, $foreignKeyArray);
 
 		if (count($foreignKeyArray) !== 2) {
 			$this->errors .= sprintf("AssociationTable %s does not have exactly 2 foreign keys. Code Gen analysis found %s.\n", $tableName, count($foreignKeyArray));
@@ -956,9 +828,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		// Get the List of Foreign Keys from the database
 		$foreignKeys = $this->database->getForeignKeysForTable($table->name);
 
-		// Add to it, the list of Foreign Keys from any Relationships Script
-		$foreignKeys = $this->getForeignKeysFromRelationshipsScript($table->name, $foreignKeys);
-
 		// Iterate through each foreign key that exists in this table
 		if ($foreignKeys) {
 			foreach ($foreignKeys as $foreignKey) {
@@ -1186,166 +1055,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 
 	/**
-	 * @param string $tableName
-	 * @param string $line
-	 * @return ForeignKey|null
-	 */
-	protected function getForeignKeyForQcodoRelationshipDefinition(string $tableName, string $line): ?ForeignKey {
-		$tokens = explode('=>', $line);
-		if (count($tokens) !== 2) {
-			$this->errors .= sprintf("Could not parse Relationships Script reference: %s (Incorrect Format)\r\n", $line);
-			$this->relationshipLinesQcodo[$line] = null;
-			return null;
-		}
-
-		$sourceTokens = explode('.', $tokens[0]);
-		$destinationTokens = explode('.', $tokens[1]);
-
-		if (count($sourceTokens) !== 2 || count($destinationTokens) !== 2) {
-			$this->errors .= sprintf("Could not parse Relationships Script reference: %s (Incorrect Table.Column Format)\r\n", $line);
-			$this->relationshipLinesQcodo[$line] = null;
-			return null;
-		}
-
-		$columnName = trim($sourceTokens[1]);
-		$referenceTableName = trim($destinationTokens[0]);
-		$referenceColumnName = trim($destinationTokens[1]);
-		$fkName = sprintf('virtualfk_%s_%s', $tableName, $columnName);
-
-		if (strtolower($tableName) === trim($sourceTokens[0])) {
-			$this->relationshipLinesQcodo[$line] = null;
-			return $this->getForeignKeyHelper($line, $fkName, $tableName, $columnName, $referenceTableName, $referenceColumnName);
-		}
-
-		return null;
-	}
-
-	/**
-	 * @param $tableName
-	 * @param $line
-	 * @return ForeignKey|null
-	 */
-	protected function getForeignKeyForSqlRelationshipDefinition($tableName, $line): ?ForeignKey {
-		$matches = [];
-
-		// Start
-		$pattern = '/alter[\s]+table[\s]+';
-		// Table Name
-		$pattern .= '[\[\`\'\"]?(' . $this->patternTableName . ')[\]\`\'\"]?[\s]+';
-
-		// Add Constraint
-		$pattern .= '(add[\s]+)?(constraint[\s]+';
-		$pattern .= '[\[\`\'\"]?(' . $this->patternKeyName . ')[\]\`\'\"]?[\s]+)?[\s]*';
-		// Foreign Key
-		$pattern .= 'foreign[\s]+key[\s]*(' . $this->patternKeyName . ')[\s]*\(';
-		$pattern .= '([^)]+)\)[\s]*';
-		// References
-		$pattern .= 'references[\s]+';
-		$pattern .= '[\[\`\'\"]?(' . $this->patternTableName . ')[\]\`\'\"]?[\s]*\(';
-		$pattern .= '([^)]+)\)[\s]*';
-		// End
-		$pattern .= '/';
-
-		// Perform the RegExp
-		preg_match($pattern, $line, $matches);
-
-		if (count($matches) === 9) {
-			$columnName = trim($matches[6]);
-			$referenceTableName = trim($matches[7]);
-			$referenceColumnName = trim($matches[8]);
-			$foreignKeyName = $matches[5];
-			if (!$foreignKeyName) {
-				$foreignKeyName = sprintf('virtualfk_%s_%s', $tableName, $columnName);
-			}
-
-			if ((str_contains($columnName, ',')) || (str_contains($referenceColumnName, ','))) {
-				$this->errors .= sprintf("Relationships Script has a foreign key definition with multiple columns: %s (Multiple-columned FKs are not supported by the code generator)\r\n", $line);
-				$this->relationshipLinesSql[$line] = null;
-				return null;
-			}
-
-			// Cleanup columnName and referenceColumnName
-			$columnName = str_replace(["'", '"', '[', ']', '`', '	', ' ', "\r", "\n"], '', $columnName);
-			$referenceColumnName = str_replace(["'", '"', '[', ']', '`', '	', ' ', "\r", "\n"], '', $referenceColumnName);
-
-			if (strtolower($tableName) === trim($matches[1])) {
-				$this->relationshipLinesSql[$line] = null;
-				return $this->getForeignKeyHelper($line, $foreignKeyName, $tableName, $columnName, $referenceTableName, $referenceColumnName);
-			}
-
-			return null;
-		}
-
-		$this->errors .= sprintf("Could not parse Relationships Script reference: %s (Not in ANSI SQL Format)\r\n", $line);
-		$this->relationshipLinesSql[$line] = null;
-		return null;
-	}
-
-	/**
-	 * @param string $line
-	 * @param string $fkName
-	 * @param string $tableName
-	 * @param string $columnName
-	 * @param string $referencedTable
-	 * @param string $referencedColumn
-	 * @return ForeignKey|null
-	 */
-	protected function getForeignKeyHelper(string $line, string $fkName, string $tableName, string $columnName, string $referencedTable, string $referencedColumn): ?ForeignKey {
-		// Make Sure Tables/Columns Exist, or display error otherwise
-		if (!$this->validateTableColumn($tableName, $columnName)) {
-			$this->errors .= sprintf("Could not parse Relationships Script reference: \"%s\" (\"%s.%s\" does not exist)\r\n",
-				$line, $tableName, $columnName);
-			return null;
-		}
-
-		if (!$this->validateTableColumn($referencedTable, $referencedColumn)) {
-			$this->errors .= sprintf("Could not parse Relationships Script reference: \"%s\" (\"%s.%s\" does not exist)\r\n",
-				$line, $referencedTable, $referencedColumn);
-			return null;
-		}
-
-		return new ForeignKey($fkName, [$columnName], $referencedTable, [$referencedColumn]);
-	}
-
-	/**
-	 * This will go through the various Relationships Script lines (if applicable) as setup during
-	 * the __constructor() through the <relationships> and <relationshipsScript> tags in the
-	 * configuration settings.
-	 *
-	 * If no Relationships are defined, this method will simply exit making no changes.
-	 *
-	 * @param string $tableName Name of the table to pull foreign keys for
-	 * @param ForeignKey[] $foreignKeyArray Array of currently found DB FK objects which will be appended to
-	 * @return ForeignKey[] Array of DB FK objects that were parsed out
-	 */
-	protected function getForeignKeysFromRelationshipsScript(string $tableName, array $foreignKeyArray): array {
-		foreach ($this->relationshipLinesQcodo as $line) {
-			if ($line) {
-				$objForeignKey = $this->getForeignKeyForQcodoRelationshipDefinition($tableName, $line);
-
-				if ($objForeignKey) {
-					$foreignKeyArray[] = $objForeignKey;
-					$this->relationshipLinesQcodo[$line] = null;
-				}
-			}
-		}
-
-		foreach ($this->relationshipLinesSql as $line) {
-			if ($line) {
-				$objForeignKey = $this->getForeignKeyForSqlRelationshipDefinition($tableName, $line);
-
-				if ($objForeignKey) {
-					$foreignKeyArray[] = $objForeignKey;
-					$this->relationshipLinesSql[$line] = null;
-				}
-			}
-		}
-
-		return $foreignKeyArray;
-	}
-
-
-	/**
 	 * Override method to perform a property "Get"
 	 * This will get the value of $strName
 	 *
@@ -1374,28 +1083,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 					$exception->incrementOffset();
 					throw $exception;
 				}
-		}
-	}
-
-	/**
-	 * @param string[] $lines
-	 * @return void
-	 */
-	protected function parseRelationshipLines(array $lines): void {
-		if ($lines) {
-			foreach ($lines as $line) {
-				$line = trim($line);
-
-				if (
-					$line &&
-					strlen($line) > 2 &&
-					strncmp($line, '//', 2) !== 0 &&
-					strncmp($line, '--', 2) !== 0 &&
-					strncmp($line, '#', 1) !== 0
-				) {
-					$this->relationshipLinesQcodo[$line] = $line;
-				}
-			}
 		}
 	}
 }

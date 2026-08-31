@@ -25,43 +25,37 @@ abstract class Utils {
 	protected static ?InflectorInterface $inflector = null;
 
 	/**
-	 * This will look up either the node value (if no attribute name is passed in) or the attribute value
-	 * for a given Tag.  Node Searches only apply from the root level of the configuration XML being passed in
-	 * (e.g. it will not be able to look up the tag name of a grandchild of the root node)
+	 * This will look up the attribute value for a given Tag.
 	 *
-	 * If No Tag Name is passed in, then attribute/value lookup is based on the root node, itself.
+	 * If No Tag Name is passed in, then attribute lookup is based on the root node, itself.
 	 *
 	 * @param SimpleXmlElement $node
 	 * @param string|null $tagName
-	 * @param string|null $attributeName
+	 * @param string $attributeName
 	 * @param string $type
 	 * @return mixed the return type depends on the Type you pass in to $strType
 	 * @throws CogException
 	 */
-	public static function lookupSetting(\SimpleXmlElement $node, ?string $tagName, ?string $attributeName = null, string $type = Type::STRING): mixed {
+	public static function lookupSetting(\SimpleXmlElement $node, ?string $tagName, string $attributeName, string $type = Type::STRING): mixed {
 		if ($tagName) {
 			$node = $node->$tagName;
 		}
 
-		if ($attributeName) {
-			switch ($type) {
-				case Type::INTEGER:
-					try {
-						return Type::cast($node[$attributeName], Type::INTEGER);
-					} catch (\Exception $exception) {
-						return null;
-					}
-				case Type::BOOLEAN:
-					try {
-						return Type::cast($node[$attributeName], Type::BOOLEAN);
-					} catch (\Exception $exception) {
-						return null;
-					}
-				default:
-					return StringUtils::trim(Type::cast($node[$attributeName], Type::STRING));
-			}
-		} else {
-			return StringUtils::trim(Type::cast($node, Type::STRING));
+		switch ($type) {
+			case Type::INTEGER:
+				try {
+					return Type::cast($node[$attributeName], Type::INTEGER);
+				} catch (\Exception $exception) {
+					return null;
+				}
+			case Type::BOOLEAN:
+				try {
+					return Type::cast($node[$attributeName], Type::BOOLEAN);
+				} catch (\Exception $exception) {
+					return null;
+				}
+			default:
+				return StringUtils::trim(Type::cast($node[$attributeName], Type::STRING));
 		}
 	}
 

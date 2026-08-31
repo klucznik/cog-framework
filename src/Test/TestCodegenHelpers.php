@@ -41,8 +41,6 @@ class TestCodegenHelpers extends TestCase {
 			<stripFromTableName prefix="%s"/>
 			<excludeTables pattern="" list=""/>
 			<includeTables pattern="" list=""/>
-			<relationships></relationships>
-			<relationshipsScript filepath="%s" format="%s"/>
 			<columnCommentForMetaControl delimiter=""/>
 		</database>';
 
@@ -52,7 +50,7 @@ class TestCodegenHelpers extends TestCase {
 	 *
 	 * @param array $overrides any of: index, classPrefix, classSuffix,
 	 *     objectPrefix, objectSuffix, namespaceData, namespaceType,
-	 *     stripPrefix, scriptPath, scriptFormat
+	 *     stripPrefix
 	 */
 	private function settingsXml(array $overrides = []): SimpleXMLElement {
 		$settings = array_merge([
@@ -64,8 +62,6 @@ class TestCodegenHelpers extends TestCase {
 			'namespaceData' => 'App\Data',
 			'namespaceType' => 'App\Type',
 			'stripPrefix' => '',
-			'scriptPath' => '',
-			'scriptFormat' => '',
 		], $overrides);
 
 		return new SimpleXMLElement(sprintf(
@@ -77,9 +73,7 @@ class TestCodegenHelpers extends TestCase {
 			$settings['objectSuffix'],
 			htmlspecialchars($settings['namespaceData']),
 			htmlspecialchars($settings['namespaceType']),
-			$settings['stripPrefix'],
-			htmlspecialchars($settings['scriptPath']),
-			$settings['scriptFormat']
+			$settings['stripPrefix']
 		));
 	}
 
@@ -619,12 +613,6 @@ class TestCodegenHelpers extends TestCase {
 		$this->assertSame('', Utils::lookupSetting($xml, 'className', 'suffix'));
 	}
 
-	public function testLookupSettingReadsNodeValues() {
-		$xml = new SimpleXMLElement('<database><relationships>  person.id  </relationships></database>');
-
-		$this->assertSame('person.id', Utils::lookupSetting($xml, 'relationships'));
-	}
-
 	public function testLookupSettingCastsBooleans() {
 		$xml = new SimpleXMLElement('<database><flag on="true" off="false"/></database>');
 
@@ -693,30 +681,6 @@ class TestCodegenHelpers extends TestCase {
 		$this->assertSame('Example\Data', $codegen->namespaceData);
 	}
 
-	public function testMissingRelationshipsScriptIsAnError() {
-		$codegen = new DatabaseCodeGen('/docroot', ['/codegen'], $this->settingsXml([
-			'scriptPath' => '/nonexistent/relationships.sql',
-			'scriptFormat' => 'sql',
-		]));
-
-		$this->assertStringContainsString('does not exist', $codegen->errors);
-	}
-
-	public function testInvalidRelationshipsScriptFormatIsAnError() {
-		$scriptPath = tempnam(sys_get_temp_dir(), 'cog-relationships-');
-		file_put_contents($scriptPath, "alter table blog_post add foreign key (author_id) references person (id);\n");
-
-		try {
-			$codegen = new DatabaseCodeGen('/docroot', ['/codegen'], $this->settingsXml([
-				'scriptPath' => $scriptPath,
-				'scriptFormat' => 'yaml',
-			]));
-
-			$this->assertStringContainsString('format "yaml" is invalid', $codegen->errors);
-		} finally {
-			unlink($scriptPath);
-		}
-	}
 }
 
 /**
