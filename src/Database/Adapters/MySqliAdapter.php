@@ -166,35 +166,6 @@ class MySqliAdapter extends Cog\Database\Base {
 		return new MySqliResult($result, $this);
 	}
 
-	/**
-	 * Performs a Multi Result-Set Query, which is available with Stored Procedures in MySQL 5
-	 *
-	 * @param string $query
-	 * @return MySqliResult[] array of results
-	 * @throws MySqliException
-	 */
-	public function multiQuery(string $query): array {
-		// Log Query (for Profiling, if applicable)
-		$this->logQuery($query);
-
-		// Perform the Query
-		$this->mySqli->multi_query($query);
-		if ($this->mySqli->error) {
-			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, $query);
-		}
-
-		$this->lastInsertId = 0;
-
-		$resultSets = [];
-		do {
-			if ($result = $this->mySqli->store_result()) {
-				$resultSets[] = new MySqliResult($result, $this);
-			}
-		} while ($this->mySqli->next_result());
-
-		return $resultSets;
-	}
-
 	/** @inheritdoc */
 	public function nonQuery(string $sql, bool $saveProfilingInfo = true): void {
 		// Perform the Query
