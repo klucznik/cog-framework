@@ -11,13 +11,19 @@ use Cog\Command\PsyshCommand;
 use Cog\Command\RollbackCommand;
 use Cog\Command\SeedCommand;
 use Cog\Command\Sha1Command;
+use Cog\Command\StatusCommand;
 use Cog\Command\WhiteCharsCommand;
 use Cog\Command\YamlLintCommand;
 use Cog\Console\CommandApplication;
 use Cog\Util\FileSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\VarDumper\VarDumper;
 
@@ -93,10 +99,13 @@ class TestCommands extends TestCase {
 	}
 
 	/** A tester for a command that needs an application to resolve sibling commands. */
-	private function tester(Command $command): CommandTester {
+	private function tester(Command $command, Command ...$siblings): CommandTester {
 		$application = new CommandApplication();
 		$application->setAutoExit(false);
 		$application->addCommand($command);
+		foreach ($siblings as $sibling) {
+			$application->addCommand($sibling);
+		}
 
 		return new CommandTester($command);
 	}
@@ -348,8 +357,9 @@ class TestCommands extends TestCase {
 	//
 	// The Phinx wrappers
 	//
-	// Each adds a Cog name and alias to a Phinx command and then chains db:codegen
-	// after it. Only the naming is ours, and it is what discovery depends on.
+	// Each runs a Phinx command as a nested application under a Cog name and
+	// alias, and the ones that change the schema chain db:codegen afterwards.
+	// The naming is what discovery depends on; the chaining is what is ours.
 	//
 
 	public static function phinxCommandProvider(): array {
@@ -357,6 +367,7 @@ class TestCommands extends TestCase {
 			'migrate' => [MigrateCommand::class, 'db:migrate', 'migrate'],
 			'rollback' => [RollbackCommand::class, 'db:rollback', 'rollback'],
 			'seed' => [SeedCommand::class, 'db:seed', 'seed'],
+			'status' => [StatusCommand::class, 'db:status', 'status'],
 		];
 	}
 
@@ -369,14 +380,16 @@ class TestCommands extends TestCase {
 	}
 
 	/**
-	 * The wrappers keep the Phinx options - they call parent::configure() before
-	 * renaming - so a caller can still pass the environment through.
+	 * The wrappers copy the Phinx command's definition, so a caller can still pass
+	 * the environment through, and add --configuration, which Phinx declares on its
+	 * application rather than on the command.
 	 */
 	public static function phinxCommandClassProvider(): array {
 		return [
 			'migrate' => [MigrateCommand::class],
 			'rollback' => [RollbackCommand::class],
 			'seed' => [SeedCommand::class],
+			'status' => [StatusCommand::class],
 		];
 	}
 
@@ -385,6 +398,117 @@ class TestCommands extends TestCase {
 		$definition = (new $class())->getDefinition();
 
 		$this->assertTrue($definition->hasOption('environment'));
+		$this->assertTrue($definition->hasOption('configuration'));
+	}
+
+	/** Without a Phinx configuration in reach the nested command fails before touching anything. */
+	public function testPhinxWrapperRunsPhinx() {
+		$this->changeToScratchDirectory();
+		$codegen = $this->codegenSpy();
+		$tester = $this->tester(new StatusCommand(), $codegen);
+
+		try {
+			$tester->execute(['--environment' => 'development']);
+			$this->fail('Phinx should have failed to locate its configuration');
+		} catch (\InvalidArgumentException $exception) {
+			$this->assertStringContainsString('phinx', $exception->getMessage());
+		}
+
+		$this->assertFalse($codegen->ran);
+	}
+
+	/**
+	 * A migration that changes the schema is followed by db:codegen, which must be
+	 * run with its own defaults rather than the Phinx options it does not know.
+	 */
+	public function testPhinxWrapperChainsCodegenAfterSuccess() {
+		$codegen = $this->codegenSpy();
+		$tester = $this->tester($this->migrateWithPhinxStub(Command::SUCCESS), $codegen);
+
+		$this->assertSame(Command::SUCCESS, $tester->execute(['--environment' => 'development']));
+		$this->assertTrue($codegen->ran);
+		$this->assertSame('codegen.xml', $codegen->config);
+	}
+
+	/** A failed Phinx run is reported as-is and the ORM is left alone. */
+	public function testPhinxWrapperSkipsCodegenAfterFailure() {
+		$codegen = $this->codegenSpy();
+		$tester = $this->tester($this->migrateWithPhinxStub(3), $codegen);
+
+		$this->assertSame(3, $tester->execute([]));
+		$this->assertFalse($codegen->ran);
+	}
+
+	/** Status only reports, so it never regenerates the ORM. */
+	public function testStatusCommandDoesNotChainCodegen() {
+		$codegen = $this->codegenSpy();
+		$status = new class extends StatusCommand {
+			protected function phinxCommand(): Command {
+				return TestCommands::phinxStub(Command::SUCCESS);
+			}
+		};
+		$tester = $this->tester($status, $codegen);
+
+		$this->assertSame(Command::SUCCESS, $tester->execute([]));
+		$this->assertFalse($codegen->ran);
+	}
+
+	/** A MigrateCommand whose nested Phinx command is replaced by a stub exiting with $exitCode. */
+	private function migrateWithPhinxStub(int $exitCode): MigrateCommand {
+		return new class($exitCode) extends MigrateCommand {
+			public function __construct(private int $exitCode) {
+				parent::__construct();
+			}
+
+			protected function phinxCommand(): Command {
+				return TestCommands::phinxStub($this->exitCode);
+			}
+		};
+	}
+
+	/**
+	 * Stands in for a Phinx command: declares --environment like the real ones and
+	 * exits with $exitCode. Like the real one it belongs to an application, whose
+	 * definition supplies the "command" argument when the stub is run.
+	 */
+	public static function phinxStub(int $exitCode): Command {
+		$stub = new class($exitCode) extends Command {
+			public function __construct(private int $exitCode) {
+				parent::__construct('phinx-stub');
+			}
+
+			protected function configure(): void {
+				$this->addOption('environment', 'e', InputOption::VALUE_REQUIRED, 'The target environment');
+			}
+
+			protected function execute(InputInterface $input, OutputInterface $output): int {
+				return $this->exitCode;
+			}
+		};
+		$stub->setApplication(new Application());
+
+		return $stub;
+	}
+
+	/** A db:codegen stand-in that records whether it ran and which config it was given. */
+	private function codegenSpy(): Command {
+		return new class extends Command {
+			public bool $ran = false;
+			public ?string $config = null;
+
+			protected function configure(): void {
+				$this
+					->setName('db:codegen')
+					->addArgument('config', InputArgument::OPTIONAL, '', 'codegen.xml');
+			}
+
+			protected function execute(InputInterface $input, OutputInterface $output): int {
+				$this->ran = true;
+				$this->config = $input->getArgument('config');
+
+				return self::SUCCESS;
+			}
+		};
 	}
 
 	//

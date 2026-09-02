@@ -2,16 +2,8 @@
 
 namespace Cog\Command;
 
-use Phinx\Console\Command;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+class RollbackCommand extends PhinxCommand {
 
-class RollbackCommand extends Command\Rollback {
-	/**
-	 * {@inheritdoc}
-	 * @throws InvalidArgumentException
-	 */
 	protected function configure(): void {
 		parent::configure();
 
@@ -20,13 +12,11 @@ class RollbackCommand extends Command\Rollback {
 			->setAliases(['rollback']);
 	}
 
-	/**
-	 * {@inheritdoc}
-	 * @throws \Exception;
-	 */
-	protected function execute(InputInterface $input, OutputInterface $output): int {
-		parent::execute($input, $output);
+	protected function phinxCommandName(): string {
+		return 'rollback';
+	}
 
-		return $this->getApplication()->find('db:codegen')->run($input, $output);
+	protected function regeneratesOrm(): bool {
+		return true;
 	}
 }
