@@ -47,7 +47,9 @@ is additionally pulled in through composer's `files` autoload.
 - `declare(strict_types=1)` on **new** files. It is not repo-wide - only five files in `src/`
   have it - and it should not be retrofitted onto existing ones as a drive-by change, since
   it turns silent scalar coercion into a `TypeError` in code never exercised under it.
-- No `readonly` anywhere in `src/`. Do not introduce it unprompted.
+- `readonly` is rare in `src/` - `BaseConfig` uses it deliberately for its set-once properties,
+  and that is currently the only place. This is an observation, not a rule: use it where
+  set-once semantics genuinely apply, and don't retrofit it elsewhere as a drive-by change.
 - Plain camelCase members in framework code. The Hungarian prefixes (`str`, `int`, `flt`, `bln`,
   `dtt`, `obj`, from `Cog\Util\ConvertNotation::prefixFromType()`) belong to **generated ORM output
   only** - never write them by hand.
