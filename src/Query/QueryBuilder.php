@@ -229,30 +229,6 @@ class QueryBuilder extends Cog\Base {
 	}
 
 	/**
-	 * @param string $joinTableName
-	 * @param string $joinTableAlias
-	 * @param QQCondition $joinCondition
-	 * @throws \Cog\Exceptions\CogException
-	 */
-	public function addJoinCustomItem($joinTableName, $joinTableAlias, QQCondition $joinCondition): void {
-		$joinItem = sprintf('LEFT JOIN %s%s%s AS %s%s%s ON ',
-			$this->escapeIdentifierBegin, $joinTableName, $this->escapeIdentifierEnd,
-			$this->escapeIdentifierBegin, $this->getTableAlias($joinTableAlias), $this->escapeIdentifierEnd
-		);
-
-		try {
-			if ($conditionClause = $joinCondition->getWhereClause($this, true)) {
-				$joinItem .= ' AND ' . $conditionClause;
-			}
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
-
-		$this->joinArray[$joinItem] = $joinItem;
-	}
-
-	/**
 	 * @param string $sql
 	 */
 	public function addJoinCustomSqlItem($sql): void {

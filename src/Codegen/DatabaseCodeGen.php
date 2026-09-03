@@ -773,7 +773,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 					// Ensure every column exist in the DbIndex's columnNameArray
 					$failed = false;
 					foreach ($databaseIndex->columnNameArray as $columnName) {
-						if (!array_key_exists(strtolower($columnName), $table->columnArray) && $table->columnArray[strtolower($columnName)]) {
+						if (!array_key_exists(strtolower($columnName), $table->columnArray)) {
 							// It doesn't exist, add a warning
 							$this->errors .= sprintf("Index %s in table %s indexes on the column %s, which does not appear to exist.\n",
 								$databaseIndex->keyName, $table->name, $columnName);

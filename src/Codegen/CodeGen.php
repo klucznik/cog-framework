@@ -287,8 +287,7 @@ abstract class CodeGen extends Base {
 			}
 		} catch (CogException $exception) {
 			$exception->incrementOffset();
+			throw $exception;
 		}
-
-		return null; // @codeCoverageIgnore
 	}
 }

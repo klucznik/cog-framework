@@ -65,6 +65,7 @@ abstract class CodeGenRunner extends Base {
 	 */
 	public static function run(string $docroot, string $settingsXmlFilePath): void {
 		self::$codegenArray = [];
+		self::$rootErrors = '';
 		self::$settingsFilePath = $settingsXmlFilePath;
 
 		if (file_exists($settingsXmlFilePath) === false || is_file($settingsXmlFilePath) === false) {

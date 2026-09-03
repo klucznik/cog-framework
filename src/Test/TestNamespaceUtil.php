@@ -28,6 +28,13 @@ class TestNamespaceUtil extends TestCase {
 		$this->assertContains(Environment::class, $classes);
 	}
 
+	/** A namespace two levels below its PSR-4 root has to map to the nested directory in the right order. */
+	public function testClassesInNestedNamespace() {
+		$classes = NamespaceUtil::getClassesInNamespace('Cog\\Command\\Descriptor');
+
+		$this->assertContains('Cog\\Command\\Descriptor\\TextDescriptor', $classes);
+	}
+
 	/** Every entry has to be a real, loadable class - dot entries and non-PHP files are filtered out. */
 	public function testClassesInNamespaceAreAllLoadable() {
 		$classes = NamespaceUtil::getClassesInNamespace('Cog\Exceptions');
