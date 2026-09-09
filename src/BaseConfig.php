@@ -11,13 +11,13 @@ class BaseConfig {
 		public bool $debug = true, // freely writable
 		public readonly bool $cache = false, // set once at construction
 
-		public string $dirDocRoot = '',
-		public string $dirAppRoot = '',
-		public string $dirPublic = '',
-		public string $dirCache = '',
-		public string $dirTemplates = '',
+		public readonly string $dirDocRoot = '',
+		public readonly string $dirAppRoot = '',
+		public readonly string $dirPublic = '',
+		public readonly string $dirCache = '',
+		public readonly string $dirTemplates = '',
 
-		public bool $isCli = false,
+		public readonly bool $isCli = false,
 	) {}
 
 	public function dump(): array {
