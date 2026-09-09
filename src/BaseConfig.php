@@ -11,6 +11,8 @@ class BaseConfig {
 		public bool $debug = true, // freely writable
 		public readonly bool $cache = false, // set once at construction
 
+		public string $dirAppRoot = '',
+		public string $dirPublic = '',
 		public string $dirCache = '',
 		public string $dirTemplates = '',
 	) {}

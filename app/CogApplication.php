@@ -3,7 +3,6 @@
 namespace Cog\ExampleApp;
 
 use Cog\BaseApplication;
-use Cog\BaseConfig;
 use Cog\Database\Database;
 use Cog\Enum\Environment;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

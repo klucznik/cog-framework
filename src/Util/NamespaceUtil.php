@@ -2,7 +2,7 @@
 
 namespace Cog\Util;
 
-use Cog\Path;
+use Cog\BaseApplication;
 use JsonException;
 
 abstract class NamespaceUtil {
@@ -51,7 +51,7 @@ abstract class NamespaceUtil {
 	}
 
 	private static function getDefinedNamespaces(): array {
-		$composerJsonPath = Path::$appRoot . '/composer.json';
+		$composerJsonPath = BaseApplication::config()->dirAppRoot . '/composer.json';
 		try {
 			$composerConfig = json_decode(file_get_contents($composerJsonPath), false, 512, JSON_THROW_ON_ERROR);
 		} catch (JsonException $e) {
@@ -73,7 +73,7 @@ abstract class NamespaceUtil {
 			$possibleNamespace = implode('\\', $namespaceFragments) . '\\';
 
 			if (array_key_exists($possibleNamespace, $composerNamespaces)) {
-				return realpath(Path::$appRoot . '/' . $composerNamespaces[$possibleNamespace] . '/' . implode('/', $undefinedNamespaceFragments));
+				return realpath(BaseApplication::config()->dirAppRoot . '/' . $composerNamespaces[$possibleNamespace] . '/' . implode('/', $undefinedNamespaceFragments));
 			}
 
 			$undefinedNamespaceFragments[] = array_pop($namespaceFragments);
