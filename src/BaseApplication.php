@@ -59,7 +59,7 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
  */
 abstract class BaseApplication extends Base {
 
-	public const string FRAMEWORK_VERSION = '0.9.1';
+	public const string FRAMEWORK_VERSION = '0.9.2';
 
 	protected static BaseConfig $config;
 
