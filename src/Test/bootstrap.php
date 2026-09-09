@@ -2,8 +2,8 @@
 
 // PHPUnit bootstrap. Loads the autoloader and builds the service container, so
 // tests can reach container-backed helpers such as StringUtils::pluralize() and
-// FileSystem::getMimeType(). Container caching is off - the suite should never
-// pick up a container dumped by a previous run.
+// FileSystem::getMimeType(). Caching is off - the suite should never
+// pick up a router cache dumped by a previous run.
 
 use Cog\BaseApplication;
 use Cog\Enum\Environment;

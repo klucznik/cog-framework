@@ -5,8 +5,7 @@ namespace Cog\Test;
 use Cog\BaseApplication;
 use Cog\BaseConfig;
 use Cog\Enum\Environment;
-use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use League\Container\Container;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 
 /**
@@ -59,7 +58,7 @@ final class MockedApplication extends BaseApplication {
 		static::$container = $container;
 	}
 
-	public static function callBuildContainer(): ContainerBuilder {
+	public static function callBuildContainer(): Container {
 		return static::buildContainer();
 	}
 

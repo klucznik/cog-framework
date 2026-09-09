@@ -24,7 +24,7 @@ is additionally pulled in through composer's `files` autoload.
 | Path | Responsibility |
 | --- | --- |
 | `src/Base.php` | Root class for nearly everything; the magic property pattern below |
-| `src/BaseApplication.php` | Lifecycle: error handler, DI container build/dump, routing, command dirs |
+| `src/BaseApplication.php` | Lifecycle: error handler, service container, routing, command dirs |
 | `src/Kernel.php` | Hand-rolled `HttpKernelInterface`: request → controller → response |
 | `src/Path.php` | Static registry of web/app roots, CLI-vs-web detection |
 | `src/Type.php` | Type string constants and `Type::cast()` |
@@ -53,8 +53,6 @@ is additionally pulled in through composer's `files` autoload.
 - Plain camelCase members in framework code. The Hungarian prefixes (`str`, `int`, `flt`, `bln`,
   `dtt`, `obj`, from `Cog\Util\ConvertNotation::prefixFromType()`) belong to **generated ORM output
   only** - never write them by hand.
-- `src/Command/ContainerDebugCommand.php` and `src/Command/Descriptor/*` are copied Symfony code in
-  4-space style. Leave their formatting alone.
 
 ## The Base property pattern
 
@@ -176,9 +174,9 @@ Rules that have already cost real bugs:
 
 ## Gotchas
 
-- `BaseApplication::$cache` switches container caching globally. With it on, edits to service
-  definitions appear to do nothing until `$dirCache/container/` is cleared. The test bootstrap forces
-  it off for that reason.
+- With caching on, the router dumps its matcher under `$dirCache/routes/`, so route edits appear
+  to do nothing until that directory is cleared. The container itself is rebuilt on every request.
+  The test bootstrap forces caching off for that reason.
 - `Cog\Path` is **retained deliberately for backwards compatibility** and is not on a deprecation
   path. **Nothing inside `src/` references it at all** - directories and CLI-ness come off
   `BaseConfig`, and `dump:path` has been removed - but the vendored sites call `Path::isCLI()` and
@@ -198,7 +196,7 @@ Rules that have already cost real bugs:
   overwrite a live entry. Adapter classes are resolved by string concatenation from the `adapter`
   config key.
 - Console command discovery is **non-recursive** over `src/Command/*.php`, and the filename must
-  match the class name. Subdirectories are never scanned, which is why `Command/Descriptor/` is not
-  mistaken for a pile of commands.
+  match the class name. Subdirectories are never scanned, so helper classes can live in one
+  without being mistaken for commands.
 - `Cog\Util\NamespaceUtil` reads `composer.json` at run time, relative to `Path::$appRoot`, so the
   PSR-4 map is load-bearing well beyond the autoloader.

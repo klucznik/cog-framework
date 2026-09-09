@@ -7,14 +7,28 @@ use Cog\BaseConfig;
 use Cog\Enum\Environment;
 use Cog\Kernel;
 use Cog\Util\Url;
-use ArgumentCountError;
+use League\Container\Argument\Literal\ArrayArgument;
+use League\Container\Argument\Literal\CallableArgument;
+use League\Container\Container;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\BackedEnumValueResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestAttributeValueResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestValueResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\SessionValueResolver;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\EventListener\ResponseListener;
+use Symfony\Component\HttpKernel\EventListener\RouterListener;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Mime\MimeTypes;
 use Symfony\Component\Mime\MimeTypesInterface;
 use Symfony\Component\Routing\Router;
@@ -28,9 +42,9 @@ use Symfony\Component\String\Slugger\SluggerInterface;
  * the container that boot produced. So the tests here drive it a second time
  * through MockedApplication and put the bootstrap's statics back afterwards.
  *
- * The base container is deliberately incomplete: it registers 'router' without a
- * $resource, so the application layer has to supply one. Anything that needs a
- * working router goes through buildRoutedContainer().
+ * The container is complete on its own: the router takes its routes from
+ * getRoutes(), which scans getRoutesDirs(), so an application only has to
+ * override the latter. MockedApplication::$routesDirs stands in for that.
  */
 class TestBaseApplication extends TestCase {
 
@@ -61,17 +75,11 @@ class TestBaseApplication extends TestCase {
 		}
 	}
 
-	/** A container the application layer has finished wiring: router given its routes. */
-	private function buildRoutedContainer(): ContainerBuilder {
+	/** The base container, with the router pointed at the fixture controllers. */
+	private function buildContainer(): Container {
 		MockedApplication::$routesDirs = [__DIR__ . '/fixtures/Controller'];
 
-		$container = MockedApplication::callBuildContainer();
-		$container->getDefinition('router')
-			->setArgument('$resource', [MockedApplication::class, 'getRoutes'])
-			->setArgument('$options', []);
-		$container->compile();
-
-		return $container;
+		return MockedApplication::callBuildContainer();
 	}
 
 	private function makeTempDir(): string {
@@ -186,13 +194,12 @@ class TestBaseApplication extends TestCase {
 		$this->assertSame($config, MockedApplication::$configAtErrorHandling);
 	}
 
-	public function testInitializeBuildsCompiledContainer() {
+	public function testInitializeBuildsTheContainer() {
 		MockedApplication::setContainer(null);
 		MockedApplication::initialize(Environment::TEST, false, false);
 		$this->restoreErrorHandlers();
 
-		$this->assertInstanceOf(ContainerBuilder::class, BaseApplication::$container);
-		$this->assertTrue(BaseApplication::$container->isCompiled());
+		$this->assertInstanceOf(Container::class, BaseApplication::$container);
 	}
 
 	public function testInitializeErrorHandlingReturnsHandler() {
@@ -210,117 +217,179 @@ class TestBaseApplication extends TestCase {
 		restore_exception_handler();
 	}
 
-	public function testBuildContainerMarksTheIntendedServicesPublic() {
-		$container = MockedApplication::callBuildContainer();
+	public function testBuildContainerResolvesTheFrameworkServices() {
+		$container = $this->buildContainer();
 
-		foreach (['kernel', 'request_stack', 'router', 'inflector', 'mime', 'slugger', 'filesystem'] as $id) {
-			$this->assertTrue($container->getDefinition($id)->isPublic(), $id . ' should be public');
+		$expected = [
+			'kernel' => Kernel::class,
+			'request_stack' => RequestStack::class,
+			'router' => Router::class,
+			'inflector' => EnglishInflector::class,
+			'mime' => MimeTypes::class,
+			'slugger' => AsciiSlugger::class,
+			'filesystem' => Filesystem::class,
+		];
+
+		foreach ($expected as $id => $class) {
+			$this->assertTrue($container->has($id), $id . ' should be registered');
+			$this->assertInstanceOf($class, $container->get($id));
 		}
-
-		foreach (['context', 'dispatcher', 'controller_resolver', 'session_factory'] as $id) {
-			$this->assertFalse($container->getDefinition($id)->isPublic(), $id . ' should be private');
-		}
-	}
-
-	public function testBuildContainerTagsArgumentValueResolversWithPriorities() {
-		$container = MockedApplication::callBuildContainer();
-
-		$priorities = [];
-		foreach ($container->findTaggedServiceIds('controller.argument_value_resolver') as $id => $tags) {
-			$priorities[$id] = $tags[0]['priority'];
-		}
-
-		$this->assertSame([
-			'argument_resolver.backed_enum_resolver' => 100,
-			'argument_resolver.request_attribute' => 100,
-			'argument_resolver.request' => 50,
-			'argument_resolver.session' => 50,
-			'argument_resolver.service' => -50,
-			'argument_resolver.variadic' => -150,
-			'argument_resolver.default' => -100,
-		], $priorities);
-	}
-
-	public function testBuildContainerTagsTheTargetedResolverSeparately() {
-		$container = MockedApplication::callBuildContainer();
-
-		$this->assertSame(
-			['argument_resolver.query_parameter_value_resolver'],
-			array_keys($container->findTaggedServiceIds('controller.targeted_value_resolver'))
-		);
-	}
-
-	public function testBuildContainerSetsKernelDebugOff() {
-		$this->assertFalse(MockedApplication::callBuildContainer()->getParameter('kernel.debug'));
-	}
-
-	public function testBuildContainerPassesEncodingTypeToTheResponseListener() {
-		$container = MockedApplication::callBuildContainer();
-
-		$this->assertSame(
-			BaseApplication::$encodingType,
-			$container->getDefinition('listener.response')->getArgument('$charset')
-		);
-	}
-
-	public function testBuildContainerAliasesInterfacesToImplementations() {
-		$container = MockedApplication::callBuildContainer();
-
-		$this->assertSame('mime', (string)$container->getAlias(MimeTypesInterface::class));
-		$this->assertSame('slugger', (string)$container->getAlias(SluggerInterface::class));
-	}
-
-	public function testCompiledContainerResolvesPublicServices() {
-		$container = $this->buildRoutedContainer();
-
-		$this->assertInstanceOf(RequestStack::class, $container->get('request_stack'));
-		$this->assertInstanceOf(EnglishInflector::class, $container->get('inflector'));
-		$this->assertInstanceOf(MimeTypes::class, $container->get('mime'));
-		$this->assertInstanceOf(AsciiSlugger::class, $container->get('slugger'));
-		$this->assertInstanceOf(Filesystem::class, $container->get('filesystem'));
 	}
 
 	/**
-	 * The interface aliases are registered without being made public, so they
-	 * serve autowiring by type and are not fetchable from the container the way
-	 * the services they point at are.
+	 * The kernel, the router listener and getCurrentRequest() all have to see the
+	 * same request stack, so every service is shared: one instance per container.
 	 */
-	public function testInterfaceAliasesAreNotPubliclyFetchable() {
-		$container = $this->buildRoutedContainer();
+	public function testBuildContainerSharesServices() {
+		$container = $this->buildContainer();
+
+		$this->assertSame($container->get('request_stack'), $container->get('request_stack'));
+		$this->assertSame($container->get('router'), $container->get('router'));
+	}
+
+	/**
+	 * Symfony's DI sorted the resolvers by a priority tag; here registration order
+	 * is the priority, and the tag hands them back in that order.
+	 */
+	public function testBuildContainerTagsArgumentValueResolversInPriorityOrder() {
+		$resolvers = $this->buildContainer()->get('controller.argument_value_resolver');
+
+		$this->assertSame([
+			BackedEnumValueResolver::class,
+			RequestAttributeValueResolver::class,
+			RequestValueResolver::class,
+			SessionValueResolver::class,
+			ServiceValueResolver::class,
+			DefaultValueResolver::class,
+			VariadicValueResolver::class,
+		], array_map(static fn(object $resolver) => $resolver::class, $resolvers));
+	}
+
+	public function testArgumentResolverFillsControllerArgumentsFromTheRequest() {
+		$request = Request::create('/dev/dump');
+		$request->attributes->set('id', 3);
+		$controller = static fn(Request $request, int $id, string $name = 'anonymous') => null;
+
+		$arguments = $this->buildContainer()->get('argument_resolver')->getArguments($request, $controller);
+
+		$this->assertSame([$request, 3, 'anonymous'], $arguments);
+	}
+
+	/**
+	 * The query parameter resolver is not in the regular chain: it only runs for
+	 * an argument that names it through #[MapQueryParameter], which the argument
+	 * resolver looks up by class name.
+	 */
+	public function testArgumentResolverMapsQueryParametersOnRequest() {
+		$request = Request::create('/dev/dump', 'GET', ['page' => '5']);
+		$controller = static fn(#[MapQueryParameter] int $page) => null;
+
+		$arguments = $this->buildContainer()->get('argument_resolver')->getArguments($request, $controller);
+
+		$this->assertSame([5], $arguments);
+	}
+
+	public function testBuildContainerSubscribesTheKernelListeners() {
+		$dispatcher = $this->buildContainer()->get('dispatcher');
+
+		$listenerClasses = static fn(array $listeners) => array_map(static fn(array $listener) => $listener[0]::class, $listeners);
+
+		$this->assertContains(RouterListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::REQUEST)));
+		$this->assertContains(ResponseListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::RESPONSE)));
+	}
+
+	/** The response listener is built with the application's encoding type as its charset. */
+	public function testResponseListenerAppliesTheEncodingType() {
+		$container = $this->buildContainer();
+		$response = new Response('body');
+		$event = new ResponseEvent($container->get('kernel'), Request::create('/dev/dump'), HttpKernelInterface::MAIN_REQUEST, $response);
+
+		$container->get('dispatcher')->dispatch($event, KernelEvents::RESPONSE);
+
+		$this->assertSame(BaseApplication::$encodingType, $response->getCharset());
+	}
+
+	/**
+	 * The whole request path through the container's wiring: the router listener
+	 * matches, the controller resolver loads the fixture action, the argument
+	 * resolver fills the route parameter and the response listener sets the charset.
+	 */
+	public function testKernelServesARequestThroughTheContainerWiring() {
+		$response = $this->buildContainer()->get('kernel')->handle(Request::create('/fixture/7'));
+
+		$this->assertSame(200, $response->getStatusCode());
+		$this->assertSame('7', $response->getContent());
+		$this->assertSame(BaseApplication::$encodingType, $response->getCharset());
+	}
+
+	/**
+	 * The router listener turns a routing miss into NotFoundHttpException before the
+	 * kernel reaches its own 404 fallback, and with no exception listener it escapes
+	 * to the error handler registered by initialize().
+	 */
+	public function testKernelThrowsNotFoundForAnUnknownPath() {
+		$this->expectException(NotFoundHttpException::class);
+
+		$this->buildContainer()->get('kernel')->handle(Request::create('/no/such/route'));
+	}
+
+	/** Interfaces are not registered: services are fetched by their string id only. */
+	public function testInterfacesAreNotRegisteredAsServices() {
+		$container = $this->buildContainer();
 
 		$this->assertFalse($container->has(MimeTypesInterface::class));
 		$this->assertFalse($container->has(SluggerInterface::class));
 	}
 
-	/** Private services are inlined away by compilation and cannot be fetched. */
-	public function testCompiledContainerInlinesPrivateServices() {
-		$container = $this->buildRoutedContainer();
+	/** The router loads its routes through getRoutes(), so getRoutesDirs() is all an application supplies. */
+	public function testRouterLoadsRoutesFromTheRoutesDirs() {
+		$routes = $this->buildContainer()->get('router')->getRouteCollection();
 
-		$this->assertFalse($container->has('dispatcher'));
-		$this->assertFalse($container->has('context'));
+		$this->assertCount(3, $routes);
+		$this->assertSame('/dev/dump', $routes->get('devDump')->getPath());
+	}
 
-		$this->expectException(ServiceNotFoundException::class);
-		$container->get('dispatcher');
+	public function testRouterWritesItsCacheUnderTheCacheDirWhenCachingIsOn() {
+		$dir = $this->makeTempDir();
+		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, dirCache: $dir));
+
+		$match = $this->buildContainer()->get('router')->match('/dev/dump');
+
+		$this->assertSame('devDump', $match['_route']);
+		$this->assertFileExists($dir . '/routes/url_matching_routes.php');
+	}
+
+	public function testRouterWritesNothingWhenCachingIsOff() {
+		$dir = $this->makeTempDir();
+		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, dirCache: $dir));
+
+		$match = $this->buildContainer()->get('router')->match('/dev/dump');
+
+		$this->assertSame('devDump', $match['_route']);
+		$this->assertDirectoryDoesNotExist($dir);
 	}
 
 	/**
-	 * The base container registers 'router' without a $resource: the framework
-	 * has no notion of where an app's controllers live, so the application
-	 * subclass has to supply it. Until it does, the kernel cannot be built.
+	 * How an application customises the container: after parent::buildContainer()
+	 * a definition can be replaced outright. The base wiring refers to the router
+	 * by id only, so the router listener picks up the replacement.
 	 */
-	public function testRouterIsIncompleteWithoutTheApplicationLayer() {
-		$container = MockedApplication::callBuildContainer();
-		$container->compile();
+	public function testAnApplicationCanReplaceTheRouterAfterTheBaseBuiltIt() {
+		$dir = $this->makeTempDir();
+		$container = $this->buildContainer();
 
-		$this->expectException(ArgumentCountError::class);
-		$container->get('router');
-	}
+		$container->addShared('router', Router::class, overwrite: true)
+			->addArguments([
+				'routes_loader_closure',
+				new CallableArgument(MockedApplication::getRoutes(...)),
+				new ArrayArgument(['cache_dir' => $dir . '/custom']),
+				'context',
+			]);
 
-	public function testKernelResolvesOnceTheRouterHasItsResource() {
-		$container = $this->buildRoutedContainer();
+		$response = $container->get('kernel')->handle(Request::create('/dev/dump'));
 
-		$this->assertInstanceOf(Router::class, $container->get('router'));
-		$this->assertInstanceOf(Kernel::class, $container->get('kernel'));
+		$this->assertSame('dump', $response->getContent());
+		$this->assertFileExists($dir . '/custom/url_matching_routes.php');
 	}
 
 	public function testGetCommandDirs() {
@@ -356,13 +425,13 @@ class TestBaseApplication extends TestCase {
 	}
 
 	public function testGetCurrentRequestIsNullWithAnEmptyStack() {
-		MockedApplication::setContainer($this->buildRoutedContainer());
+		MockedApplication::setContainer($this->buildContainer());
 
 		$this->assertNull(MockedApplication::getCurrentRequest());
 	}
 
 	public function testGetCurrentRequestReturnsWhatWasPushedOntoTheStack() {
-		$container = $this->buildRoutedContainer();
+		$container = $this->buildContainer();
 		MockedApplication::setContainer($container);
 
 		$container->get('request_stack')->push(Request::create('/dev/dump'));
@@ -372,55 +441,29 @@ class TestBaseApplication extends TestCase {
 
 	/** A container without a request_stack yields null rather than an exception. */
 	public function testGetCurrentRequestIsNullWhenTheContainerHasNoRequestStack() {
-		$empty = new ContainerBuilder();
-		$empty->compile();
-		MockedApplication::setContainer($empty);
+		MockedApplication::setContainer(new Container());
 
 		$this->assertNull(MockedApplication::getCurrentRequest());
 	}
 
-	public function testInitializeContainerDumpsTheContainerWhenCachingIsOn() {
-		$dir = $this->makeTempDir();
-		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, dirCache: $dir));
-		MockedApplication::setContainer(null);
-
-		MockedApplication::callInitializeContainer();
-
-		$this->assertFileExists($dir . '/container/ProjectServiceContainer.php');
-		$this->assertFileExists($dir . '/container/ProjectServiceContainer.preload.php');
-	}
-
 	/**
-	 * The cached branch is only reachable once per file per process, because
-	 * initializeContainer() pulls the dump in with require_once.
+	 * There is no compiled container to dump any more: the definitions are cheap
+	 * enough to rebuild on every request, so the cache switch leaves the container
+	 * alone and only the router still writes under the cache directory.
 	 */
-	public function testInitializeContainerLoadsTheDumpedContainer() {
+	public function testInitializeContainerWritesNothingEvenWhenCachingIsOn() {
 		$dir = $this->makeTempDir();
 		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, dirCache: $dir));
-
 		MockedApplication::setContainer(null);
-		MockedApplication::callInitializeContainer();
 
-		MockedApplication::setContainer(null);
 		MockedApplication::callInitializeContainer();
 
 		$this->assertInstanceOf(Container::class, BaseApplication::$container);
-		$this->assertNotInstanceOf(ContainerBuilder::class, BaseApplication::$container);
-	}
-
-	public function testInitializeContainerWritesNothingWhenCachingIsOff() {
-		$dir = $this->makeTempDir();
-		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, dirCache: $dir));
-		MockedApplication::setContainer(null);
-
-		MockedApplication::callInitializeContainer();
-
-		$this->assertInstanceOf(ContainerBuilder::class, BaseApplication::$container);
 		$this->assertDirectoryDoesNotExist($dir);
 	}
 
 	public function testInitializeContainerKeepsAnAlreadyBuiltContainer() {
-		$container = $this->buildRoutedContainer();
+		$container = $this->buildContainer();
 		MockedApplication::setContainer($container);
 		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, dirCache: $this->makeTempDir()));
 
@@ -437,7 +480,7 @@ class TestBaseApplication extends TestCase {
 	}
 
 	public function testDisplayProfilingRendersTheBarWhenForced() {
-		MockedApplication::setContainer($this->buildRoutedContainer());
+		MockedApplication::setContainer($this->buildContainer());
 		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false));
 
 		ob_start();
@@ -453,7 +496,7 @@ class TestBaseApplication extends TestCase {
 
 	/** The bar reports the route and controller of the request being served. */
 	public function testDisplayProfilingReportsTheCurrentRoute() {
-		$container = $this->buildRoutedContainer();
+		$container = $this->buildContainer();
 		MockedApplication::setContainer($container);
 		MockedApplication::setConfig(new BaseConfig(Environment::DEV, true, false));
 

@@ -5,7 +5,10 @@ namespace Cog\ExampleApp;
 use Cog\BaseApplication;
 use Cog\Database\Database;
 use Cog\Enum\Environment;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use League\Container\Argument\Literal\ArrayArgument;
+use League\Container\Argument\Literal\CallableArgument;
+use League\Container\Container;
+use Symfony\Component\Routing\Router;
 
 /**
  * This abstract class should never be instantiated. It contains the
@@ -34,13 +37,23 @@ abstract class CogApplication extends BaseApplication {
 		return $annotDirs;
 	}
 
-	/** @inheritDoc */
-	protected static function buildContainer(): ContainerBuilder {
+	/**
+	 * How an application customises the container: call parent::buildContainer()
+	 * and add to, extend or replace what it registered. Here the router is
+	 * re-registered with the app's own options; the base wiring only refers to it
+	 * by id, so nothing has resolved the original yet.
+	 * @inheritDoc
+	 */
+	protected static function buildContainer(): Container {
 		$container = parent::buildContainer();
 
-		$container->getDefinition('router')
-			->setArgument('$resource', [self::class, 'getRoutes'])
-			->setArgument('$options', self::config()->cache ? ['cache_dir' => self::config()->dirCache . '/routes'] : []);
+		$container->addShared('router', Router::class, overwrite: true)
+			->addArguments([
+				'routes_loader_closure',
+				new CallableArgument(static::getRoutes(...)),
+				new ArrayArgument(self::config()->cache ? ['cache_dir' => self::config()->dirCache . '/routes'] : []),
+				'context',
+			]);
 
 		return $container;
 	}

@@ -8,13 +8,12 @@ use Cog\Enum\Environment;
 use Cog\Util\StringUtils;
 use Cog\Util\Url;
 use Exception;
+use League\Container\Argument\Literal\ArrayArgument;
+use League\Container\Argument\Literal\CallableArgument;
+use League\Container\Argument\Literal\StringArgument;
+use League\Container\Container;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\LoaderResolver;
-use Symfony\Component\DependencyInjection\Argument\AbstractArgument;
-use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Dumper\PhpDumper;
-use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Filesystem\Filesystem;
@@ -33,26 +32,22 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolver\SessionValueResolve
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
-use Symfony\Component\HttpKernel\DependencyInjection\ControllerArgumentValueResolverPass;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
 use Symfony\Component\HttpKernel\EventListener\SessionListener;
 use Symfony\Component\Mime\MimeTypes;
-use Symfony\Component\Mime\MimeTypesInterface;
 use Symfony\Component\Routing\Loader\AttributeDirectoryLoader;
 use Symfony\Component\Routing\Loader\ClosureLoader;
-use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Router;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use Symfony\Component\String\Slugger\AsciiSlugger;
-use Symfony\Component\String\Slugger\SluggerInterface;
 
 /**
  * Framework-level base for the application entry point.
  *
- * This holds the compiled service container and every piece of lifecycle
+ * This holds the service container and every piece of lifecycle
  * logic that doesn't need to know about the App namespace: container
  * assembly, error handling, database connection bootstrapping, request
  * access, and dev profiling output.
@@ -145,147 +140,92 @@ abstract class BaseApplication extends Base {
 	}
 
 	protected static function initializeContainer(): void {
-		$file = static::config()->dirCache . '/container/ProjectServiceContainer.php';
-
-		// if container exist in cache use it
-		if (static::config()->cache && file_exists($file)) {
-			self::$container = require_once $file;
-		}
-
-		if (self::$container == null) {
+		if (self::$container === null) {
 			self::$container = static::buildContainer();
-
-			self::$container->compile();
-
-			// cache compiled container if cache is enabled
-			if (static::config()->cache) {
-				//dump(self::$container->getCompiler()->getLog());
-				$dumper = new PhpDumper(self::$container);
-
-				$content = $dumper->dump([
-					'as_files' => true,
-					'build_time' => time(),
-				]);
-
-				$dir = static::config()->dirCache . '/container/';
-				$fs = new Filesystem();
-
-				foreach ($content as $file => $code) {
-					$fs->dumpFile($dir.$file, $code);
-					@chmod($dir.$file, 0666 & ~umask());
-				}
-			}
 		}
 	}
 
 	/**
-	 * Builds the base service container shared by every Cog application:
-	 * routing, sessions, argument resolvers, and the response/router event
-	 * listeners. App\CogApplication::buildContainer() calls this via
-	 * parent::buildContainer() and adds the app's own kernel and CORS
-	 * listener before the container is compiled.
-	 * @return ContainerBuilder
+	 * Builds the service container shared by every Cog application: the kernel
+	 * and its argument resolvers, routing, sessions, and the router/session/
+	 * response event listeners. Every service is shared, so the kernel, the
+	 * listeners and getCurrentRequest() all see the same request stack. An
+	 * application that needs more overrides this, calls parent::buildContainer()
+	 * and adds to what comes back.
+	 *
+	 * Arguments are positional. A plain string is looked up as a service id (or
+	 * a tag), so literal values go through the Literal argument wrappers.
+	 * @return Container
 	 */
-	protected static function buildContainer(): ContainerBuilder {
-		$container = new ContainerBuilder();
+	protected static function buildContainer(): Container {
+		$container = new Container();
 
-		$container->register('kernel', Kernel::class)
-			->setArgument('$dispatcher', new Reference('dispatcher'))
-			->setArgument('$resolver', new Reference('controller_resolver'))
-			->setArgument('$argumentResolver', new Reference('argument_resolver'))
-			->setArgument('$requestStack', new Reference('request_stack'))
-			->setPublic(true);
+		// the container itself, for the services that look other services up at runtime
+		$container->addShared('service_container', static fn() => $container);
 
-		$container->setParameter('kernel.debug', false);
-		$container->addCompilerPass(new ControllerArgumentValueResolverPass());
+		$container->addShared('kernel', Kernel::class)
+			->addArguments(['dispatcher', 'controller_resolver', 'argument_resolver', 'request_stack']);
 
-		$container->register('context', RequestContext::class);
+		$container->addShared('context', RequestContext::class);
+		$container->addShared('request_stack', RequestStack::class);
+		$container->addShared('controller_resolver', ControllerResolver::class);
+		$container->addShared('argument_metadata_factory', ArgumentMetadataFactory::class);
 
-		$container->register('matcher', UrlMatcher::class)
-			->setArgument('$routes', [static::class, 'getRoutes'])
-			->setArgument('$context', new Reference('context'));
+		// Registration order is the order the resolvers are tried in.
+		$container->addShared('argument_resolver.backed_enum_resolver', BackedEnumValueResolver::class)
+			->addTag('controller.argument_value_resolver');
+		$container->addShared('argument_resolver.request_attribute', RequestAttributeValueResolver::class)
+			->addTag('controller.argument_value_resolver');
+		$container->addShared('argument_resolver.request', RequestValueResolver::class)
+			->addTag('controller.argument_value_resolver');
+		$container->addShared('argument_resolver.session', SessionValueResolver::class)
+			->addTag('controller.argument_value_resolver');
+		$container->addShared('argument_resolver.service', ServiceValueResolver::class)
+			->addArgument('service_container')
+			->addTag('controller.argument_value_resolver');
+		$container->addShared('argument_resolver.default', DefaultValueResolver::class)
+			->addTag('controller.argument_value_resolver');
+		$container->addShared('argument_resolver.variadic', VariadicValueResolver::class)
+			->addTag('controller.argument_value_resolver');
 
-		$container->register('request_stack', RequestStack::class)
-			->setAutowired(true)
-			->setPublic(true);
+		// Not in the chain above: only an argument that names it through
+		// #[MapQueryParameter] uses it, and the argument resolver looks it up by class.
+		$container->addShared(QueryParameterValueResolver::class);
 
-		$container->register('controller_resolver', ControllerResolver::class);
-		$container->register('argument_metadata_factory', ArgumentMetadataFactory::class);
-		$container->register('argument_resolver', ArgumentResolver::class)
-			->setArgument('$argumentMetadataFactory', new Reference('argument_metadata_factory'))
-			->setArgument(1, new AbstractArgument('argument value resolvers'))
-            ->setArgument(2, new AbstractArgument('targeted value resolvers'));
+		$container->addShared('argument_resolver', ArgumentResolver::class)
+			->addArguments(['argument_metadata_factory', 'controller.argument_value_resolver', 'service_container']);
 
-		$container->register('argument_resolver.backed_enum_resolver', BackedEnumValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => 100, 'name' => BackedEnumValueResolver::class]);
+		$container->addShared('session_storage', NativeSessionStorageFactory::class);
+		$container->addShared('session_factory', SessionFactory::class)
+			->addArguments(['request_stack', 'session_storage']);
+		$container->addShared('listener.session', SessionListener::class)
+			->addArgument('service_container');
 
-		$container->register('argument_resolver.request_attribute', RequestAttributeValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => 100, 'name' => RequestAttributeValueResolver::class]);
+		$container->addShared('listener.response', ResponseListener::class)
+			->addArgument(new StringArgument(static::$encodingType));
 
-		$container->register('argument_resolver.request', RequestValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => 50, 'name' => RequestValueResolver::class]);
+		$container->addShared('listener.router', RouterListener::class)
+			->addArguments(['router', 'request_stack']);
 
-		$container->register('argument_resolver.session', SessionValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => 50, 'name' => SessionValueResolver::class]);
+		$container->addShared('dispatcher', EventDispatcher::class)
+			->addMethodCall('addSubscriber', ['listener.router'])
+			->addMethodCall('addSubscriber', ['listener.session'])
+			->addMethodCall('addSubscriber', ['listener.response']);
 
-		$container->register('argument_resolver.service', ServiceValueResolver::class)
-			->setArgument('$container', new Reference('service_container'))
-			->addTag('controller.argument_value_resolver', ['priority' => -50, 'name' => ServiceValueResolver::class]);
+		$container->addShared('routes_loader_closure', ClosureLoader::class);
 
-		$container->register('argument_resolver.variadic', VariadicValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => -150, 'name' => VariadicValueResolver::class]);
+		$container->addShared('router', Router::class)
+			->addArguments([
+				'routes_loader_closure',
+				new CallableArgument(static::getRoutes(...)),
+				new ArrayArgument(static::config()->cache ? ['cache_dir' => static::config()->dirCache . '/routes'] : []),
+				'context',
+			]);
 
-		$container->register('argument_resolver.default', DefaultValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => -100, 'name' => DefaultValueResolver::class]);
-
-		$container->register('argument_resolver.query_parameter_value_resolver', QueryParameterValueResolver::class)
-			->addTag('controller.targeted_value_resolver', ['name' => QueryParameterValueResolver::class]);
-
-		$container->register('listener.session', SessionListener::class)
-			->setArgument('$container', new Reference('service_container'));
-
-		$container->register('session_storage', NativeSessionStorageFactory::class);
-
-		$container->register('session_factory', SessionFactory::class)
-			->setArgument('$storageFactory', new Reference('session_storage'))
-			->setArgument('$requestStack', new Reference('request_stack'));
-
-		$container->register('listener.response', ResponseListener::class)
-			->setArgument('$charset', static::$encodingType);
-
-		$container->register('listener.router', RouterListener::class)
-			->setArgument('$matcher', new Reference('router'))
-			->setArgument('$requestStack', new Reference('request_stack'));
-
-		$container->register('dispatcher', EventDispatcher::class)
-			->addMethodCall('addSubscriber', [new Reference('listener.router')])
-			->addMethodCall('addSubscriber', [new Reference('listener.session')])
-			->addMethodCall('addSubscriber', [new Reference('listener.response')]);
-
-		$container->register('routes_loader_closure', ClosureLoader::class);
-
-		$container->register('router', Router::class)
-			->setArgument('$loader',  new Reference('routes_loader_closure'))
-			->setArgument('$context', new Reference('context'))
-			->setPublic(true);
-
-		$container->register('inflector', EnglishInflector::class)
-			->setAutowired(true)
-			->setPublic(true);
-
-		$container->register('mime', MimeTypes::class)
-			->setAutowired(true)
-			->setPublic(true);
-		$container->setAlias(MimeTypesInterface::class, 'mime');
-
-		$container->register('slugger', AsciiSlugger::class)
-			->setAutowired(true)
-			->setPublic(true);
-		$container->setAlias(SluggerInterface::class, 'slugger');
-
-		$container->register('filesystem', Filesystem::class)
-			->setAutowired(true)
-			->setPublic(true);
+		$container->addShared('inflector', EnglishInflector::class);
+		$container->addShared('mime', MimeTypes::class);
+		$container->addShared('slugger', AsciiSlugger::class);
+		$container->addShared('filesystem', Filesystem::class);
 
 		return $container;
 	}

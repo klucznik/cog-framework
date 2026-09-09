@@ -30,9 +30,9 @@ class TestNamespaceUtil extends TestCase {
 
 	/** A namespace two levels below its PSR-4 root has to map to the nested directory in the right order. */
 	public function testClassesInNestedNamespace() {
-		$classes = NamespaceUtil::getClassesInNamespace('Cog\\Command\\Descriptor');
+		$classes = NamespaceUtil::getClassesInNamespace('Cog\\Database\\Adapters');
 
-		$this->assertContains('Cog\\Command\\Descriptor\\TextDescriptor', $classes);
+		$this->assertContains('Cog\\Database\\Adapters\\MySqliAdapter', $classes);
 	}
 
 	/** Every entry has to be a real, loadable class - dot entries and non-PHP files are filtered out. */

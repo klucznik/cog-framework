@@ -70,10 +70,6 @@
 		</include>
 		<exclude>
 			<directory>src/Test</directory>
-			<!-- Copied Symfony code, kept verbatim in its original 4-space style
-				 (see CLAUDE.md). Not ours to test, so not ours to count. -->
-			<directory>src/Command/Descriptor</directory>
-			<file>src/Command/ContainerDebugCommand.php</file>
 			<!-- Code generator output. These live outside <include> today, but
 				 they are named here so widening the include never starts
 				 measuring generated classes against hand-written coverage. -->

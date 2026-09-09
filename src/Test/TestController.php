@@ -7,7 +7,7 @@ use Cog\Exceptions\CogException;
 use Cog\Exceptions\RedirectException;
 use Cog\Test\fixtures\ControllerBase\FixtureBaseController;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\Container;
+use League\Container\Container;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -42,13 +42,7 @@ class TestController extends TestCase {
 
 	/** Points BaseApplication::$container at a container whose router knows the fixture routes. */
 	private function useRoutedContainer(): void {
-		$container = MockedApplication::callBuildContainer();
-		$container->getDefinition('router')
-			->setArgument('$resource', [MockedApplication::class, 'getRoutes'])
-			->setArgument('$options', []);
-		$container->compile();
-
-		MockedApplication::setContainer($container);
+		MockedApplication::setContainer(MockedApplication::callBuildContainer());
 	}
 
 	//////////////////////////////
