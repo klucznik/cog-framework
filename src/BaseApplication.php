@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Cog;
 
@@ -30,7 +30,6 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestAttributeVal
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\SessionValueResolver;
-use Symfony\Component\HttpKernel\Controller\ArgumentResolver\UidValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
@@ -219,9 +218,6 @@ abstract class BaseApplication extends Base {
 
 		$container->register('argument_resolver.backed_enum_resolver', BackedEnumValueResolver::class)
 			->addTag('controller.argument_value_resolver', ['priority' => 100, 'name' => BackedEnumValueResolver::class]);
-
-		$container->register('argument_resolver.uid', UidValueResolver::class)
-			->addTag('controller.argument_value_resolver', ['priority' => 100, 'name' => UidValueResolver::class]);
 
 		$container->register('argument_resolver.request_attribute', RequestAttributeValueResolver::class)
 			->addTag('controller.argument_value_resolver', ['priority' => 100, 'name' => RequestAttributeValueResolver::class]);

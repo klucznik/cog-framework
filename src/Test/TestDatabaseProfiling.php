@@ -4,19 +4,19 @@ namespace Cog\Test;
 
 use Cog\Database\Database;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\VarDumper\VarDumper;
 
 /**
- * Tests for the development-facing output on Cog\Database\Database.
+ * Tests for the development-facing helpers on Cog\Database\Database.
  *
  * These are the static helpers the dev toolbar calls: the profiling link that
- * posts collected queries to the profile page, and the configuration dump. They
- * write to the output buffer rather than returning anything, which is why they
- * had no coverage - and why the one assertion that matters most, that
- * dumpConfig() never prints the database password, had nothing pinning it.
+ * posts collected queries to the profile page, and the configuration dump. The
+ * profiling helpers write to the output buffer rather than returning anything,
+ * which is why they had no coverage. dumpConfig() returns what it reports, and
+ * the one assertion that matters most is that the returned configuration never
+ * carries the database password.
  *
  * TestDatabase covers the connection itself and the per-connection profiling
- * accessors; this file covers only what Database prints.
+ * accessors; this file covers only what Database prints or reports.
  */
 class TestDatabaseProfiling extends TestCase {
 
@@ -195,63 +195,33 @@ class TestDatabaseProfiling extends TestCase {
 	// dumpConfig
 	//
 
+	/** One entry per connection, keyed by its index in Database::$databases. */
 	public function testDumpConfigReportsEveryConnection() {
 		Database::initializeConnection(self::connectionConfig());
 
-		$dumped = [];
-		VarDumper::setHandler(static function ($variable) use (&$dumped): void {
-			$dumped[] = $variable;
-		});
+		$config = Database::dumpConfig();
 
-		try {
-			Database::dumpConfig();
-		} finally {
-			VarDumper::setHandler(null);
-		}
-
-		$this->assertCount(2, $dumped);
-		$this->assertIsArray($dumped[0]);
-		$this->assertSame(0, $dumped[0]['index']);
-		$this->assertSame(1, $dumped[1]['index']);
-		$this->assertSame(getenv('COG_TEST_DB_NAME') ?: 'cog_framework_test', $dumped[0]['database']);
+		$this->assertSame([0, 1], array_keys($config));
+		$this->assertSame(0, $config[0]['index']);
+		$this->assertSame(1, $config[1]['index']);
+		$this->assertSame(getenv('COG_TEST_DB_NAME') ?: 'cog_framework_test', $config[0]['database']);
 	}
 
 	/** The password is the whole reason this helper masks anything. */
 	public function testDumpConfigMasksThePassword() {
-		$dumped = null;
-		VarDumper::setHandler(static function ($variable) use (&$dumped): void {
-			$dumped = $variable;
-		});
+		$config = Database::dumpConfig();
 
-		try {
-			Database::dumpConfig();
-		} finally {
-			VarDumper::setHandler(null);
-		}
-
-		$this->assertIsArray($dumped);
-		$this->assertSame('********', $dumped['password']);
+		$this->assertSame('********', $config[0]['password']);
 
 		$configuredPassword = getenv('COG_TEST_DB_PASSWORD') ?: '';
 		if ($configuredPassword !== '') {
-			$this->assertNotSame($configuredPassword, $dumped['password']);
+			$this->assertNotSame($configuredPassword, $config[0]['password']);
 		}
 	}
 
-	public function testDumpConfigWithNoConnectionsPrintsNothing() {
+	public function testDumpConfigWithNoConnectionsReturnsNothing() {
 		$this->closeEveryConnection();
 
-		$calls = 0;
-		VarDumper::setHandler(static function () use (&$calls): void {
-			$calls++;
-		});
-
-		try {
-			Database::dumpConfig();
-		} finally {
-			VarDumper::setHandler(null);
-		}
-
-		$this->assertSame(0, $calls);
+		$this->assertSame([], Database::dumpConfig());
 	}
 }

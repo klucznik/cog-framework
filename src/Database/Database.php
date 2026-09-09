@@ -133,12 +133,14 @@ abstract class Database {
 	}
 
 	/**
-	 * For development purposes, this static method outputs all the Databases configuration
-	 * @return void
+	 * For development purposes, this static method returns all the Databases configuration
+	 * @return array
 	 */
-	public static function dumpConfig(): void {
+	public static function dumpConfig(): array {
+		$toReturn = [];
+
 		foreach (self::$databases as $index => $database) {
-			dump([
+			$toReturn[$index] = [
 				'index' => $index,
 				'adapter' => $database->adapter,
 				'server' => $database->server,
@@ -147,7 +149,9 @@ abstract class Database {
 				'username' => $database->username,
 				'password' => '********', // Don't display database password
 				'profiling' => $database->profiling,
-			]);
+			];
 		}
+
+		return $toReturn;
 	}
 }

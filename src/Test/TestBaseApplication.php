@@ -232,7 +232,6 @@ class TestBaseApplication extends TestCase {
 
 		$this->assertSame([
 			'argument_resolver.backed_enum_resolver' => 100,
-			'argument_resolver.uid' => 100,
 			'argument_resolver.request_attribute' => 100,
 			'argument_resolver.request' => 50,
 			'argument_resolver.session' => 50,
