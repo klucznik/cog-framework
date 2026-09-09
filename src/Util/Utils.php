@@ -3,6 +3,9 @@
 namespace Cog\Util;
 
 use DateTime;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 
 /**
  * Other helpful functions
@@ -42,6 +45,21 @@ abstract class Utils {
 		} catch (\Exception $e) {
 			return 0;
 		}
+	}
+
+	/**
+	 * Formats a datetime the way generated getIterator() emits it for json_encode:
+	 * ISO-8601 normalised to UTC with microseconds and a literal Z, for example
+	 * 2020-07-02T01:04:05.000000Z. Null stays null.
+	 * @param ?DateTimeInterface $dateTime
+	 * @return ?string
+	 */
+	public static function dateTimeToJson(?DateTimeInterface $dateTime): ?string {
+		if ($dateTime === null) {
+			return null;
+		}
+
+		return DateTimeImmutable::createFromInterface($dateTime)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
 	}
 
 	public static function isHost(string $needle): bool {

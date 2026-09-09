@@ -2,10 +2,10 @@
 
 namespace Cog\Test;
 
-use Carbon\Carbon;
 use Cog\Database\Adapters\PostgreSqlAdapter;
 use Cog\Database\Database;
 use Cog\Database\FieldType;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
@@ -239,8 +239,8 @@ class TestPostgreSql extends TestCase {
 		$row = $this->database->query('SELECT * FROM obj ORDER BY id')->getNextRow();
 		$creationDate = $row->getColumn('creation_date', FieldType::DATETIME);
 
-		$this->assertInstanceOf(Carbon::class, $creationDate);
-		$this->assertSame('2024-01-15 10:00:00', $creationDate->toDateTimeString());
+		$this->assertInstanceOf(DateTimeImmutable::class, $creationDate);
+		$this->assertSame('2024-01-15 10:00:00', $creationDate->format('Y-m-d H:i:s'));
 	}
 
 	public function testFetchField(): void {

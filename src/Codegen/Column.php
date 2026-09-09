@@ -100,7 +100,7 @@ class Column extends Base {
 			return 'null';
 		} elseif ($this->variableType === Type::DATETIME) {
 			if ($this->hasCurrentTimestampDefault()) {
-				return 'new Carbon()';
+				return 'new DateTimeImmutable()';
 			}
 			return 'null';
 		} elseif ($this->variableType === Type::BOOLEAN) {

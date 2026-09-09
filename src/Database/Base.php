@@ -2,7 +2,6 @@
 
 namespace Cog\Database;
 
-use Carbon\Carbon;
 use Cog;
 use Cog\Codegen\Index;
 use Cog\Exceptions\CogException;
@@ -10,6 +9,7 @@ use Cog\Query\QQClause;
 use Cog\Query\QQCondition;
 use Cog\Query\QQNamedValue;
 use Cog\Type;
+use DateTimeInterface;
 
 /**
  * Every database adapter must implement the following 5 classes (all which are abstract):
@@ -348,8 +348,8 @@ abstract class Base extends Cog\Base {
 		}
 
 		// Check for DATE Value
-		if ($data instanceof Carbon) {
-			return $toReturn . sprintf("'%s'", $data->toDateTimeString());
+		if ($data instanceof DateTimeInterface) {
+			return $toReturn . sprintf("'%s'", $data->format('Y-m-d H:i:s'));
 		}
 
 		// Assume it's some kind of string value

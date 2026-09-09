@@ -7,14 +7,14 @@
 /** @var string $escapeIdentifierEnd */
 ?>
 <?php
-$blnCarbon = false;
+$blnDateTime = false;
 $blnTimestamp = false;
 foreach ($table->columnArray as $column) {
 	if ($column->timestamp) {
 		$blnTimestamp = true;
 	}
 	if ($column->variableType == \Cog\Type::DATETIME) {
-		$blnCarbon = true;
+		$blnDateTime = true;
 	}
 }
 ?>
@@ -44,7 +44,7 @@ use Cog\Exceptions\InvalidCastException;
 use Cog\Util\Utils;
 use JsonException;
 use Generated\Node\QQNode<?= $table->className ?>;
-<?= $blnCarbon ? 'use Carbon\Carbon;' : '' ?>
+<?= $blnDateTime ? 'use DateTimeImmutable;' : '' ?>
 <?= $blnTimestamp ? 'use Cog\Database\Exceptions\OptimisticLockingException;' : '' ?>
 
 /**

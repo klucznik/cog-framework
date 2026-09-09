@@ -48,7 +48,7 @@ CREATE TABLE `person` (
 -- obj: testForeignFieldsForTable expects exactly one foreign key, pointing at
 -- `person`. `creation_date` defaults to CURRENT_TIMESTAMP, which cannot be a
 -- constant property initializer, so the generated ObjGen gets a constructor
--- that assigns Carbon::now() instead.
+-- that assigns new DateTimeImmutable() instead.
 --
 CREATE TABLE `obj` (
 	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,

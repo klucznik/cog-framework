@@ -125,8 +125,8 @@ Rules that have already cost real bugs:
 - The generated/hand-written split is `Generated\Data|Node|Type` → `/generated/*` (rewritten on
   every run) versus `App\Data|Type` → `/app/*` (written once, safe to edit).
 - **Property initializers must be constant expressions.** A `DEFAULT CURRENT_TIMESTAMP` column
-  cannot initialize a `Carbon`-typed property. `Column::hasCurrentTimestampDefault()` detects one,
-  `Column::getDefaultAsString()` returns a run-time expression (`new Carbon()`) rather than a
+  cannot initialize a `DateTimeImmutable`-typed property. `Column::hasCurrentTimestampDefault()` detects one,
+  `Column::getDefaultAsString()` returns a run-time expression (`new DateTimeImmutable()`) rather than a
   literal, and `object_construct.tpl.php` emits a constructor to apply it. `timestamp`
   columns are deliberately excluded - they are the optimistic-locking token and the database
   maintains them.

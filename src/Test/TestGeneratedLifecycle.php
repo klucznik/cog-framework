@@ -6,12 +6,12 @@ use App\Data\BlogPost;
 use App\Data\Category;
 use App\Data\Obj;
 use App\Data\Person;
-use Carbon\Carbon;
 use Cog\Database\Exceptions\OptimisticLockingException;
 use Cog\Database\Exceptions\UndefinedPrimaryKeyException;
 use Cog\Exceptions\CogException;
 use Cog\Exceptions\InvalidCastException;
 use Cog\Query\QQ;
+use DateTimeImmutable;
 use Generated\Node\QQNodePerson;
 
 /**
@@ -177,7 +177,7 @@ class TestGeneratedLifecycle extends QueryTestCase {
 
 		$loaded = Obj::load($obj->save());
 
-		$this->assertInstanceOf(Carbon::class, $loaded->creationDate);
+		$this->assertInstanceOf(DateTimeImmutable::class, $loaded->creationDate);
 		$this->assertSame($written->format('Y-m-d H:i:s'), $loaded->creationDate->format('Y-m-d H:i:s'));
 	}
 

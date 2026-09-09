@@ -3,6 +3,9 @@
 namespace Cog\Test;
 
 use Cog\Util\Utils;
+use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 
 class TestUtil extends TestCase {
@@ -76,5 +79,23 @@ class TestUtil extends TestCase {
 
 		$_SERVER['HTTP_HOST'] = 'example.com.evil.net';
 		$this->assertFalse(Utils::isHost('example.com'));
+	}
+
+	/**
+	 * Generated getIterator() hands datetime columns to json_encode through this, so
+	 * the format is fixed: ISO-8601, normalised to UTC, microseconds, literal Z.
+	 */
+	public function testDateTimeToJson() {
+		$this->assertNull(Utils::dateTimeToJson(null));
+		$this->assertSame('2020-07-02T01:04:05.000000Z', Utils::dateTimeToJson(new DateTimeImmutable('2020-07-02 03:04:05', new DateTimeZone('+02:00'))));
+		$this->assertSame('2020-01-02T03:04:05.123456Z', Utils::dateTimeToJson(new DateTimeImmutable('2020-01-02 03:04:05.123456', new DateTimeZone('UTC'))));
+	}
+
+	/** A mutable DateTime is formatted without being shifted to UTC in place. */
+	public function testDateTimeToJsonLeavesMutableInputAlone() {
+		$mutable = new DateTime('2020-07-02 03:04:05', new DateTimeZone('+02:00'));
+
+		$this->assertSame('2020-07-02T01:04:05.000000Z', Utils::dateTimeToJson($mutable));
+		$this->assertSame('+02:00', $mutable->getTimezone()->getName());
 	}
 }

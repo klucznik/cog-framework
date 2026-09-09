@@ -467,7 +467,7 @@ class TestCodegenHelpers extends TestCase {
 			$column = $this->column('creation_date', Type::DATETIME, ['default' => $default]);
 
 			$this->assertTrue($column->hasCurrentTimestampDefault(), $default . ' should read as a run-time default');
-			$this->assertSame('new Carbon()', $column->getDefaultAsString());
+			$this->assertSame('new DateTimeImmutable()', $column->getDefaultAsString());
 		}
 	}
 
@@ -535,7 +535,7 @@ class TestCodegenHelpers extends TestCase {
 		$this->assertSame('string', $this->column('name', Type::STRING)->variableTyped);
 		$this->assertSame('bool', $this->column('active', Type::BOOLEAN)->variableTyped);
 		$this->assertSame('float', $this->column('rating', Type::FLOAT)->variableTyped);
-		$this->assertSame('Carbon', $this->column('created', Type::DATETIME)->variableTyped);
+		$this->assertSame('DateTimeImmutable', $this->column('created', Type::DATETIME)->variableTyped);
 	}
 
 	public function testColumnVariableTypeJs() {

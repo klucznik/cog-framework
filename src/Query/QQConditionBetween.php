@@ -2,8 +2,8 @@
 
 namespace Cog\Query;
 
-use Carbon\Carbon;
 use Cog\Exceptions\InvalidCastException;
+use DateTimeInterface;
 
 class QQConditionBetween extends QQConditionComparison {
 
@@ -23,10 +23,10 @@ class QQConditionBetween extends QQConditionComparison {
 
 	/**
 	 * A bound is kept as given so that sqlVariable() formats it for its type - an int stays
-	 * unquoted and a Carbon becomes a datetime literal - instead of being cast to a string.
+	 * unquoted and a DateTimeInterface becomes a datetime literal - instead of being cast to a string.
 	 */
 	private static function bound(mixed $value): mixed {
-		if ($value instanceof QQNamedValue || $value instanceof Carbon || $value === null || is_scalar($value)) {
+		if ($value instanceof QQNamedValue || $value instanceof DateTimeInterface || $value === null || is_scalar($value)) {
 			return $value;
 		}
 		throw new InvalidCastException('Unable to cast ' . get_debug_type($value) . ' to a BETWEEN bound', 4);

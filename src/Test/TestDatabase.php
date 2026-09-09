@@ -2,7 +2,6 @@
 
 namespace Cog\Test;
 
-use Carbon\Carbon;
 use Cog\Codegen\ForeignKey;
 use Cog\Codegen\Index;
 use Cog\Database\Adapters\MySqliException;
@@ -10,6 +9,8 @@ use Cog\Database\Database;
 use Cog\Exceptions\CogException;
 use Cog\Exceptions\UndefinedPropertyException;
 use Cog\Query\QQNamedValue;
+use DateTime;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class TestDatabase extends TestCase {
@@ -275,10 +276,18 @@ class TestDatabase extends TestCase {
 		);
 	}
 
-	public function testSqlVariableWithCarbon() {
+	public function testSqlVariableWithDateTime() {
 		$this->assertEquals(
 			"'2020-01-02 03:04:05'",
-			$this->database->sqlVariable(Carbon::parse('2020-01-02 03:04:05'))
+			$this->database->sqlVariable(new DateTimeImmutable('2020-01-02 03:04:05'))
+		);
+	}
+
+	/** Any DateTimeInterface formats as a datetime literal, not only the immutable one the ORM hands out. */
+	public function testSqlVariableWithMutableDateTime() {
+		$this->assertEquals(
+			"'2020-01-02 03:04:05'",
+			$this->database->sqlVariable(new DateTime('2020-01-02 03:04:05'))
 		);
 	}
 

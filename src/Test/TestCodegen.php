@@ -2,8 +2,9 @@
 
 namespace Cog\Test;
 
-use Carbon\Carbon;
 use Cog\Exceptions\CogException;
+use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -200,8 +201,21 @@ class TestCodegen extends TestCase {
 	public function testCurrentTimestampDefault() {
 		$obj = new \App\Data\Obj();
 
-		$this->assertInstanceOf(Carbon::class, $obj->creationDate);
-		$this->assertEqualsWithDelta(Carbon::now()->getTimestamp(), $obj->creationDate->getTimestamp(), 5);
+		$this->assertInstanceOf(DateTimeImmutable::class, $obj->creationDate);
+		$this->assertEqualsWithDelta(time(), $obj->creationDate->getTimestamp(), 5);
+	}
+
+	/**
+	 * getIterator() is what the API layers hand to json_encode, so a datetime column
+	 * has to come out as the ISO-8601 UTC string clients already parse, not as
+	 * DateTimeImmutable's {date, timezone_type, timezone} object.
+	 */
+	public function testIteratorEmitsDateTimeAsIsoUtcString() {
+		$obj = new \App\Data\Obj();
+		$obj->creationDate = new DateTimeImmutable('2020-07-02 03:04:05', new DateTimeZone('+02:00'));
+
+		$this->assertSame('2020-07-02T01:04:05.000000Z', $obj->getIterator()['creationDate']);
+		$this->assertStringContainsString('"creationDate":"2020-07-02T01:04:05.000000Z"', $obj->getJson());
 	}
 
 	/** Tables without a run-time default get no generated constructor at all. */

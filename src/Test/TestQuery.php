@@ -15,6 +15,8 @@ use Cog\Query\QQConditionAnd;
 use Cog\Query\QQConditionEqual;
 use Cog\Query\QQDistinct;
 use Cog\Util\Utils;
+use DateTime;
+use DateTimeImmutable;
 use Generated\Node\QQNodeAsset;
 use Generated\Node\QQNodeBlogPost;
 use Generated\Node\QQNodeObj;
@@ -118,6 +120,14 @@ class TestQuery extends QueryTestCase {
 		$people = Person::queryArray(QQ::notBetween($this->person()->id, 1, 2));
 		$this->assertQueryContains("`t0`.`id` NOT BETWEEN 1 AND 2");
 		$this->assertEquals(['Piotr Lewandowski'], self::pluck($people, 'name'));
+	}
+
+	/** Date bounds are formatted as datetime literals by sqlVariable(), whichever DateTimeInterface they are. */
+	public function testBetweenWithDateTimeBounds() {
+		$objects = Obj::queryArray(QQ::between((new QQNodeObj())->creationDate, new DateTimeImmutable('2024-01-01 00:00:00'), new DateTime('2024-12-31 23:59:59')));
+
+		$this->assertQueryContains("`t0`.`creation_date` BETWEEN '2024-01-01 00:00:00' AND '2024-12-31 23:59:59'");
+		$this->assertNotEmpty($objects);
 	}
 
 	public function testNullChecks() {

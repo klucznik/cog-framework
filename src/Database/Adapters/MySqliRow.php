@@ -2,10 +2,10 @@
 
 namespace Cog\Database\Adapters;
 
-use Carbon\Carbon;
 use Cog;
 use Cog\Database\FieldType;
 use Cog\Type;
+use DateTimeImmutable;
 
 class MySqliRow extends Cog\Database\RowBase {
 
@@ -43,7 +43,7 @@ class MySqliRow extends Cog\Database\RowBase {
 				case FieldType::DATETIME:
 				case FieldType::TIME:
 				case FieldType::TIMESTAMP:
-					return new Carbon($this->columnArray[$columnName]);
+					return new DateTimeImmutable($this->columnArray[$columnName]);
 
 				case FieldType::FLOAT:
 					return Type::cast($this->columnArray[$columnName], Type::FLOAT);

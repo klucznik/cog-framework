@@ -75,7 +75,7 @@ class TestConvertNotation extends TestCase {
 		$this->assertEquals('int', ConvertNotation::prefixFromType(Type::INTEGER));
 		$this->assertEquals('str', ConvertNotation::prefixFromType(Type::STRING));
 
-		$this->assertEquals('', ConvertNotation::prefixFromType('DateTimeImmutable'));
+		$this->assertEquals('', ConvertNotation::prefixFromType('stdClass'));
 	}
 
 	public function testPhpTypeFromType() {
@@ -87,7 +87,7 @@ class TestConvertNotation extends TestCase {
 		$this->assertEquals('float', ConvertNotation::phpTypeFromType(Type::FLOAT));
 		$this->assertEquals('int', ConvertNotation::phpTypeFromType(Type::INTEGER));
 
-		$this->assertEquals('', ConvertNotation::phpTypeFromType('DateTimeImmutable'));
+		$this->assertEquals('', ConvertNotation::phpTypeFromType('stdClass'));
 	}
 
 	/** Drops the three character type prefix, then camel cases whatever is left. */

@@ -2,8 +2,9 @@
 
 namespace Cog;
 
-use Carbon\Carbon;
 use Cog\Exceptions\InvalidCastException;
+use DateTimeImmutable;
+use DateTimeInterface;
 use ReflectionClass;
 use ReflectionException;
 use Symfony\Component\String\ByteString;
@@ -56,7 +57,7 @@ abstract class Type {
 	public const string BOOLEAN = 'boolean';
 	public const string OBJECT = 'object';
 	public const string ARRAY = 'array';
-	public const string DATETIME = 'Carbon';
+	public const string DATETIME = 'DateTimeImmutable';
 
 	/**
 	 * @param mixed $item
@@ -91,8 +92,9 @@ abstract class Type {
 			}
 		} catch (InvalidCastException $exception) {}
 
-		if ($type === self::DATETIME && $item instanceof Carbon) {
-			return $item;
+		// a datetime is stored immutable, whichever DateTimeInterface implementation was handed in
+		if ($type === self::DATETIME && $item instanceof DateTimeInterface) {
+			return $item instanceof DateTimeImmutable ? $item : DateTimeImmutable::createFromInterface($item);
 		}
 
 		//convert string wrapper classes to string

@@ -2,9 +2,11 @@
 
 namespace Cog\Test;
 
-use Carbon\Carbon;
 use Cog\Exceptions\InvalidCastException;
 use Cog\Type;
+use DateTime;
+use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 use SimpleXMLElement;
 use stdClass;
@@ -61,7 +63,7 @@ class TestType extends TestCase {
 		$this->assertEquals('Type::FLOAT', Type::constant('double'));
 		$this->assertEquals('Type::BOOLEAN', Type::constant('boolean'));
 		$this->assertEquals('Type::ARRAY', Type::constant('array'));
-		$this->assertEquals('Type::DATETIME', Type::constant('Carbon'));
+		$this->assertEquals('Type::DATETIME', Type::constant('DateTimeImmutable'));
 	}
 
 	public function testConstantCodeGeneratorException() {
@@ -118,24 +120,34 @@ class TestType extends TestCase {
 		$this->assertEquals('string', Type::getDeclarationType(Type::STRING));
 		$this->assertEquals('array', Type::getDeclarationType(Type::ARRAY));
 		$this->assertEquals('object', Type::getDeclarationType(Type::OBJECT));
-		$this->assertEquals('Carbon', Type::getDeclarationType(Type::DATETIME));
+		$this->assertEquals('DateTimeImmutable', Type::getDeclarationType(Type::DATETIME));
 		$this->assertEquals('Cog\Test\MockedBaseObject', Type::getDeclarationType(MockedBaseObject::class));
 	}
 
 	public function testDateTimeCast() {
-		$carbon = Carbon::parse('2020-01-02 03:04:05');
+		$dateTime = new DateTimeImmutable('2020-01-02 03:04:05');
 
-		$this->assertSame($carbon, Type::cast($carbon, Type::DATETIME));
-		$this->assertSame($carbon, Type::cast($carbon, Carbon::class));
+		$this->assertSame($dateTime, Type::cast($dateTime, Type::DATETIME));
+		$this->assertSame($dateTime, Type::cast($dateTime, DateTimeImmutable::class));
 
 		$this->assertNull(Type::cast(null, Type::DATETIME));
 		$this->assertNull(Type::cast(null, Type::DATETIME, false));
 	}
 
-	/** Carbon is an object, and objects only cast to a class they are an instance of. */
+	/** A mutable DateTime is accepted, but what is stored is always immutable. */
+	public function testDateTimeCastConvertsMutableDateTime() {
+		$mutable = new DateTime('2020-01-02 03:04:05', new DateTimeZone('Europe/Warsaw'));
+
+		$cast = Type::cast($mutable, Type::DATETIME);
+
+		$this->assertInstanceOf(DateTimeImmutable::class, $cast);
+		$this->assertSame($mutable->format(DATE_ATOM), $cast->format(DATE_ATOM));
+	}
+
+	/** A DateTimeImmutable is an object, and objects only cast to a class they are an instance of. */
 	public function testDateTimeCastToStringIsRejected() {
 		$this->expectException(InvalidCastException::class);
-		Type::cast(Carbon::parse('2020-01-02 03:04:05'), Type::STRING);
+		Type::cast(new DateTimeImmutable('2020-01-02 03:04:05'), Type::STRING);
 	}
 
 	public function testStringToDateTimeCastIsRejected() {

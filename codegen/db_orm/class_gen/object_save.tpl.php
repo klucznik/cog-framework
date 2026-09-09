@@ -54,10 +54,10 @@ foreach ($table->columnArray as $column) {
 			$strCols .= $strCol;
 			switch ($column->dbType) {
 				case 'Date':
-					$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ' instanceof Carbon ? $this->' . $column->variableName . '->toDateString() : $this->' . $column->variableName . ') . \'';
+					$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ' instanceof \DateTimeInterface ? $this->' . $column->variableName . '->format(\'Y-m-d\') : $this->' . $column->variableName . ') . \'';
 					break;
 				case 'Time':
-					$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ' instanceof Carbon ? $this->' . $column->variableName . '->toTimeString() : $this->' . $column->variableName . ') . \'';
+					$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ' instanceof \DateTimeInterface ? $this->' . $column->variableName . '->format(\'H:i:s\') : $this->' . $column->variableName . ') . \'';
 					break;
 				default:
 				$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ') . \'';
@@ -162,7 +162,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 					');
 
 					$objRow = $result->fetchArray();
-					if (($objRow[0] ?? null) != (string) $this-><?= $column->variableName ?>) {
+					if (($objRow[0] ?? null) != $this-><?= $column->variableName ?>?->format('Y-m-d H:i:s')) {
 						throw new OptimisticLockingException('<?= $table->className ?>');
 					}
 				}
@@ -242,8 +242,8 @@ foreach ($table->primaryKeyColumnArray as $column) {
 		');
 
 		$objRow = $result->fetchArray();
-		// A nullable token that the database left NULL must stay null; new Carbon(null) would be "now"
-		$this-><?= $column->variableName ?> = isset($objRow[0]) ? new Carbon($objRow[0]) : null;
+		// A nullable token that the database left NULL must stay null; new DateTimeImmutable(null) would be "now"
+		$this-><?= $column->variableName ?> = isset($objRow[0]) ? new DateTimeImmutable($objRow[0]) : null;
 <?php } ?>
 <?php } ?>
 		return $mixToReturn;

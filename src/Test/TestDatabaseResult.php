@@ -2,13 +2,13 @@
 
 namespace Cog\Test;
 
-use Carbon\Carbon;
 use Cog\Database\Adapters\MySqliField;
 use Cog\Database\Adapters\MySqliResult;
 use Cog\Database\Adapters\MySqliRow;
 use Cog\Database\Database;
 use Cog\Database\FieldType;
 use Cog\Exceptions\UndefinedPropertyException;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -166,8 +166,8 @@ class TestDatabaseResult extends TestCase {
 		$row = $this->database->query('SELECT * FROM `obj` ORDER BY `id`;')->getNextRow();
 
 		$creationDate = $row->getColumn('creation_date', FieldType::DATETIME);
-		$this->assertInstanceOf(Carbon::class, $creationDate);
-		$this->assertEquals('2024-01-15 10:00:00', $creationDate->toDateTimeString());
+		$this->assertInstanceOf(DateTimeImmutable::class, $creationDate);
+		$this->assertEquals('2024-01-15 10:00:00', $creationDate->format('Y-m-d H:i:s'));
 	}
 
 	public function testRowBitColumn() {
