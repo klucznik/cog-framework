@@ -12,7 +12,6 @@ use Cog\Command\SeedCommand;
 use Cog\Command\Sha1Command;
 use Cog\Command\StatusCommand;
 use Cog\Command\WhiteCharsCommand;
-use Cog\Command\YamlLintCommand;
 use Cog\Console\CommandApplication;
 use Cog\Util\FileSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,9 +30,9 @@ use Symfony\Component\Console\Tester\CommandTester;
  * Two things are worth pinning here. The first is each command's identity - name
  * and aliases - because discovery is by directory scan and a renamed command
  * fails by simply not existing, with nothing to catch it. The second is the
- * behaviour that is actually ours: the commands wrapping Phinx, Symfony's YAML
- * linter and PsySH contribute only configuration and a timing footer, so those
- * are asserted rather than the third-party work underneath.
+ * behaviour that is actually ours: the commands wrapping Phinx and PsySH
+ * contribute only configuration, so that is asserted rather than the
+ * third-party work underneath.
  *
  * CodegenCommand's success path is deliberately not exercised: it drives the
  * generator, which TestCodegen already covers end to end, and running it here
@@ -219,50 +218,6 @@ class TestCommands extends TestCase {
 
 	public function testWhiteCharsIdentity() {
 		$this->assertSame('util:whitechars', (new WhiteCharsCommand())->getName());
-	}
-
-	//
-	// lint:yaml
-	//
-
-	/**
-	 * The linting is Symfony's; what is ours is the AsCommand attribute (PHP
-	 * attributes are not inherited, so without it the name never reaches the
-	 * subclass) and the timing footer.
-	 */
-	public function testYamlLintIdentity() {
-		$command = new YamlLintCommand();
-
-		$this->assertSame('lint:yaml', $command->getName());
-		$this->assertNotSame('', $command->getDescription());
-	}
-
-	public function testYamlLintAcceptsValidYaml() {
-		$file = $this->workDirectory . '/valid.yaml';
-		file_put_contents($file, "cog:\n  framework: true\n");
-
-		$tester = $this->tester(new YamlLintCommand());
-
-		$this->assertSame(Command::SUCCESS, $tester->execute(['filename' => [$file]]));
-	}
-
-	public function testYamlLintRejectsInvalidYaml() {
-		$file = $this->workDirectory . '/invalid.yaml';
-		file_put_contents($file, "cog:\n\tframework: true\n  broken: [\n");
-
-		$tester = $this->tester(new YamlLintCommand());
-
-		$this->assertNotSame(Command::SUCCESS, $tester->execute(['filename' => [$file]]));
-	}
-
-	public function testYamlLintAppendsTimingFooter() {
-		$file = $this->workDirectory . '/valid.yaml';
-		file_put_contents($file, "cog: true\n");
-
-		$tester = $this->tester(new YamlLintCommand());
-		$tester->execute(['filename' => [$file]]);
-
-		$this->assertStringContainsString('Command time', $tester->getDisplay());
 	}
 
 	//
@@ -493,6 +448,16 @@ class TestCommands extends TestCase {
 
 		$this->assertSame('shell', $command->getName());
 		$this->assertSame('Start PsySH', $command->getDescription());
+	}
+
+	/**
+	 * PsySH is a dev dependency, so the command hides itself from discovery when
+	 * the package is absent instead of failing every command listing. Under the
+	 * suite's own dev install it has to be enabled.
+	 */
+	public function testPsyshCommandIsEnabledWhenPsyshIsInstalled() {
+		$this->assertTrue(class_exists(\Psy\Shell::class));
+		$this->assertTrue((new PsyshCommand())->isEnabled());
 	}
 
 	//
