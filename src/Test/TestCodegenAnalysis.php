@@ -9,6 +9,7 @@ use Cog\Codegen\Index;
 use Cog\Database\Database;
 use Cog\Database\FieldType;
 use Cog\Exceptions\CogException;
+use Cog\Util\FileSystem;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use SimpleXMLElement;
@@ -51,6 +52,9 @@ class TestCodegenAnalysis extends TestCase {
 
 	private ?array $savedCodegenArray = null;
 
+	/** @var string|null scratch docroot for the tests that generate, removed in tearDown() */
+	private ?string $docroot = null;
+
 	protected function setUp(): void {
 		$this->savedCodegenArray = isset(CodeGenRunner::$codegenArray) ? CodeGenRunner::$codegenArray : null;
 		CodeGenRunner::$codegenArray = [];
@@ -59,6 +63,31 @@ class TestCodegenAnalysis extends TestCase {
 	protected function tearDown(): void {
 		unset(Database::$databases[self::DATABASE_INDEX]);
 		CodeGenRunner::$codegenArray = $this->savedCodegenArray ?? [];
+
+		if ($this->docroot !== null && is_dir($this->docroot)) {
+			// The templates are symlinked in; removeDirectory() must not see the link.
+			if (is_link($this->docroot . '/codegen')) {
+				unlink($this->docroot . '/codegen');
+			}
+			FileSystem::removeDirectory($this->docroot);
+		}
+	}
+
+	/** A throwaway docroot with the repository's templates linked in as /codegen, for tests that generate. */
+	private function scratchDocroot(): string {
+		$this->docroot = sys_get_temp_dir() . '/cog-analysis-test-' . bin2hex(random_bytes(8));
+		mkdir($this->docroot);
+
+		if (@symlink(dirname(__DIR__, 2) . '/codegen', $this->docroot . '/codegen') === false) {
+			$this->markTestSkipped('cannot symlink the templates into a scratch docroot');
+		}
+
+		// The class headers name the application; the runner normally sets it.
+		if (!isset(CodeGenRunner::$applicationName)) {
+			CodeGenRunner::$applicationName = 'TestCodegenAnalysis';
+		}
+
+		return $this->docroot;
 	}
 
 	//
@@ -115,7 +144,7 @@ class TestCodegenAnalysis extends TestCase {
 	 * Run the analysis against a schema. Settings are named "tag.attribute",
 	 * e.g. 'excludeTables.pattern', and override the defaults in SETTINGS.
 	 */
-	private function analyze(FakeSchemaAdapter $schema, array $settings = []): DatabaseCodeGen {
+	private function analyze(FakeSchemaAdapter $schema, array $settings = [], string $docroot = '/docroot'): DatabaseCodeGen {
 		$xml = new SimpleXMLElement(self::SETTINGS);
 		foreach ($settings as $path => $value) {
 			[$tag, $attribute] = explode('.', $path);
@@ -124,7 +153,7 @@ class TestCodegenAnalysis extends TestCase {
 
 		Database::$databases[self::DATABASE_INDEX] = $schema;
 
-		return new DatabaseCodeGen('/docroot', ['/codegen'], $xml);
+		return new DatabaseCodeGen($docroot, ['/codegen'], $xml);
 	}
 
 	//
@@ -265,10 +294,10 @@ class TestCodegenAnalysis extends TestCase {
 	//
 
 	/**
-	 * The primary key index comes from the columns, not from the adapter, and
-	 * it is the index - not the column's own flags - that records it as unique.
-	 * The templates read indexArray for that, which is why loadById() is a
-	 * single-object loader.
+	 * The primary key index comes from the columns, not from the adapter. Like
+	 * any other single-column index it marks its column, and a single-column
+	 * primary key is unique whether or not the adapter flags it so - MySQL
+	 * reports PRI and UNIQUE as different flags and only ever sets one.
 	 */
 	public function testPrimaryKeyIndexIsDerivedFromTheColumns() {
 		$table = $this->analyze(self::widgetSchema())->getTable('widget');
@@ -279,6 +308,19 @@ class TestCodegenAnalysis extends TestCase {
 		$this->assertTrue($index->primaryKey);
 		$this->assertTrue($index->unique);
 		$this->assertSame(['id'], $index->columnNameArray);
+		$this->assertTrue($table->columnArray['id']->indexed);
+		$this->assertTrue($table->columnArray['id']->unique);
+	}
+
+	public function testCompositePrimaryKeyColumnsAreNotUniqueOnTheirOwn() {
+		$schema = self::schema()->addTable('pair', [self::integer('a', primaryKey: true), self::integer('b', primaryKey: true)]);
+
+		$table = $this->analyze($schema)->getTable('pair');
+
+		$this->assertSame(['a', 'b'], $table->indexArray[0]->columnNameArray);
+		$this->assertFalse($table->columnArray['a']->unique);
+		$this->assertFalse($table->columnArray['a']->indexed);
+		$this->assertFalse($table->columnArray['b']->unique);
 	}
 
 	public function testSingleColumnIndexesMarkTheirColumn() {
@@ -413,11 +455,12 @@ class TestCodegenAnalysis extends TestCase {
 
 	/**
 	 * A foreign key on the primary key itself is how one table extends another.
-	 * The reverse side is then named after the extending class rather than
-	 * after the column, and the primary key index already satisfies the
-	 * "index behind every foreign key" check, so nothing is warned about.
+	 * The reverse side is then a single object - a person has at most one
+	 * manager row - named after the extending class rather than after the
+	 * column, and the primary key index already satisfies the "index behind
+	 * every foreign key" check, so nothing is warned about.
 	 */
-	public function testForeignKeyOnThePrimaryKeyNamesTheReverseSideAfterTheExtendingClass() {
+	public function testForeignKeyOnThePrimaryKeyIsAUniqueReverseReferenceNamedAfterTheExtendingClass() {
 		$schema = self::schema()
 			->addTable('person', [self::id(), self::varchar('name')])
 			->addTable('manager', [self::id(), self::varchar('department')], [], [self::foreignKey('id', 'person')]);
@@ -430,10 +473,38 @@ class TestCodegenAnalysis extends TestCase {
 
 		$reverse = $codegen->getTable('person')->reverseReferenceArray[0];
 		$this->assertSame('id', $reverse->column);
+		$this->assertTrue($reverse->unique, 'the templates emit an array of managers otherwise');
 		$this->assertSame('objManager', $reverse->objectMemberVariable);
 		$this->assertSame('Manager', $reverse->objectPropertyName);
 		$this->assertSame('Manager', $reverse->objectDescription);
 		$this->assertSame('Managers', $reverse->objectDescriptionPlural);
+	}
+
+	/**
+	 * The unique flag is what the templates switch on, so the generated class is
+	 * the real test of it: an inheritance chain has to come out as one adjoined
+	 * object on the parent, not as an array of managers.
+	 */
+	public function testInheritanceChainGeneratesASingleObjectReverseReference() {
+		$schema = self::schema()
+			->addTable('person', [self::id(), self::varchar('name')])
+			->addTable('manager', [self::id(), self::varchar('department')], [], [self::foreignKey('id', 'person')]);
+		$codegen = $this->analyze($schema, [], $this->scratchDocroot());
+
+		$this->assertTrue($codegen->generateTable($codegen->getTable('person')));
+
+		$file = $this->docroot . '/generated/Data/PersonGen.php';
+		$source = file_get_contents($file);
+		$this->assertStringContainsString("case 'Manager':", $source);
+		// The loader is named from the column's property name, so the casing is LoadByid;
+		// PHP resolves method names case-insensitively.
+		$this->assertStringContainsStringIgnoringCase('Manager::loadById(', $source);
+		$this->assertStringContainsString('$this->objManager', $source);
+		$this->assertStringNotContainsString('getManagerArray', $source);
+		$this->assertStringNotContainsString('unassociateAllManagers', $source);
+
+		exec(sprintf('%s -l %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($file)), $output, $status);
+		$this->assertSame(0, $status, "the generated class does not lint:\n" . implode("\n", $output));
 	}
 
 	public function testForeignKeyToANonPrimaryKeyColumnIsWarned() {

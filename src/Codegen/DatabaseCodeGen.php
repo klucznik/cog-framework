@@ -218,7 +218,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		parent::__construct($docroot, $templatePaths, $settingsXml);
 
 		// Set the databaseIndex
-		$this->databaseIndex = Utils::lookupSetting($settingsXml, null, 'index', Type::INTEGER);
+		$this->databaseIndex = Utils::lookupSetting($settingsXml, null, 'index', Type::INTEGER) ?? 0;
 
 		// Append Suffix/Prefixes
 		$this->classPrefix = Utils::lookupSetting($settingsXml, 'className', 'prefix');
@@ -289,9 +289,11 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 	protected function analyzeDatabase(): void {
 		// Set aside the Cog\Database\Database object
-		if (array_key_exists($this->databaseIndex, Database::$databases)) {
-			$this->database = Database::$databases[$this->databaseIndex];
+		if (!array_key_exists($this->databaseIndex, Database::$databases)) {
+			$this->errors .= sprintf("CodeGen Settings XML Fatal Error: databaseIndex %s is not a registered Database connection\r\n", $this->databaseIndex);
+			return;
 		}
+		$this->database = Database::$databases[$this->databaseIndex];
 
 		// Ensure DB Profiling is DISABLED on this DB
 		if ($this->database->profiling) {
@@ -394,6 +396,9 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 					foreach ($table->columnArray as $column) {
 						if ($column->reference && !$column->reference->isType) {
 							$reference = $column->reference;
+							if (!array_key_exists(strtolower($reference->table), $this->tableArray)) {
+								continue; // verification already dropped the referenced table and reported why
+							}
 							$referencedTable = $this->getTable($reference->table);
 							$referencedColumn = $referencedTable->columnArray[strtolower($reference->column)];
 
@@ -641,11 +646,13 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 		if ($fieldArray[0]->type !== FieldType::INTEGER || !$fieldArray[0]->primaryKey) {
 			$this->errors .= sprintf("TypeTable %s's first column is not a PK integer.\n", $typeTable->name);
+			unset($this->typeTableArray[strtolower($typeTable->name)]);
 			return;
 		}
 
 		if ($fieldArray[1]->type !== FieldType::VARCHAR || !$fieldArray[1]->unique) {
 			$this->errors .= sprintf("TypeTable %s's second column is not a unique VARCHAR.\n", $typeTable->name);
+			unset($this->typeTableArray[strtolower($typeTable->name)]);
 			return;
 		}
 
@@ -680,6 +687,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 			if (strlen($tokenArray[$row[0]]) === 0) {
 				$this->warnings .= sprintf("Warning: TypeTable %s contains an invalid type name: %s\r\n",
 					$typeTable->name, stripslashes($nameArray[$row[0]]));
+				unset($this->typeTableArray[strtolower($typeTable->name)]);
 				return;
 			}
 		}
@@ -756,6 +764,20 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 			$index->unique = true;
 			$index->columnNameArray = $primaryKeyNamesArray;
 			$preparedIndexArray[] = $index;
+
+			// A single-column primary key marks its column the way any other
+			// single-column index below does. The adapter's own PRIMARY entry is
+			// skipped as a duplicate of this one, so this is the only place the
+			// column learns it is unique - the field flags cannot say so, since
+			// MySQL reports PRI and UNIQUE as separate flags and sets only one.
+			// A reverse reference through this column relies on it: an FK on the
+			// primary key is an inheritance chain, and only a unique reverse
+			// reference is generated as a single adjoined object.
+			if (count($primaryKeyNamesArray) === 1) {
+				$column = $table->columnArray[strtolower($primaryKeyNamesArray[0])];
+				$column->indexed = true;
+				$column->unique = true;
+			}
 		}
 
 		// Get the List of Indexes
@@ -1041,9 +1063,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$column->notNull = $field->notNull;
 		$column->identity = $field->identity;
 		$column->unique = $field->unique;
-		if ($field->primaryKey && $table && $table->primaryKeyColumnArray !== null && count($table->primaryKeyColumnArray) === 1) {
-			$column->unique = true;
-		}
 		$column->timestamp = $field->timestamp;
 
 		$column->variableName = VariableNameCreator::variableNameFromColumn($column);
