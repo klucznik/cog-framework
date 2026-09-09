@@ -24,7 +24,7 @@ use Cog\Exceptions\CogException;
 <?php } ?>
 <?php } ?>
 <?php foreach ($table->manyToManyReferenceArray as $reference) { ?>
- * @property-read QQNode<?= $table->className ?><?= $reference->objectDescription ?> $<?= $reference->objectDescription ?>
+ * @property-read QQNode<?= $table->className ?><?= $reference->objectDescriptionUppercase ?> $<?= $reference->objectDescription ?>
 
 <?php } ?>
 <?php foreach ($table->reverseReferenceArray as $reference) { ?>
@@ -57,7 +57,7 @@ class QQReverseReferenceNode<?= $table->className ?> extends QQReverseReferenceN
 <?php } ?>
 <?php foreach ($table->manyToManyReferenceArray as $reference) { ?>
 			case '<?= $reference->objectDescription ?>':
-				return new QQNode<?= $table->className ?><?= $reference->objectDescription ?>($this);
+				return new QQNode<?= $table->className ?><?= $reference->objectDescriptionUppercase ?>($this);
 <?php } ?><?php foreach ($table->reverseReferenceArray as $reference) { ?>
 			case '<?= $reference->objectDescription ?>':
 				return new QQReverseReferenceNode<?= $reference->variableType ?>($this, '<?= strtolower($reference->objectDescription) ?>', 'reverse_reference', '<?= $reference->column ?>', '<?= $reference->objectDescription ?>');
