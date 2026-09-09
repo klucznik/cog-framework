@@ -4,6 +4,7 @@ namespace Cog\Test;
 
 use Cog\Command\CodegenCleanCommand;
 use Cog\Command\CodegenCommand;
+use Cog\Command\DumpConfigCommand;
 use Cog\Command\Md5Command;
 use Cog\Command\MigrateCommand;
 use Cog\Command\PsyshCommand;
@@ -13,6 +14,7 @@ use Cog\Command\Sha1Command;
 use Cog\Command\StatusCommand;
 use Cog\Command\WhiteCharsCommand;
 use Cog\Console\CommandApplication;
+use Cog\BaseConfig;
 use Cog\Util\FileSystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -458,6 +460,32 @@ class TestCommands extends TestCase {
 	public function testPsyshCommandIsEnabledWhenPsyshIsInstalled() {
 		$this->assertTrue(class_exists(\Psy\Shell::class));
 		$this->assertTrue((new PsyshCommand())->isEnabled());
+	}
+
+	//
+	// dump:config
+	//
+
+	public function testDumpConfigIdentity() {
+		$this->assertSame('dump:config', (new DumpConfigCommand())->getName());
+	}
+
+	/** The config is written through the command's own output as a key/value table; json-encoded values keep booleans, null and paths readable. */
+	public function testDumpConfigWritesTheConfigToTheOutput() {
+		$original = MockedApplication::config();
+		MockedApplication::setConfig(new BaseConfig(dirCache: '/cog-dump-config-test'));
+
+		try {
+			$tester = $this->tester(new DumpConfigCommand());
+			$tester->execute([]);
+		} finally {
+			MockedApplication::setConfig($original);
+		}
+
+		$this->assertSame(Command::SUCCESS, $tester->getStatusCode());
+		$this->assertMatchesRegularExpression('~\|\s*Key\s*\|\s*Value\s*\|~', $tester->getDisplay());
+		$this->assertMatchesRegularExpression('~\|\s*dirCache\s*\|\s*"/cog-dump-config-test"\s*\|~', $tester->getDisplay());
+		$this->assertMatchesRegularExpression('~\|\s*debug\s*\|\s*true\s*\|~', $tester->getDisplay());
 	}
 
 	//
