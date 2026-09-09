@@ -19,9 +19,9 @@ composer require klucznik/cog-framework
 The framework is initialized once per request through `Cog\BaseApplication::initialize()`.
 The repository ships a working example of this wiring:
 
-- [`prepend.inc.php`](prepend.inc.php) — loads the Composer autoloader and initializes the application
-- [`public/index.php`](public/index.php) — main web entry point 
-- [`cog`](cog) — the console command
+- [`prepend.inc.php`](../prepend.inc.php) — loads the Composer autoloader and initializes the application
+- [`public/index.php`](../public/index.php) — main web entry point 
+- [`cog`](../cog) — the console command
 
 These are reference examples, not files you install. Copy them into your own project
 and adjust the paths to your Composer autoloader.
@@ -32,7 +32,7 @@ Cog\BaseApplication is meant to be extended, you should create your own Applicat
 ## Code generation
 
 The generator reads a `codegen.xml` configuration file describing the database
-connection and output paths. Copy [`codegen.xml-dist`](codegen.xml-dist) to
+connection and output paths. Copy [`codegen.xml-dist`](../codegen.xml-dist) to
 `codegen.xml`, fill in your settings, then run:
 
 ```bash
@@ -48,7 +48,7 @@ mysql -u root -p < src/Test/cog_framework_test.sql
 ```
 
 Connection details come from the `COG_TEST_DB_*` environment variables; override
-the defaults in [`phpunit.xml.dist`](phpunit.xml.dist) by copying it to
+the defaults in [`phpunit.xml.dist`](../phpunit.xml.dist) by copying it to
 `phpunit.xml` (git-ignored). Then:
 
 ```bash

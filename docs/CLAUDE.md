@@ -135,6 +135,16 @@ Rules that have already cost real bugs:
   entity class of its own.
 - Class names written inside templates are just strings the generator never type-checks. Exceptions
   live under `Cog\Exceptions\`; getting that wrong only fails at run time, inside generated code.
+- **A generated class name must be spelled with the same case everywhere it is emitted.** The
+  many-to-many node is declared as `QQNode<Table><objectDescriptionUppercase>` by
+  `class_nodes/many.tpl.php` (that spelling is also its file name), so every template that
+  instantiates or documents it must use `objectDescriptionUppercase` too - `objectDescription`
+  yields `QQNodeObjtag` for a class that lives in `QQNodeObjTag.php`. PHP resolves an already-loaded
+  class case-insensitively, but PSR-4 derives the file path from the name as written, so the wrong
+  spelling autoloads on a case-insensitive macOS filesystem and fails on Linux with "Class not
+  found", unless another code path happened to load the correctly named class first. Neither the
+  suite nor a macOS dev machine catches it; grep the emitted `new QQNode...` calls in
+  `.phpunit.codegen/generated/Node/` against the file names in the same directory.
 
 ## Tests
 
@@ -147,6 +157,16 @@ Rules that have already cost real bugs:
   generator is reported as a failed assertion instead of an unreadable bootstrap fatal.
 - Generation output goes to the git-ignored `.phpunit.codegen/`; `CodegenFixture::registerAutoloader()`
   maps `Generated\` and `App\` onto it so later tests can use the generated classes.
+- `TestGeneratedLifecycle` and `TestGeneratedAssociations` exercise the generated ORM's write path
+  (`save()`, `delete()`, the `associate*` families, optimistic locking). Each test runs inside a
+  transaction rolled back in `tearDown()`, so the fixture rows stay as the SQL file left them.
+  `truncate()` is DDL and commits implicitly, so it is never called; reverse-reference
+  `unassociate*` nulls the foreign key, which strict mode refuses on NOT NULL columns, so those
+  run against the nullable `category.owner`.
+- `TestCodegenAnalysis` drives `DatabaseCodeGen`'s schema analysis through `FakeSchemaAdapter`, a
+  `Database\Base` that answers the four schema methods from arrays, so malformed schemas the
+  fixture cannot hold (a three-column `_assn` table, a reserved-word table name) are tested
+  without a server. It registers under `Database::$databases[99]`; keep that index free.
 - `src/Test/cog_framework_test.sql` is a schema **contract**, asserted against by `TestDatabase` (table count,
   `person` indexes, `obj` foreign key) and by `TestCodegen` (type table, association table, timestamp
   column, `CURRENT_TIMESTAMP` column). Changing the schema means changing those assertions in the
