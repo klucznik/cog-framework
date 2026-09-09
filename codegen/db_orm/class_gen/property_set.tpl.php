@@ -102,7 +102,7 @@
 
 				// Make sure $value actually is <?= $reverseReference->variableType ?> object
 				try {
-					$value = Type::cast($value, '<?= $reverseReference->variableType ?>');
+					$value = Type::cast($value, <?= $reverseReference->variableType ?>::class);
 				} catch (InvalidCastException $exception) {
 					$exception->incrementOffset();
 					throw $exception;

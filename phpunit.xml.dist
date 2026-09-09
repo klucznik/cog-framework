@@ -14,6 +14,7 @@
 			<file>src/Test/TestCodegenHelpers.php</file>
 			<file>src/Test/TestCodegenTemplates.php</file>
 			<file>src/Test/TestCodegenValueObjects.php</file>
+			<file>src/Test/TestCodegenAnalysis.php</file>
 			<file>src/Test/TestBase.php</file>
 			<file>src/Test/TestBaseApplication.php</file>
 			<file>src/Test/TestCommands.php</file>
@@ -37,6 +38,8 @@
 			<file>src/Test/TestQueryJoins.php</file>
 			<file>src/Test/TestQueryInternals.php</file>
 			<file>src/Test/TestGeneratedIsset.php</file>
+			<file>src/Test/TestGeneratedLifecycle.php</file>
+			<file>src/Test/TestGeneratedAssociations.php</file>
 			<file>src/Test/TestStringUtils.php</file>
 			<file>src/Test/TestTemplate.php</file>
 			<file>src/Test/TestType.php</file>
