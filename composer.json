@@ -23,7 +23,6 @@
 		"ext-libxml": "*",
 		"ext-mysqli": "*",
 		"ext-simplexml": "*",
-		"symfony/cache": "^7.4||^8.0",
 		"symfony/translation": "^7.4||^8.0",
 		"symfony/filesystem": "^7.4||^8.0",
 		"symfony/routing": "^7.4||^8.0",
@@ -39,7 +38,6 @@
 		"symfony/event-dispatcher": "^7.4||^8.0",
 		"symfony/error-handler": "^7.4||^8.0",
 		"nesbot/carbon": "^3.0",
-		"psr/simple-cache": "^3.0",
 		"psy/psysh": "^v0.12.24",
 		"robmorgan/phinx": "^0.16.12"
 	},
