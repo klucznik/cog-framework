@@ -43,6 +43,18 @@ class PostgreSqlField extends Cog\Database\FieldBase {
 	}
 
 	/**
+	 * information_schema deparses a default into an expression: a quoted literal comes back
+	 * as 'abc'::character varying, with any embedded quote doubled. Unwrap those to the value
+	 * MySQL would report; the words true / false, numbers and function calls pass through.
+	 */
+	private static function defaultFromCatalog(?string $default): ?string {
+		if ($default !== null && preg_match("/^'(.*)'::[a-z_ ]+(\\[\\])?$/s", $default, $matches)) {
+			return str_replace("''", "'", $matches[1]);
+		}
+		return $default;
+	}
+
+	/**
 	 * @param array $row one row of the getFieldsForTable() catalog query
 	 */
 	public static function fromCatalogRow(array $row, string $tableName): self {
@@ -51,7 +63,7 @@ class PostgreSqlField extends Cog\Database\FieldBase {
 		return new self([
 			'name' => $row['column_name'],
 			'table' => $tableName,
-			'default' => $row['column_default'],
+			'default' => self::defaultFromCatalog($row['column_default']),
 			'maxLength' => $row['character_maximum_length'] !== null ? (int)$row['character_maximum_length'] : null,
 			'comment' => $row['column_comment'] ?? '',
 			'identity' => $row['is_identity'] === 'YES' || $isSerial,

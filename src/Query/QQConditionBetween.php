@@ -2,9 +2,8 @@
 
 namespace Cog\Query;
 
-use Cog;
+use Carbon\Carbon;
 use Cog\Exceptions\InvalidCastException;
-use Cog\Type;
 
 class QQConditionBetween extends QQConditionComparison {
 
@@ -18,41 +17,27 @@ class QQConditionBetween extends QQConditionComparison {
 			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
 		}
 
-		if ($minValue instanceof QQNamedValue) {
-			$this->operand = $minValue;
-		} else {
-			try {
-				$this->operand = Type::cast($minValue, Type::STRING);
-			} catch (Cog\Exceptions\CogException $exception) {
-				$exception->incrementOffset();
-				$exception->incrementOffset();
-				throw $exception;
-			}
-		}
+		$this->operand = self::bound($minValue);
+		$this->operandTwo = self::bound($maxValue);
+	}
 
-		if ($maxValue instanceof QQNamedValue) {
-			$this->operandTwo = $maxValue;
-		} else {
-			try {
-				$this->operandTwo = Type::cast($maxValue, Type::STRING);
-			} catch (Cog\Exceptions\CogException $exception) {
-				$exception->incrementOffset();
-				$exception->incrementOffset();
-				throw $exception;
-			}
+	/**
+	 * A bound is kept as given so that sqlVariable() formats it for its type - an int stays
+	 * unquoted and a Carbon becomes a datetime literal - instead of being cast to a string.
+	 */
+	private static function bound(mixed $value): mixed {
+		if ($value instanceof QQNamedValue || $value instanceof Carbon || $value === null || is_scalar($value)) {
+			return $value;
 		}
+		throw new InvalidCastException('Unable to cast ' . get_debug_type($value) . ' to a BETWEEN bound', 4);
+	}
+
+	protected function boundSql(mixed $bound, QueryBuilder $queryBuilder): string {
+		return $bound instanceof QQNamedValue ? $bound->parameter() : $queryBuilder->database->sqlVariable($bound);
 	}
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		$operand = $this->operand;
-		$operandTwo = $this->operandTwo;
-		if ($operand instanceof QQNamedValue) {
-			/** @var QQNamedValue $operand */
-			/** @var QQNamedValue $operandTwo */
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $operand->parameter() . ' AND ' . $operandTwo->parameter());
-		} else {
-			$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $queryBuilder->database->sqlVariable($operand) . ' AND ' . $queryBuilder->database->sqlVariable($operandTwo));
-		}
+		$queryBuilder->addWhereItem($this->queryNode->getColumnAlias($queryBuilder) . ' BETWEEN ' . $this->boundSql($this->operand, $queryBuilder) . ' AND ' . $this->boundSql($this->operandTwo, $queryBuilder));
 	}
 }

@@ -364,7 +364,7 @@ abstract class Base extends Cog\Base {
 					$parameters[] = $this->sqlVariable($parameter);
 				}
 
-				$query = str_replace(chr(QQNamedValue::DELIMITER_CODE) . '{' . $key . '}', implode(',', $parameters), $query);
+				$query = str_replace(chr(QQNamedValue::DELIMITER_CODE) . '{' . $key . '}', $parameters ? implode(',', $parameters) : $this->sqlEmptyList(), $query);
 			} else {
 				$query = str_replace([
 					chr(QQNamedValue::DELIMITER_CODE) . '{=' . $key . '=}',
@@ -379,6 +379,15 @@ abstract class Base extends Cog\Base {
 		}
 
 		return $query;
+	}
+
+	/**
+	 * What an empty named-value list becomes inside IN (...): a subquery that yields no rows,
+	 * so IN is false and NOT IN is true - the same answers the literal-list branches of
+	 * QQConditionIn and QQConditionNotIn give. A bare "IN ()" is a syntax error.
+	 */
+	public function sqlEmptyList(): string {
+		return 'SELECT NULL WHERE 1=0';
 	}
 
 	/**

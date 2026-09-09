@@ -17,7 +17,7 @@
 
 	protected function unassociateEverything(): void {
 	<?php foreach ($table->reverseReferenceArray as $reverseReference) { ?><?php if (!$reverseReference->unique) { ?>
-	self::unassociateAll<?= $reverseReference->objectDescriptionPluralUppercase ?>();
+	self::<?= $reverseReference->notNull ? 'deleteAll' : 'unassociateAll' ?><?= $reverseReference->objectDescriptionPluralUppercase ?>();
 	<?php } ?><?php } ?><?php \Cog\Codegen\Utils::goBack(1); ?>
 	<?php foreach ($table->manyToManyReferenceArray as $manyToManyReference) { ?>
 	self::unassociateAll<?= $manyToManyReference->objectDescriptionPluralUppercase ?>();

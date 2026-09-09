@@ -64,7 +64,9 @@ HELP);
 		try {
 			CodeGenRunner::run($this->getRunnerDir(), $settingsXmlFilePath);
 
+			$failed = false;
 			if ($errors = CodeGenRunner::$rootErrors) {
+				$failed = true;
 				$output->writeln( sprintf("<error>The following ROOT ERRORS were reported:\n%s</error>\n\n", $errors));
 			} else {
 				$output->writeln('<comment>Cog\Codegen\CodeGen settings:</comment>');
@@ -78,6 +80,7 @@ HELP);
 				$output->writeln($codegen->generateAll());
 
 				if ($errors = $codegen->errors) {
+					$failed = true;
 					$output->writeln('<comment>The following errors were reported:</comment>');
 					$output->writeln('<error>' . $errors . '</error>');
 				}
@@ -98,7 +101,7 @@ HELP);
 
 			$this->getStopwatchStats($output);
 
-			return self::SUCCESS;
+			return $failed ? self::FAILURE : self::SUCCESS;
 		} catch (\Throwable $exception) {
 			$output->writeln('<error>error: ' . trim($exception->getMessage()) . '</error>');
 			return self::FAILURE;

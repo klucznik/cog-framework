@@ -20,6 +20,9 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 	/** pg_affected_rows() is a property of a result, not of the connection. */
 	protected ?PgSqlResult $lastResult = null;
 
+	/** True between transactionBegin() and the commit or rollback that ends it; a nested begin is refused. */
+	protected bool $inTransaction = false;
+
 	public function connect(): void {
 		if ($this->connectedFlag) {
 			return;
@@ -62,6 +65,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 		if ($this->connectedFlag) {
 			pg_close($this->postgreSql);
 			$this->connectedFlag = false;
+			$this->inTransaction = false;
 		}
 	}
 
@@ -178,14 +182,20 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 	}
 
 	public function transactionBegin(): void {
+		if ($this->inTransaction) {
+			throw new PostgreSqlException('Nested transactions are not supported: a transaction is already open', -1, 'BEGIN');
+		}
 		$this->nonQuery('BEGIN;');
+		$this->inTransaction = true;
 	}
 
 	public function transactionCommit(): void {
+		$this->inTransaction = false;
 		$this->nonQuery('COMMIT;');
 	}
 
 	public function transactionRollback(): void {
+		$this->inTransaction = false;
 		$this->nonQuery('ROLLBACK;');
 	}
 

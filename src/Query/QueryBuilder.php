@@ -309,11 +309,10 @@ class QueryBuilder extends Cog\Base {
 	 */
 	public function addExpandAsArrayNode($node): void {
 
-		// build child nodes and find top node of given node
+		// Mark the node, then work from a copy of its chain up to the root that holds only
+		// that path - the live root also carries every column node ever read off it.
 		$node->expandAsArray = true;
-		while ($node->parentNode) {
-			$node = $node->parentNode;
-		}
+		$node = $node->expansionPath();
 
 		if ($this->expandAsArrayNode) {
 			// integrate the information into current nodes

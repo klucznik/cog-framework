@@ -112,11 +112,11 @@ class TestQuery extends QueryTestCase {
 	public function testBetween() {
 		$people = Person::queryArray(QQ::between($this->person()->id, 1, 2));
 
-		$this->assertQueryContains("`t0`.`id` BETWEEN '1' AND '2'");
+		$this->assertQueryContains("`t0`.`id` BETWEEN 1 AND 2");
 		$this->assertCount(2, $people);
 
 		$people = Person::queryArray(QQ::notBetween($this->person()->id, 1, 2));
-		$this->assertQueryContains("`t0`.`id` NOT BETWEEN '1' AND '2'");
+		$this->assertQueryContains("`t0`.`id` NOT BETWEEN 1 AND 2");
 		$this->assertEquals(['Piotr Lewandowski'], self::pluck($people, 'name'));
 	}
 
@@ -290,8 +290,8 @@ class TestQuery extends QueryTestCase {
 	public function testClausesForCountDropsAnOrderByThatWouldMultiplyRows() {
 		$orderByReverseReference = [QQ::orderBy((new QQNodePerson)->blogPostAsAuthor->title)];
 
-		// 3 people, but person 1 wrote both blog posts
-		$this->assertSame(4, Person::queryCount(QQ::all(), $orderByReverseReference));
+		// 3 people, but person 1 wrote both blog posts; queryCount() strips the order by itself
+		$this->assertSame(3, Person::queryCount(QQ::all(), $orderByReverseReference));
 		$this->assertSame(3, Person::queryCount(QQ::all(), QQ::clausesForCount($orderByReverseReference)));
 	}
 

@@ -104,12 +104,27 @@ class Column extends Base {
 			}
 			return 'null';
 		} elseif ($this->variableType === Type::BOOLEAN) {
-			return ($this->default) ? 'true' : 'false';
+			return $this->defaultAsBoolean() ? 'true' : 'false';
 		} elseif (is_numeric($this->default)) {
 			return $this->default;
 		} else {
 			return "'" . Cog\Util\StringUtils::addslashes($this->default) . "'";
 		}
+	}
+
+	/**
+	 * The default as reported by the server is not a PHP truth value: MySQL reports a BIT
+	 * default as b'0' / b'1' and PostgreSQL deparses a boolean to the words false / true,
+	 * all of which are non-empty strings.
+	 */
+	private function defaultAsBoolean(): bool {
+		if (is_string($this->default)) {
+			if (preg_match("/^b'([01]+)'$/i", $this->default, $matches)) {
+				return (int)$matches[1] !== 0;
+			}
+			return !in_array(strtolower($this->default), ['', '0', 'false', 'f', 'no', 'off'], true);
+		}
+		return (bool)$this->default;
 	}
 
 	/**

@@ -15,8 +15,16 @@ class PartialQueryBuilder extends QueryBuilder {
 		parent::__construct($queryBuilder->database, $queryBuilder->rootTableName);
 
 		$this->parentBuilder = $queryBuilder;
+		// Share the alias state and the joins with the parent. A condition may reach a table the
+		// parent has not joined yet; that join, and the alias counter that names it, must land in
+		// the parent's statement, since this builder only ever contributes its WHERE text.
 		$this->columnAliasArray = &$queryBuilder->columnAliasArray;
+		$this->columnAliasCount = &$queryBuilder->columnAliasCount;
 		$this->tableAliasArray = &$queryBuilder->tableAliasArray;
+		$this->tableAliasCount = &$queryBuilder->tableAliasCount;
+		$this->joinArray = &$queryBuilder->joinArray;
+		$this->joinConditionArray = &$queryBuilder->joinConditionArray;
+		$this->virtualNodeArray = &$queryBuilder->virtualNodeArray;
 	}
 
 	public function getWhereStatement(): string {

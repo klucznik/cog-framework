@@ -212,6 +212,9 @@
 	 * @throws CogException
 	 */
 	public static function queryCount(QQCondition $conditions, QQClause|array|null $optionalClauses = null, ?array $parameterArray = null): int {
+		// Ordering, paging and expandAsArray would inflate or truncate the count
+		$optionalClauses = QQ::clausesForCount($optionalClauses);
+
 		// Get the Query Statement
 		try {
 			$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray, true);

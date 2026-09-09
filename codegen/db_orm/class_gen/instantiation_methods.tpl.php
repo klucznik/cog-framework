@@ -200,12 +200,12 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 		if ($dbRow->ColumnExists($aliasName)) {
 			if (null !== $dbRow->getColumn($aliasName)) {
 				$expansionNode = (empty($expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']) ? null : $expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']);
-				$toReturn->obj<?= $reference->objectDescription ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
+				$toReturn-><?= $reference->objectMemberVariable ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
 			}
 			else {
 				// We ATTEMPTED to do an Early Bind but the Object Doesn't Exist
-				// Let's set to FALSE so that the object knows not to try and re-query again
-				$toReturn->obj<?= $reference->objectDescription ?> = false;
+				// The member is typed ?Class, so null is all it can hold; the getter re-queries on access
+				$toReturn-><?= $reference->objectMemberVariable ?> = null;
 			}
 		}
 

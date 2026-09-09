@@ -59,7 +59,7 @@
 
 			WHERE
 <?php foreach ($table->primaryKeyColumnArray as $column) { ?>
-				<?= $escapeIdentifierBegin ?><?= $column->name ?><?= $escapeIdentifierEnd ?> = ' . $database->sqlVariable($this-><?= $column->variableName ?>) . ' AND
+				<?= $escapeIdentifierBegin ?><?= $column->name ?><?= $escapeIdentifierEnd ?> = ' . $database->sqlVariable(<?= $column->identity ? '$this->' . $column->variableName : '$this->__' . $column->variableName . ' ?? $this->' . $column->variableName ?>) . ' AND
 <?php } ?><?php \Cog\Codegen\Utils::goBack(8); ?>);
 	}
 

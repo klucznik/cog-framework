@@ -162,7 +162,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 					');
 
 					$objRow = $result->fetchArray();
-					if ($objRow[0] != (string) $this-><?= $column->variableName ?>) {
+					if (($objRow[0] ?? null) != (string) $this-><?= $column->variableName ?>) {
 						throw new OptimisticLockingException('<?= $table->className ?>');
 					}
 				}
@@ -242,7 +242,8 @@ foreach ($table->primaryKeyColumnArray as $column) {
 		');
 
 		$objRow = $result->fetchArray();
-		$this-><?= $column->variableName ?> = new Carbon($objRow[0]);
+		// A nullable token that the database left NULL must stay null; new Carbon(null) would be "now"
+		$this-><?= $column->variableName ?> = isset($objRow[0]) ? new Carbon($objRow[0]) : null;
 <?php } ?>
 <?php } ?>
 		return $mixToReturn;

@@ -245,4 +245,32 @@ abstract class QQBaseNode extends Cog\Base {
 		}
 		return null;
 	}
+
+	/**
+	 * A copy of the chain from the root down to this node that holds only that path.
+	 * The live nodes also register every column node ever read off them, and a root
+	 * reused across clauses collects several relations - both of which the generated
+	 * expandArray() would walk as expansions. An association hop that ends the path
+	 * keeps its child table node, which expandArray() reads to name the join.
+	 */
+	public function expansionPath(): QQBaseNode {
+		$pathNode = clone $this;
+		$pathNode->childNodeArray = [];
+		if ($this instanceof QQAssociationNode) {
+			foreach ($this->childNodeArray as $name => $child) {
+				if ($child->tableName !== null) {
+					$childCopy = clone $child;
+					$childCopy->childNodeArray = [];
+					$pathNode->childNodeArray[$name] = $childCopy;
+				}
+			}
+		}
+
+		for ($node = $this; $node->parentNode; $node = $node->parentNode) {
+			$parentCopy = clone $node->parentNode;
+			$parentCopy->childNodeArray = [$node->name => $pathNode];
+			$pathNode = $parentCopy;
+		}
+		return $pathNode;
+	}
 }

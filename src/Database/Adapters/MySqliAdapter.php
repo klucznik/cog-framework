@@ -19,12 +19,20 @@ class MySqliAdapter extends Cog\Database\Base {
 
 	protected int $lastInsertId = 0;
 
+	/** True between transactionBegin() and the commit or rollback that ends it; a nested begin is refused. */
+	protected bool $inTransaction = false;
+
 	/** @inheritdoc */
 	public function __construct($databaseIndex, $configArray) {
 		parent::__construct($databaseIndex, $configArray);
 
 		$this->escapeIdentifierBegin = '`';
 		$this->escapeIdentifierEnd = '`';
+	}
+
+	/** MySQL needs a FROM for a WHERE; DUAL is its placeholder table. */
+	public function sqlEmptyList(): string {
+		return 'SELECT NULL FROM DUAL WHERE 1=0';
 	}
 
 	public function sqlLimitVariablePrefix($limitInfo): ?string {
@@ -221,6 +229,7 @@ class MySqliAdapter extends Cog\Database\Base {
 		if ($this->connectedFlag) {
 			$this->mySqli->close();
 			$this->connectedFlag = false;
+			$this->inTransaction = false;
 		}
 	}
 
@@ -229,17 +238,22 @@ class MySqliAdapter extends Cog\Database\Base {
 	}
 
 	public function transactionBegin(): void {
-		// Set to AutoCommit
+		if ($this->inTransaction) {
+			throw new MySqliException('Nested transactions are not supported: a transaction is already open', 0, 'SET AUTOCOMMIT=0');
+		}
 		$this->nonQuery('SET AUTOCOMMIT=0;');
+		$this->inTransaction = true;
 	}
 
 	public function transactionCommit(): void {
+		$this->inTransaction = false;
 		$this->nonQuery('COMMIT;');
 		// Set to AutoCommit
 		$this->nonQuery('SET AUTOCOMMIT=1;');
 	}
 
 	public function transactionRollback(): void {
+		$this->inTransaction = false;
 		$this->nonQuery('ROLLBACK;');
 		// Set to AutoCommit
 		$this->nonQuery('SET AUTOCOMMIT=1;');
