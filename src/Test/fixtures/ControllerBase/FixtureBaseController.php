@@ -16,14 +16,13 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class FixtureBaseController extends ControllerBase {
 
-	public function setRequest(Request $request): void {
-		$this->request = $request;
-	}
-
-	/** Renders FixtureBaseControllerShow.tpl.php, found by convention. */
+	/**
+	 * Renders FixtureBaseControllerShow.tpl.php, found by convention. The request
+	 * is an ordinary token the action passes on - ControllerBase holds none.
+	 */
 	#[Route('/base/show', name: 'fixtureBaseShow')]
-	public function showAction(): Response {
-		return $this->render();
+	public function showAction(Request $request): Response {
+		return $this->render(null, ['request' => $request]);
 	}
 
 	/** Same, but naming the template explicitly. */

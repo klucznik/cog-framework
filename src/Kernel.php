@@ -199,12 +199,10 @@ class Kernel implements HttpKernelInterface {
 	/**
 	 * Filters a response object.
 	 */
-	private function filterResponse(Response $response, Request $request, int $type): Response
-	{
+	private function filterResponse(Response $response, Request $request, int $type): Response {
 		$event = new ResponseEvent($this, $request, $type, $response);
 
 		$this->dispatcher->dispatch($event, KernelEvents::RESPONSE);
-
 		$this->finishRequest($request, $type);
 
 		return $event->getResponse();

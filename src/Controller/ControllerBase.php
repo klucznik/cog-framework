@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Cog\Controller;
 
@@ -8,13 +8,10 @@ use Cog\Exceptions\RedirectException;
 use Cog\Util\Template;
 use Cog\Util\Url;
 use ReflectionClass;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 abstract class ControllerBase extends Base {
-
-	protected Request $request;
 
 	/**
 	 * @param string|null $templateFile
@@ -32,11 +29,8 @@ abstract class ControllerBase extends Base {
 		}
 
 		$tokens['controller'] = $this;
-		$tokens['request'] = $this->request;
 
-		$toReturn = Template::render($templateFile, $tokens);
-
-		return new Response($toReturn);
+		return new Response(Template::render($templateFile, $tokens));
 	}
 
 	protected function findTemplate(): ?string {
@@ -85,7 +79,7 @@ abstract class ControllerBase extends Base {
 	 *
 	 * @throws RedirectException
 	 */
-	protected function redirectToRoute(string $route, array $parameters = [], int $referenceType = UrlGenerator::ABSOLUTE_PATH, int $status = 302): void {
+	protected function redirectToRoute(string $route, array $parameters = [], int $referenceType = UrlGeneratorInterface::ABSOLUTE_PATH, int $status = 302): void {
 		$this->redirect(Url::getForRoute($route, $parameters, $referenceType), $status);
 	}
 }

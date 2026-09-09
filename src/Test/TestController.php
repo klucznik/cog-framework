@@ -36,11 +36,8 @@ class TestController extends TestCase {
 		MockedApplication::$routesDirs = $this->routesDirs;
 	}
 
-	private function controller(string $path = '/base/show'): FixtureBaseController {
-		$controller = new FixtureBaseController();
-		$controller->setRequest(Request::create($path));
-
-		return $controller;
+	private function controller(): FixtureBaseController {
+		return new FixtureBaseController();
 	}
 
 	/** Points BaseApplication::$container at a container whose router knows the fixture routes. */
@@ -64,15 +61,15 @@ class TestController extends TestCase {
 	 * FixtureBaseControllerShow.tpl.php beside the class.
 	 */
 	public function testRenderFindsTheTemplateByConvention() {
-		$response = $this->controller('/base/show')->showAction();
+		$response = $this->controller()->showAction(Request::create('/base/show'));
 
 		$this->assertSame(200, $response->getStatusCode());
 		$this->assertSame("shown for /base/show", $response->getContent());
 	}
 
-	/** The controller and the request are always available to the template. */
-	public function testRenderPassesTheControllerAndRequestAsTokens() {
-		$response = $this->controller('/base/show?q=1')->showAction();
+	/** Tokens the action hands render() reach the template as variables. */
+	public function testRenderPassesTheActionsTokensToTheTemplate() {
+		$response = $this->controller()->showAction(Request::create('/base/show?q=1'));
 
 		$this->assertStringContainsString('/base/show', $response->getContent());
 	}
@@ -93,7 +90,7 @@ class TestController extends TestCase {
 	public function testRenderEmitsNothingOfItsOwn() {
 		$this->expectOutputString('');
 
-		$this->controller()->showAction();
+		$this->controller()->showAction(Request::create('/base/show'));
 	}
 
 	//////////////////////////////

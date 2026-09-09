@@ -28,8 +28,6 @@ class DevController extends ControllerBase {
 		methods: ['POST']
 	)]
 	public function profileAction(Request $request): Response {
-		$this->request = $request;
-
 		if (
 			$request->request->has('databaseIndex') === false
 			|| $request->request->has('profileData') === false
