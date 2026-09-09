@@ -4,6 +4,7 @@ namespace Cog\Test;
 
 use Cog\Command\CodegenCleanCommand;
 use Cog\Command\CodegenCommand;
+use Cog\Command\ContainerDebugCommand;
 use Cog\Command\DumpConfigCommand;
 use Cog\Command\Md5Command;
 use Cog\Command\MigrateCommand;
@@ -14,8 +15,11 @@ use Cog\Command\Sha1Command;
 use Cog\Command\StatusCommand;
 use Cog\Command\WhiteCharsCommand;
 use Cog\Console\CommandApplication;
+use Cog\BaseApplication;
 use Cog\BaseConfig;
+use Cog\Kernel;
 use Cog\Util\FileSystem;
+use League\Container\Container;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
@@ -25,6 +29,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver;
 
 /**
  * Tests for the shipped console commands.
@@ -486,6 +491,70 @@ class TestCommands extends TestCase {
 		$this->assertMatchesRegularExpression('~\|\s*Key\s*\|\s*Value\s*\|~', $tester->getDisplay());
 		$this->assertMatchesRegularExpression('~\|\s*dirCache\s*\|\s*"/cog-dump-config-test"\s*\|~', $tester->getDisplay());
 		$this->assertMatchesRegularExpression('~\|\s*debug\s*\|\s*true\s*\|~', $tester->getDisplay());
+	}
+
+	//
+	// debug:container
+	//
+
+	public function testDebugContainerIdentity() {
+		$this->assertSame('debug:container', (new ContainerDebugCommand())->getName());
+	}
+
+	/** One row per definition: id, the concrete class, whether it is shared, and its tags. */
+	public function testDebugContainerListsTheDefinitions() {
+		$original = BaseApplication::$container;
+		$container = new Container();
+		$container->addShared('kernel', Kernel::class);
+		$container->add('resolver.default', DefaultValueResolver::class)->addTag('controller.argument_value_resolver')->addTag('extra');
+		MockedApplication::setContainer($container);
+
+		try {
+			$tester = $this->tester(new ContainerDebugCommand());
+			$tester->execute([]);
+		} finally {
+			MockedApplication::setContainer($original);
+		}
+
+		$this->assertSame(Command::SUCCESS, $tester->getStatusCode());
+		$this->assertMatchesRegularExpression('~\|\s*Service\s*\|\s*Class\s*\|\s*Shared\s*\|\s*Tags\s*\|~', $tester->getDisplay());
+		$this->assertMatchesRegularExpression('~\|\s*kernel\s*\|\s*Cog\\\\Kernel\s*\|\s*yes\s*\|\s*\|~', $tester->getDisplay());
+		$this->assertMatchesRegularExpression('~\|\s*resolver\.default\s*\|\s*' . preg_quote(DefaultValueResolver::class, '~') . '\s*\|\s*no\s*\|\s*controller\.argument_value_resolver, extra\s*\|~', $tester->getDisplay());
+	}
+
+	/** A closure factory has no class to name, so the row says so instead of printing nothing. */
+	public function testDebugContainerNamesClosureFactories() {
+		$original = BaseApplication::$container;
+		$container = new Container();
+		$container->addShared('service_container', static fn() => $container);
+		MockedApplication::setContainer($container);
+
+		try {
+			$tester = $this->tester(new ContainerDebugCommand());
+			$tester->execute([]);
+		} finally {
+			MockedApplication::setContainer($original);
+		}
+
+		$this->assertMatchesRegularExpression('~\|\s*service_container\s*\|\s*closure\s*\|\s*yes\s*\|~', $tester->getDisplay());
+	}
+
+	/** The rows come out sorted by id, so the listing is stable regardless of registration order. */
+	public function testDebugContainerSortsById() {
+		$original = BaseApplication::$container;
+		$container = new Container();
+		$container->add('zeta', Kernel::class);
+		$container->add('alpha', Kernel::class);
+		MockedApplication::setContainer($container);
+
+		try {
+			$tester = $this->tester(new ContainerDebugCommand());
+			$tester->execute([]);
+		} finally {
+			MockedApplication::setContainer($original);
+		}
+
+		$this->assertLessThan(strpos($tester->getDisplay(), 'zeta'), strpos($tester->getDisplay(), 'alpha'));
 	}
 
 	//

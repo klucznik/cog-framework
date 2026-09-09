@@ -89,7 +89,7 @@ class TestConsole extends TestCase {
 		$application = new CommandApplication();
 		$application->addCommandDir(dirname(__DIR__) . '/Command', 'Cog\Command');
 
-		foreach (['crypt:md5', 'crypt:sha1', 'db:clean', 'db:codegen', 'dump:config', 'util:whitechars', 'shell'] as $name) {
+		foreach (['crypt:md5', 'crypt:sha1', 'db:clean', 'db:codegen', 'debug:container', 'dump:config', 'util:whitechars', 'shell'] as $name) {
 			$this->assertTrue($application->has($name), sprintf('%s was not discovered', $name));
 		}
 	}
