@@ -4,7 +4,6 @@ namespace Cog\Test;
 
 use Cog\Command\CodegenCleanCommand;
 use Cog\Command\CodegenCommand;
-use Cog\Command\DumpPathCommand;
 use Cog\Command\Md5Command;
 use Cog\Command\MigrateCommand;
 use Cog\Command\PsyshCommand;
@@ -25,7 +24,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\VarDumper\VarDumper;
 
 /**
  * Tests for the shipped console commands.
@@ -139,35 +137,6 @@ class TestCommands extends TestCase {
 	public function testHashCommandIdentities() {
 		$this->assertSame('crypt:md5', (new Md5Command())->getName());
 		$this->assertSame('crypt:sha1', (new Sha1Command())->getName());
-	}
-
-	//
-	// dump:path
-	//
-
-	/**
-	 * The command hands Path::dump() to var-dumper, which writes to stdout rather
-	 * than to the output interface. The handler is swapped out so the dump is
-	 * captured instead of leaking into the test run.
-	 */
-	public function testDumpPathCommandDumpsThePathRegistry() {
-		$dumped = null;
-		VarDumper::setHandler(static function ($variable) use (&$dumped): void {
-			$dumped = $variable;
-		});
-
-		try {
-			$tester = $this->tester(new DumpPathCommand());
-
-			$this->assertSame(Command::SUCCESS, $tester->execute([]));
-		} finally {
-			VarDumper::setHandler(null);
-		}
-
-		$this->assertIsArray($dumped);
-		$this->assertArrayHasKey('appRoot', $dumped);
-		$this->assertArrayHasKey('webRoot', $dumped);
-		$this->assertTrue($dumped['cli']);
 	}
 
 	//

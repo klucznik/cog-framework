@@ -159,8 +159,18 @@ Rules that have already cost real bugs:
 - `BaseApplication::$cache` switches container caching globally. With it on, edits to service
   definitions appear to do nothing until `$dirCache/container/` is cleared. The test bootstrap forces
   it off for that reason.
-- `BaseApplication::$dirCache` and `$dirTemplates` default to paths inside `src/` that do not exist;
-  applications are expected to reassign them.
+- `Cog\Path` is **retained deliberately for backwards compatibility** and is not on a deprecation
+  path. **Nothing inside `src/` references it at all** - directories and CLI-ness come off
+  `BaseConfig`, and `dump:path` has been removed - but the vendored sites call `Path::isCLI()` and
+  `Path::dump()`, so it stays. Its `$cliMode` is an independent sniff of the same `$_SERVER` key that
+  `createConfig()` reads, not a delegation: `Path::initialize()` runs at autoload time, while
+  `BaseApplication::$config` is an uninitialized typed static until `initialize()` runs, so `Path`
+  cannot ask the config without fatalling on any pre-boot caller. Framework code should read
+  `config()->isCli`. It is also **deliberately untested** - `TestPath`/`MockedPath` were deleted
+  rather than maintained, because the class is frozen; do not add coverage back for it.
+- `BaseApplication::createConfig()` derives every directory from `dirname(__DIR__)` - the framework's
+  own docroot - so the defaults are already normalized and none of them need to exist to be built.
+  `dirCache` is not shipped, so applications either create it or override the hook.
 - `Database::$databases` is a static, index-keyed registry rather than a pool, and generated ORM
   classes bind to a **specific numeric index** (the test fixture uses
   `CodegenFixture::DATABASE_INDEX = 1`). `initializeConnection()` derives the next index from

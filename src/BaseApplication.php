@@ -85,10 +85,6 @@ abstract class BaseApplication extends Base {
 	 */
 	public static string $encodingType = 'UTF-8';
 
-	public static function isCli(): bool {
-		return !array_key_exists('SERVER_PROTOCOL', $_SERVER);
-	}
-
 	/**
 	 * Called by initialize() to route errors, uncaught exceptions and fatals
 	 * through Symfony's error handler.
@@ -114,12 +110,20 @@ abstract class BaseApplication extends Base {
 	 * @return BaseConfig
 	 */
 	protected static function createConfig(Environment $environment, bool $debug, bool $cache): BaseConfig {
+		$docroot = dirname(__DIR__);
+
 		return new BaseConfig(
 			$environment,
 			$debug,
 			$cache,
-			__DIR__ . '/../cache',
-			__DIR__ . '/../templates'
+
+			$docroot,
+			$docroot . '/app',
+			$docroot . '/public',
+			$docroot . '/cache',
+			$docroot . '/templates',
+
+			array_key_exists('SERVER_PROTOCOL', $_SERVER) === false
 		);
 	}
 

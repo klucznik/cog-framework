@@ -39,6 +39,14 @@ final class MockedApplication extends BaseApplication {
 		return parent::initializeErrorHandling();
 	}
 
+	/**
+	 * The real factory, bypassing $configFactoryResult - the only way to assert
+	 * what BaseApplication::createConfig() itself builds.
+	 */
+	public static function callCreateConfig(Environment $environment, bool $debug = false, bool $cache = false): BaseConfig {
+		return parent::createConfig($environment, $debug, $cache);
+	}
+
 	public static function getRoutesDirs(): array {
 		return static::$routesDirs;
 	}

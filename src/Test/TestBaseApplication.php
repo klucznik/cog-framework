@@ -37,15 +37,18 @@ class TestBaseApplication extends TestCase {
 	private ?Container $container;
 	private BaseConfig $config;
 	private array $routesDirs;
+	private array $server;
 	private string $tempDir = '';
 
 	public function setUp(): void {
 		$this->container = BaseApplication::$container;
 		$this->config = BaseApplication::config();
 		$this->routesDirs = MockedApplication::$routesDirs;
+		$this->server = $_SERVER;
 	}
 
 	public function tearDown(): void {
+		$_SERVER = $this->server;
 		MockedApplication::setContainer($this->container);
 		MockedApplication::setConfig($this->config);
 		MockedApplication::$routesDirs = $this->routesDirs;
@@ -93,19 +96,65 @@ class TestBaseApplication extends TestCase {
 	}
 
 	/**
-	 * The cache and template directories default to paths inside src/ - the
-	 * template one is not even shipped, so applications are expected to
-	 * reassign both rather than rely on the defaults.
+	 * Every directory defaults to a path under the framework's own docroot - the
+	 * parent of src/ - built from dirname() rather than a '..' segment, so the
+	 * strings are already normalized and no directory has to exist for them to
+	 * be built. The cache one is not shipped, so an application that keeps the
+	 * defaults still has to create it or reassign the property.
 	 */
-	public function testInitializeDefaultsToDirectoriesInsideSrc() {
+	public function testInitializeDefaultsToDirectoriesUnderTheDocroot() {
+		MockedApplication::initialize(Environment::DEV, true, false);
+		$this->restoreErrorHandlers();
+
+		$config = MockedApplication::config();
+		$docroot = dirname(__DIR__, 2);
+
+		$this->assertSame($docroot, $config->dirDocRoot);
+		$this->assertSame($docroot . '/app', $config->dirAppRoot);
+		$this->assertSame($docroot . '/public', $config->dirPublic);
+		$this->assertSame($docroot . '/cache', $config->dirCache);
+		$this->assertSame($docroot . '/templates', $config->dirTemplates);
+		$this->assertDirectoryDoesNotExist($config->dirCache);
+		$this->assertTrue($config->isCli);
+	}
+
+	/**
+	 * CLI-ness used to be re-sniffed from $_SERVER on every call. It is now
+	 * resolved once, by createConfig(), and carried on the config - so these
+	 * drive the factory directly rather than a global.
+	 */
+	public function testCreateConfigFlagsCliWhenServerProtocolIsAbsent() {
+		unset($_SERVER['SERVER_PROTOCOL']);
+
+		$this->assertTrue(MockedApplication::callCreateConfig(Environment::TEST)->isCli);
+	}
+
+	public function testCreateConfigFlagsWebWhenServerProtocolIsPresent() {
+		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+
+		$this->assertFalse(MockedApplication::callCreateConfig(Environment::TEST)->isCli);
+	}
+
+	/** The flag is a snapshot: a later $_SERVER change does not reach an existing config. */
+	public function testIsCliIsNotReSniffedAfterTheConfigIsBuilt() {
+		unset($_SERVER['SERVER_PROTOCOL']);
+		$config = MockedApplication::callCreateConfig(Environment::TEST);
+
+		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+
+		$this->assertTrue($config->isCli);
+	}
+
+	/** No default carries a '..' segment, so the paths need no further normalizing. */
+	public function testInitializeDefaultsAreAlreadyNormalized() {
 		MockedApplication::initialize(Environment::DEV, true, false);
 		$this->restoreErrorHandlers();
 
 		$config = MockedApplication::config();
 
-		$this->assertSame(dirname(__DIR__) . '/cache', $config->dirCache);
-		$this->assertSame(dirname(__DIR__) . '/templates', $config->dirTemplates);
-		$this->assertDirectoryDoesNotExist($config->dirTemplates);
+		foreach (['dirDocRoot', 'dirAppRoot', 'dirPublic', 'dirCache', 'dirTemplates'] as $property) {
+			$this->assertStringNotContainsString('/../', $config->$property, $property . ' still holds a relative segment');
+		}
 	}
 
 	/**
@@ -113,7 +162,7 @@ class TestBaseApplication extends TestCase {
 	 * install its own BaseConfig subclass rather than having the base one forced on it.
 	 */
 	public function testInitializeUsesCreateConfigOverride() {
-		$config = new BaseConfig(Environment::TEST, false, false, $this->makeTempDir(), '');
+		$config = new BaseConfig(Environment::TEST, false, false, dirCache: $this->makeTempDir());
 		MockedApplication::$configFactoryResult = $config;
 
 		MockedApplication::initialize(Environment::DEV, true, false);
@@ -128,7 +177,7 @@ class TestBaseApplication extends TestCase {
 	 * both read directories off it.
 	 */
 	public function testInitializeInstallsConfigBeforeErrorHandling() {
-		$config = new BaseConfig(Environment::TEST, false, false, $this->makeTempDir(), '');
+		$config = new BaseConfig(Environment::TEST, false, false, dirCache: $this->makeTempDir());
 		MockedApplication::$configFactoryResult = $config;
 
 		MockedApplication::initialize(Environment::DEV, true, false);
@@ -333,7 +382,7 @@ class TestBaseApplication extends TestCase {
 
 	public function testInitializeContainerDumpsTheContainerWhenCachingIsOn() {
 		$dir = $this->makeTempDir();
-		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, $dir, ''));
+		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, dirCache: $dir));
 		MockedApplication::setContainer(null);
 
 		MockedApplication::callInitializeContainer();
@@ -348,7 +397,7 @@ class TestBaseApplication extends TestCase {
 	 */
 	public function testInitializeContainerLoadsTheDumpedContainer() {
 		$dir = $this->makeTempDir();
-		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, $dir, ''));
+		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, true, dirCache: $dir));
 
 		MockedApplication::setContainer(null);
 		MockedApplication::callInitializeContainer();
@@ -362,7 +411,7 @@ class TestBaseApplication extends TestCase {
 
 	public function testInitializeContainerWritesNothingWhenCachingIsOff() {
 		$dir = $this->makeTempDir();
-		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, $dir, ''));
+		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, dirCache: $dir));
 		MockedApplication::setContainer(null);
 
 		MockedApplication::callInitializeContainer();
@@ -374,7 +423,7 @@ class TestBaseApplication extends TestCase {
 	public function testInitializeContainerKeepsAnAlreadyBuiltContainer() {
 		$container = $this->buildRoutedContainer();
 		MockedApplication::setContainer($container);
-		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, $this->makeTempDir(), ''));
+		MockedApplication::setConfig(new BaseConfig(Environment::TEST, false, false, dirCache: $this->makeTempDir()));
 
 		MockedApplication::callInitializeContainer();
 

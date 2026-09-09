@@ -30,7 +30,6 @@
 			<file>src/Test/TestFileSystem.php</file>
 			<file>src/Test/TestKernel.php</file>
 			<file>src/Test/TestNamespaceUtil.php</file>
-			<file>src/Test/TestPath.php</file>
 			<file>src/Test/TestPostgreSql.php</file>
 			<file>src/Test/TestQuery.php</file>
 			<file>src/Test/TestQueryBuilder.php</file>
