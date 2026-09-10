@@ -12,7 +12,7 @@
 <?php if ($column->reference && (!$column->reference->isType)) { ?>
 <?php
 	$type = $column->reference->variableType;
-	$loaded = $column->reference->variableName;
+	$loaded = $column->reference->loadedMember;
 	$referencedKey = $codegen->tableArray[strtolower($column->reference->table)]->columnArray[strtolower($column->reference->column)]->propertyName;
 ?>
 	/**
@@ -23,25 +23,25 @@
 
 	/**
 	 * The <?= $type ?> referenced by <?= $table->name ?>.<?= $column->name ?>, loaded on first read.
-	 * Assigning one sets <?= $column->variableName ?>; the <?= $type ?> must already be saved.
+	 * Assigning one sets <?= $column->propertyName ?>; the <?= $type ?> must already be saved.
 	 */
 	public ?<?= $type ?> $<?= $column->reference->propertyName ?> {
 		get {
-			if (!$this-><?= $loaded ?> && null !== $this-><?= $column->variableName ?>) {
-				$this-><?= $loaded ?> = <?= $type ?>::load($this-><?= $column->variableName ?>);
+			if (!$this-><?= $loaded ?> && null !== $this-><?= $column->propertyName ?>) {
+				$this-><?= $loaded ?> = <?= $type ?>::load($this-><?= $column->propertyName ?>);
 			}
 			return $this-><?= $loaded ?>;
 		}
 		set {
 			if (null === $value) {
-				$this-><?= $column->variableName ?> = null;
+				$this-><?= $column->propertyName ?> = null;
 				return;
 			}
 			if (null === $value-><?= $referencedKey ?>) {
 				throw new CogException('Unable to set an unsaved <?= $column->reference->propertyName ?> for this <?= $table->className ?>');
 			}
 			// The key first: its setter drops the cached object, which is then replaced
-			$this-><?= $column->variableName ?> = $value-><?= $referencedKey ?>;
+			$this-><?= $column->propertyName ?> = $value-><?= $referencedKey ?>;
 			$this-><?= $loaded ?> = $value;
 		}
 	}
@@ -52,7 +52,7 @@
 <?php if ($reverseReference->unique) { ?>
 <?php
 	$type = $reverseReference->variableType;
-	$loaded = $reverseReference->objectMemberVariable;
+	$loaded = $reverseReference->loadedMember;
 	$property = $reverseReference->objectPropertyName;
 	$dirty = lcfirst($property) . 'Dirty';
 	$reverseTable = $codegen->getTable($reverseReference->table);
@@ -81,7 +81,7 @@
 	public ?<?= $type ?> $<?= $property ?> {
 		get {
 			if (!$this-><?= $loaded ?>) {
-				$this-><?= $loaded ?> = <?= $type ?>::loadBy<?= $reverseColumn->propertyNameUppercase ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'variableName', $table->primaryKeyColumnArray) ?>);
+				$this-><?= $loaded ?> = <?= $type ?>::loadBy<?= $reverseColumn->propertyNameUppercase ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>);
 			}
 			return $this-><?= $loaded ?>;
 		}
@@ -94,7 +94,7 @@
 			// Only a different <?= $type ?> needs writing on save(). The current one is loaded by hand
 			// rather than read through the property: a hook reading its own property makes it backed.
 			if (!$this-><?= $loaded ?>) {
-				$this-><?= $loaded ?> = <?= $type ?>::loadBy<?= $reverseColumn->propertyNameUppercase ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'variableName', $table->primaryKeyColumnArray) ?>);
+				$this-><?= $loaded ?> = <?= $type ?>::loadBy<?= $reverseColumn->propertyNameUppercase ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>);
 			}
 			if (!$this-><?= $loaded ?> || $this-><?= $loaded ?>-><?= $reverseKey ?> != $value-><?= $reverseKey ?>) {
 				$this-><?= $dirty ?> = true;

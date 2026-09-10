@@ -16,13 +16,13 @@
 		}
 
 		// Reload the object
-		$reloaded = <?= $table->className ?>::load(<?php foreach ($table->primaryKeyColumnArray as $column) { ?>$this-><?= $column->variableName ?>, <?php } ?><?php \Cog\Codegen\Utils::goBack(2); ?>);
+		$reloaded = <?= $table->className ?>::load(<?php foreach ($table->primaryKeyColumnArray as $column) { ?>$this-><?= $column->propertyName ?>, <?php } ?><?php \Cog\Codegen\Utils::goBack(2); ?>);
 
 		// Update local variables to match
 <?php foreach ($table->columnArray as $column) { ?>
 <?php if (!$column->identity) { ?>
-		$this-><?= $column->variableName ?> = $reloaded-><?= $column->variableName ?>;
+		$this-><?= $column->propertyName ?> = $reloaded-><?= $column->propertyName ?>;
 <?php if ($column->primaryKey) { ?>
-		$this->__<?= $column->variableName ?> = $this-><?= $column->variableName ?>;
+		$this->__<?= $column->propertyName ?> = $this-><?= $column->propertyName ?>;
 <?php } ?><?php } ?><?php } ?>
 	}

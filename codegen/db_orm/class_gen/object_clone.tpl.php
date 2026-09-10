@@ -15,7 +15,7 @@
 <?php foreach ($table->columnArray as $column) { ?>
 <?php if (!$column->identity) { ?>
 <?php if (!$column->timestamp) { ?>
-		$clone-><?= $column->propertyName ?> = $this-><?= $column->variableName ?>;
+		$clone-><?= $column->propertyName ?> = $this-><?= $column->propertyName ?>;
 <?php } ?>
 <?php } ?><?php } ?>
 

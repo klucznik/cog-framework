@@ -107,7 +107,7 @@ class <?= $table->className ?>Gen extends Base implements IteratorAggregate {
 
 	public function mock(<?= $codegen->parameterListFromColumnArray($table->primaryKeyColumnArray) ?>): void {
 <?php foreach ($table->primaryKeyColumnArray as $column) { ?>
-		$this-><?= $column->variableName ?> = $<?= $column->propertyName ?>;
+		$this-><?= $column->propertyName ?> = $<?= $column->propertyName ?>;
 <?php } ?>
 		$this->__restored = true;
 	}

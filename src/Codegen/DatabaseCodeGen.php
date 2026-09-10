@@ -32,8 +32,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	protected Cog\Database\Base $database;
 
 	protected int $databaseIndex;
-	/** @var string The delimiter to be used for parsing comments on the DB tables for being used as the name of Meta control's Label */
-	protected string $commentMetaControlLabelDelimiter;
 
 	// Namespaces the generated subclasses live in. Templates read these rather
 	// than writing the namespace out, so an application is not tied to App\Data.
@@ -258,9 +256,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$this->includePattern = Utils::lookupSetting($settingsXml, 'includeTables', 'pattern');
 		$includeList = Utils::lookupSetting($settingsXml, 'includeTables', 'list');
 		$this->includeListArray = array_map('trim', explode(',', $includeList));
-
-		// Column Comment for MetaControlLabel setting.
-		$this->commentMetaControlLabelDelimiter = Utils::lookupSetting($settingsXml, 'columnCommentForMetaControl', 'delimiter');
 
 		// Check to make sure things that are required are there
 		if (!$this->databaseIndex) {
@@ -567,11 +562,9 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 			$oppositeColumn->name = $manyToManyReference->oppositeColumn;
 
-			$manyToManyReference->oppositeVariableName = VariableNameCreator::variableNameFromColumnWithType($oppositeColumn);
-			$manyToManyReference->oppositePropertyName = VariableNameCreator::propertyNameFromColumn($oppositeColumn);
+			$manyToManyReference->oppositePropertyName = $oppositeColumn->propertyName;
 			$manyToManyReference->oppositeVariableType = $oppositeColumn->variableType;
 
-			$manyToManyReference->variableName = $this->reverseReferenceVariableNameFromTable($oppositeForeignKey->referenceTableName);
 			$manyToManyReference->variableType = $this->reverseReferenceVariableTypeFromTable($oppositeForeignKey->referenceTableName);
 
 			$objectDescription = $this->calculateObjectDescriptionForAssociation($tableName, $foreignKey->referenceTableName, $oppositeForeignKey->referenceTableName, false);
@@ -923,9 +916,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 							// Setup VariableType
 							$reference->variableType = $this->classNameFromTableName($referencedTableName);
 
-							// Setup propertyName and variableName
-							$reference->propertyName = VariableNameCreator::referencePropertyNameFromColumn($column);
-							$reference->variableName = VariableNameCreator::referenceVariableNameFromColumn($column);
+							$reference->propertyName = $column->referencePropertyName;
 
 							// Add this reference to the column
 							$column->reference = $reference;
@@ -941,24 +932,21 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 								$reverseReference->column = $columnName;
 								$reverseReference->notNull = $column->notNull;
 								$reverseReference->unique = $column->unique;
-								$reverseReference->propertyName = VariableNameCreator::propertyNameFromColumn($this->getColumn($table->name, $columnName));
+								$reverseReference->propertyName = $this->getColumn($table->name, $columnName)->propertyName;
 
 								$reverseReference->objectDescription = $this->calculateObjectDescription($table->name, $columnName, $referencedTableName, false);
 								$reverseReference->objectDescriptionPlural = $this->calculateObjectDescription($table->name, $columnName, $referencedTableName, true);
-								$reverseReference->variableName = $this->reverseReferenceVariableNameFromTable($table->name);
 								$reverseReference->variableType = $this->reverseReferenceVariableTypeFromTable($table->name);
 
-								// For Special Case ReverseReferences, calculate Associated MemberVariableName and propertyName...
+								// For Special Case ReverseReferences, calculate the adjoined object's property name...
 
 								// See if ReverseReference is due to an ORM-based Class Inheritance Chain
 								if ($column->primaryKey && count($table->primaryKeyColumnArray) === 1) {
-									$reverseReference->objectMemberVariable = 'loaded' . $reverseReference->variableType;
 									$reverseReference->objectPropertyName = $reverseReference->variableType;
 									$reverseReference->objectDescription = $reverseReference->variableType;
 									$reverseReference->objectDescriptionPlural = Utils::pluralize($reverseReference->variableType);
 									// Otherwise, see if it's just plain ol' unique
 								} elseif ($column->unique) {
-									$reverseReference->objectMemberVariable = $this->calculateObjectMemberVariable($table->name, $columnName, $referencedTableName);
 									$reverseReference->objectPropertyName = $this->calculateObjectPropertyName($table->name, $columnName, $referencedTableName);
 								}
 
@@ -1064,8 +1052,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$column->unique = $field->unique;
 		$column->timestamp = $field->timestamp;
 
-		$column->variableName = VariableNameCreator::variableNameFromColumn($column);
-		$column->propertyName = VariableNameCreator::propertyNameFromColumn($column);
 		$column->comment = $field->comment;
 
 		return $column;
@@ -1092,8 +1078,6 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 				return $this->namespaceData;
 			case 'namespaceType':
 				return $this->namespaceType;
-			case 'commentMetaControlLabelDelimiter':
-				return $this->commentMetaControlLabelDelimiter;
 			default:
 				try {
 					return parent::__get($name);

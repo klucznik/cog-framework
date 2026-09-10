@@ -28,6 +28,6 @@ if (!count($runtimeDefaultColumnArray)) {
 <?php foreach ($runtimeDefaultColumnArray as $column) { ?>
 		// <?= $table->name ?>.<?= $column->name ?> defaults to <?= $column->default ?>
 
-		$this-><?= $column->variableName ?> = <?= $column->getDefaultAsString() ?>;
+		$this-><?= $column->propertyName ?> = <?= $column->getDefaultAsString() ?>;
 <?php } ?>
 	}

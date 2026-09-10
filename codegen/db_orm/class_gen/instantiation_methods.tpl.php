@@ -40,7 +40,7 @@ if (count($table->primaryKeyColumnArray) > 1 && $blnImmediateExpansions) {
 		$expanded = false;
 
 		foreach ($previousItemArray as $previousItem) {
-			if ($previousItem-><?= $table->primaryKeyColumnArray[0]->variableName ?> !== $dbRow->getColumn($columnAlias, '<?= $table->primaryKeyColumnArray[0]->dbType ?>')) {
+			if ($previousItem-><?= $table->primaryKeyColumnArray[0]->propertyName ?> !== $dbRow->getColumn($columnAlias, '<?= $table->primaryKeyColumnArray[0]->dbType ?>')) {
 				continue;
 			}
 
@@ -144,9 +144,9 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 <?php foreach ($table->columnArray as $column) { ?>
 		$alias = $aliasPrefix . '<?= $column->name ?>';
 		$aliasName = !empty($columnAliasArray[$alias]) ? $columnAliasArray[$alias] : $alias;
-		$toReturn-><?= $column->variableName ?> = $dbRow->getColumn($aliasName, '<?= $column->dbType ?>');
+		$toReturn-><?= $column->propertyName ?> = $dbRow->getColumn($aliasName, '<?= $column->dbType ?>');
 <?php if ($column->primaryKey && (!$column->identity)) { ?>
-		$toReturn->__<?= $column->variableName ?> = $dbRow->getColumn($aliasName, '<?= $column->dbType ?>');
+		$toReturn->__<?= $column->propertyName ?> = $dbRow->getColumn($aliasName, '<?= $column->dbType ?>');
 <?php } ?>
 <?php } ?>
 
@@ -188,7 +188,7 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 		$aliasName = !empty($columnAliasArray[$alias]) ? $columnAliasArray[$alias] : $alias;
 		if (null !== $dbRow->getColumn($aliasName)) {
 			$expansionNode = (empty($expansionAliasArray['<?= $column->name ?>']) ? null : $expansionAliasArray['<?= $column->name ?>']);
-			$toReturn-><?= $column->reference->variableName ?> = <?= $column->reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= $column->name ?>__', $expansionNode, null, $columnAliasArray);
+			$toReturn-><?= $column->reference->loadedMember ?> = <?= $column->reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= $column->name ?>__', $expansionNode, null, $columnAliasArray);
 		}
 <?php } ?>
 <?php } ?>
@@ -200,12 +200,12 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 		if ($dbRow->ColumnExists($aliasName)) {
 			if (null !== $dbRow->getColumn($aliasName)) {
 				$expansionNode = (empty($expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']) ? null : $expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']);
-				$toReturn-><?= $reference->objectMemberVariable ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
+				$toReturn-><?= $reference->loadedMember ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
 			}
 			else {
 				// We ATTEMPTED to do an Early Bind but the Object Doesn't Exist
 				// The member is typed ?Class, so null is all it can hold; the getter re-queries on access
-				$toReturn-><?= $reference->objectMemberVariable ?> = null;
+				$toReturn-><?= $reference->loadedMember ?> = null;
 			}
 		}
 
@@ -278,7 +278,7 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 				if ($item) {
 					$toReturn[] = $item;
 <?php if ($table->primaryKeyColumnArray)  {?>
-					$previousItemArray[$item-><?= $table->primaryKeyColumnArray[0]->variableName ?>][] = $item;
+					$previousItemArray[$item-><?= $table->primaryKeyColumnArray[0]->propertyName ?>][] = $item;
 <?php } else { ?>
 					$previousItemArray[] = $item;
 

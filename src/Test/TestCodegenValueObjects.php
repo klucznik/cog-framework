@@ -2,7 +2,6 @@
 
 namespace Cog\Test;
 
-use Cog\Codegen\CodeGenRunner;
 use Cog\Codegen\Column;
 use Cog\Codegen\ForeignKey;
 use Cog\Codegen\Index;
@@ -11,11 +10,9 @@ use Cog\Codegen\Reference;
 use Cog\Codegen\ReverseReference;
 use Cog\Codegen\Table;
 use Cog\Codegen\TypeTable;
-use Cog\Codegen\VariableNameCreator;
 use Cog\Exceptions\CogException;
 use Cog\Exceptions\UndefinedPropertyException;
 use Cog\Type;
-use Cog\Util\ConvertNotation;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -44,8 +41,6 @@ class TestCodegenValueObjects extends TestCase {
 		$column->name = $name;
 		$column->variableType = $variableType;
 		$column->default = null;
-		$column->propertyName = ConvertNotation::camelCase($name);
-		$column->variableName = ConvertNotation::camelCase($name);
 
 		foreach ($properties as $property => $value) {
 			$column->__set($property, $value);
@@ -308,7 +303,6 @@ class TestCodegenValueObjects extends TestCase {
 		$reference->table = 'person';
 		$reference->column = 'id';
 		$reference->propertyName = 'author';
-		$reference->variableName = 'loadedAuthor';
 		$reference->variableType = 'Person';
 		$reference->isType = false;
 
@@ -316,24 +310,22 @@ class TestCodegenValueObjects extends TestCase {
 		$this->assertSame('person', $reference->table);
 		$this->assertSame('id', $reference->column);
 		$this->assertSame('author', $reference->propertyName);
-		$this->assertSame('loadedAuthor', $reference->variableName);
 		$this->assertSame('Person', $reference->variableType);
 		$this->assertFalse($reference->isType);
 	}
 
 	/**
-	 * The uppercase forms are computed - templates build getters and setters from
-	 * them. They come back as a Symfony ByteString rather than a string, despite
-	 * the @property-read block saying string; templates interpolate them, so the
+	 * The derived names are computed from the property name. The uppercase form
+	 * comes back as a Symfony ByteString rather than a string, despite the
+	 * @property-read block saying string; templates interpolate it, so the
 	 * distinction only shows up under a strict comparison like this one.
 	 */
-	public function testReferenceComputedUppercaseNames() {
+	public function testReferenceComputedNames() {
 		$reference = new Reference();
 		$reference->propertyName = 'author';
-		$reference->variableName = 'loadedAuthor';
 
 		$this->assertSame('Author', (string)$reference->propertyNameUppercase);
-		$this->assertSame('LoadedAuthor', (string)$reference->variableNameUppercase);
+		$this->assertSame('loadedAuthor', $reference->loadedMember);
 	}
 
 	public function testReferenceUnknownPropertyThrows() {
@@ -354,7 +346,6 @@ class TestCodegenValueObjects extends TestCase {
 		$reverse->column = 'author_id';
 		$reverse->notNull = true;
 		$reverse->unique = false;
-		$reverse->variableName = 'blogPost';
 		$reverse->variableType = 'BlogPost';
 		$reverse->propertyName = 'blogPost';
 		$reverse->objectDescription = 'BlogPostAsAuthor';
@@ -369,14 +360,16 @@ class TestCodegenValueObjects extends TestCase {
 		$this->assertSame('BlogPostsAsAuthor', $reverse->objectDescriptionPlural);
 	}
 
-	public function testReverseReferenceComputedUppercaseNames() {
+	public function testReverseReferenceComputedNames() {
 		$reverse = new ReverseReference();
-		$reverse->variableName = 'blogPost';
+		$reverse->variableType = 'BlogPost';
 		$reverse->propertyName = 'blogPost';
 		$reverse->objectDescription = 'blogPostAsAuthor';
 		$reverse->objectDescriptionPlural = 'blogPostsAsAuthor';
+		$reverse->objectPropertyName = 'personProfile';
 
-		$this->assertSame('BlogPost', (string)$reverse->variableNameUppercase);
+		$this->assertSame('blogPost', $reverse->parameterName);
+		$this->assertSame('loadedPersonProfile', $reverse->loadedMember);
 		$this->assertSame('BlogPost', (string)$reverse->propertyNameUppercase);
 		$this->assertSame('BlogPostAsAuthor', (string)$reverse->objectDescriptionUppercase);
 		$this->assertSame('BlogPostsAsAuthor', (string)$reverse->objectDescriptionPluralUppercase);
@@ -404,11 +397,9 @@ class TestCodegenValueObjects extends TestCase {
 		$reference->column = 'person_id';
 		$reference->oppositeColumn = 'tag_id';
 		$reference->oppositeVariableType = 'Tag';
-		$reference->oppositeVariableName = 'tag';
 		$reference->oppositePropertyName = 'tag';
 		$reference->oppositeObjectDescription = 'Tag';
 		$reference->associatedTable = 'tag';
-		$reference->variableName = 'tag';
 		$reference->variableType = 'Tag';
 		$reference->objectDescription = 'Tag';
 		$reference->objectDescriptionPlural = 'Tags';
@@ -428,13 +419,13 @@ class TestCodegenValueObjects extends TestCase {
 		$this->assertSame($column, $reference->columnArray['person_id']);
 	}
 
-	public function testManyToManyReferenceComputedUppercaseNames() {
+	public function testManyToManyReferenceComputedNames() {
 		$reference = new ManyToManyReference();
-		$reference->variableName = 'tag';
+		$reference->variableType = 'Tag';
 		$reference->objectDescription = 'tag';
 		$reference->objectDescriptionPlural = 'tags';
 
-		$this->assertSame('Tag', (string)$reference->variableNameUppercase);
+		$this->assertSame('tag', $reference->parameterName);
 		$this->assertSame('Tag', (string)$reference->objectDescriptionUppercase);
 		$this->assertSame('Tags', (string)$reference->objectDescriptionPluralUppercase);
 	}
@@ -447,79 +438,33 @@ class TestCodegenValueObjects extends TestCase {
 	}
 
 	//
-	// VariableNameCreator: the form-control naming the templates emit
+	// Column: the names that follow from the column name
 	//
 
-	/** An identity or timestamp column is not editable, so it gets a label. */
-	public function testFormControlVariableNameForReadOnlyColumns() {
-		$identity = $this->column('id', Type::INTEGER, ['identity' => true]);
-		$timestamp = $this->column('row_version', Type::STRING, ['timestamp' => true]);
-
-		$this->assertSame('lblId', VariableNameCreator::formControlVariableNameForColumn($identity));
-		$this->assertSame('lblRowVersion', VariableNameCreator::formControlVariableNameForColumn($timestamp));
-	}
-
-	/** A foreign key becomes a list box, named after the reference rather than the column. */
-	public function testFormControlVariableNameForReferenceColumn() {
-		$reference = new Reference();
-		$reference->propertyName = 'author';
-
-		$column = $this->column('author_id', Type::INTEGER, ['reference' => $reference]);
-
-		$this->assertSame('lstAuthor', VariableNameCreator::formControlVariableNameForColumn($column));
-	}
-
-	public function testFormControlVariableNameByType() {
-		$this->assertSame(
-			'chkEmailVerified',
-			VariableNameCreator::formControlVariableNameForColumn($this->column('email_verified', Type::BOOLEAN))
-		);
-		$this->assertSame(
-			'calCreationDate',
-			VariableNameCreator::formControlVariableNameForColumn($this->column('creation_date', Type::DATETIME))
-		);
-		$this->assertSame(
-			'txtFirstName',
-			VariableNameCreator::formControlVariableNameForColumn($this->column('first_name', Type::STRING))
-		);
-		$this->assertSame(
-			'txtRating',
-			VariableNameCreator::formControlVariableNameForColumn($this->column('rating', Type::FLOAT))
-		);
-	}
-
-	/** The translation name drops the three-character control prefix. */
-	public function testTranslationNameForColumn() {
-		$this->assertSame('firstName', VariableNameCreator::translationNameForColumn($this->column('first_name')));
-		$this->assertSame(
-			'emailVerified',
-			VariableNameCreator::translationNameForColumn($this->column('email_verified', Type::BOOLEAN))
-		);
+	/** The generated property is the column name in camelCase, whatever its type. */
+	public function testColumnPropertyName() {
+		$this->assertSame('id', $this->column('id', Type::INTEGER)->propertyName);
+		$this->assertSame('firstName', $this->column('first_name', Type::STRING)->propertyName);
+		$this->assertSame('emailVerified', $this->column('email_verified', Type::BOOLEAN)->propertyName);
 	}
 
 	/**
-	 * With no delimiter configured for the owning database, the label falls back to
-	 * the property name split into words - the column comment is ignored.
-	 *
-	 * The lookup walks CodeGenRunner::$codegenArray, a static with no initializer,
-	 * so the test sets and restores it rather than depending on whether a previous
-	 * test happened to run the generator.
+	 * A foreign key column carries both the id and the object it points at, so the
+	 * two need different names. A trailing "_id" is dropped; anything else gains
+	 * "_object" so the object cannot collide with the column it was mapped from.
 	 */
-	public function testMetaControlLabelFallsBackToPropertyName() {
-		$table = new Table('person');
-		$table->ownerDbIndex = 1;
+	public function testColumnReferencePropertyName() {
+		$this->assertSame('author', $this->column('author_id', Type::INTEGER)->referencePropertyName);
+		$this->assertSame('personObject', $this->column('person', Type::INTEGER)->referencePropertyName);
 
-		$column = $this->column('first_name', Type::STRING, ['ownerTable' => $table, 'comment' => 'Given name; the label']);
+		// Too short to be an "_id" suffix, so it takes the _object branch.
+		$this->assertSame('idObject', $this->column('_id', Type::INTEGER)->referencePropertyName);
+	}
 
-		$restore = isset(CodeGenRunner::$codegenArray) ? CodeGenRunner::$codegenArray : null;
-		CodeGenRunner::$codegenArray = [];
+	/** The label is the property name split into words; the column comment plays no part. */
+	public function testColumnLabel() {
+		$column = $this->column('first_name', Type::STRING, ['comment' => 'Given name; the label']);
 
-		try {
-			$this->assertSame('First name', VariableNameCreator::metaControlLabelNameFromColumn($column));
-		} finally {
-			if ($restore !== null) {
-				CodeGenRunner::$codegenArray = $restore;
-			}
-		}
+		$this->assertSame('First name', $column->label);
 	}
 }

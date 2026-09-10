@@ -77,11 +77,4 @@ class TestConvertNotation extends TestCase {
 
 		$this->assertEquals('', ConvertNotation::phpTypeFromType('stdClass'));
 	}
-
-	/** Drops the three character type prefix, then camel cases whatever is left. */
-	public function testTranslationNameFromString() {
-		$this->assertEquals('firstName', ConvertNotation::translationNameFromString('strFirstName'));
-		$this->assertEquals('emailVerified', ConvertNotation::translationNameFromString('blnEmailVerified'));
-		$this->assertEquals('createdAt', ConvertNotation::translationNameFromString('dttCreatedAt'));
-	}
 }

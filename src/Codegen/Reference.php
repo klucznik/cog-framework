@@ -15,12 +15,11 @@ use Symfony\Component\String\ByteString;
  * 	@property string $table
  * 	@property string $column
  * 	@property string $propertyName
- * 	@property string $variableName
+ * 	@property-read string $loadedMember
  * 	@property string $variableType
  *	@property bool $isType
  *
  *  @property-read string $propertyNameUppercase
- *  @property-read string $variableNameUppercase
  */
 class Reference extends Cog\Base {
 
@@ -39,14 +38,6 @@ class Reference extends Cog\Base {
 	 * @var string Name of the referenced object as a class property
 	 */
 	private string $propertyName;
-
-	/**
-	 * Name of the member caching the referenced object once loaded
-	 * So if the column that this reference points from is named
-	 * "primary_annual_report_id", it would be loadedPrimaryAnnualReport
-	 * @var string Name of the member caching the referenced object once loaded
-	 */
-	private string $variableName;
 
 	/**
 	 * The type of the protected member object (should be based off of $this->strTable)
@@ -75,8 +66,9 @@ class Reference extends Cog\Base {
 				return $this->column;
 			case 'propertyName':
 				return $this->propertyName;
-			case 'variableName':
-				return $this->variableName;
+			case 'loadedMember':
+				// The member caching the referenced object once loaded: loadedAuthor behind author
+				return 'loaded' . ucfirst($this->propertyName);
 			case 'variableType':
 				return $this->variableType;
 			case 'variableTyped':
@@ -86,8 +78,6 @@ class Reference extends Cog\Base {
 
 			case 'propertyNameUppercase':
 				return (new ByteString($this->propertyName))->title();
-			case 'variableNameUppercase':
-				return (new ByteString($this->variableName))->title();
 
 			default:
 				try {
@@ -117,8 +107,6 @@ class Reference extends Cog\Base {
 					return $this->column = Type::cast($value, Type::STRING);
 				case 'propertyName':
 					return $this->propertyName = Type::cast($value, Type::STRING);
-				case 'variableName':
-					return $this->variableName = Type::cast($value, Type::STRING);
 				case 'variableType':
 					return $this->variableType = Type::cast($value, Type::STRING);
 				case 'isType':

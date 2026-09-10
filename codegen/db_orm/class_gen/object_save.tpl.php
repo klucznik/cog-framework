@@ -54,13 +54,13 @@ foreach ($table->columnArray as $column) {
 			$strCols .= $strCol;
 			switch ($column->dbType) {
 				case 'Date':
-					$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ' instanceof \DateTimeInterface ? $this->' . $column->variableName . '->format(\'Y-m-d\') : $this->' . $column->variableName . ') . \'';
+					$strValue = '\' . $database->sqlVariable($this->' . $column->propertyName . ' instanceof \DateTimeInterface ? $this->' . $column->propertyName . '->format(\'Y-m-d\') : $this->' . $column->propertyName . ') . \'';
 					break;
 				case 'Time':
-					$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ' instanceof \DateTimeInterface ? $this->' . $column->variableName . '->format(\'H:i:s\') : $this->' . $column->variableName . ') . \'';
+					$strValue = '\' . $database->sqlVariable($this->' . $column->propertyName . ' instanceof \DateTimeInterface ? $this->' . $column->propertyName . '->format(\'H:i:s\') : $this->' . $column->propertyName . ') . \'';
 					break;
 				default:
-				$strValue = '\' . $database->sqlVariable($this->' . $column->variableName . ') . \'';
+				$strValue = '\' . $database->sqlVariable($this->' . $column->propertyName . ') . \'';
 			}
 			$strValues .= '		    				' . $strValue;
 			$strColUpdates .= $strCol . ' = ' . $strValue;
@@ -106,7 +106,7 @@ foreach ($table->primaryKeyColumnArray as $objPkColumn) {
 		$strIds .= " AND \n";
 	}
 	$strIds .= '						' . $escapeIdentifierBegin.$objPkColumn->name.$escapeIdentifierEnd .
-		' = \' . $database->sqlVariable($this->' . ($objPkColumn->identity ? '' : '__')  . $objPkColumn->variableName . ') . \'';
+		' = \' . $database->sqlVariable($this->' . ($objPkColumn->identity ? '' : '__')  . $objPkColumn->propertyName . ') . \'';
 }
 ?>
 
@@ -136,7 +136,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 	if ($column->identity) {
 		print sprintf('		   		// Update Identity column and return its value
 				$mixToReturn = $this->%s = $database->insertId(\'%s\', \'%s\');',
-			$column->variableName, $table->name, $column->name);
+			$column->propertyName, $table->name, $column->name);
 	}
 }
 ?>
@@ -162,7 +162,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 					');
 
 					$objRow = $result->fetchArray();
-					if (($objRow[0] ?? null) != $this-><?= $column->variableName ?>?->format('Y-m-d H:i:s')) {
+					if (($objRow[0] ?? null) != $this-><?= $column->propertyName ?>?->format('Y-m-d H:i:s')) {
 						throw new OptimisticLockingException('<?= $table->className ?>');
 					}
 				}
@@ -197,15 +197,15 @@ foreach ($table->primaryKeyColumnArray as $column) {
 			// TODO: Make this into hard-coded SQL queries
 			if ($this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty) {
 				// Unassociate the old one (if applicable)
-				if ($associated = <?= $reverseReference->variableType ?>::LoadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'variableName', $table->primaryKeyColumnArray) ?>)) {
+				if ($associated = <?= $reverseReference->variableType ?>::LoadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>)) {
 					$associated-><?= $reverseReferenceColumn->propertyName ?> = null;
 					$associated->save();
 				}
 
 				// Associate the new one (if applicable)
-				if ($this-><?= $reverseReference->objectMemberVariable ?>) {
-					$this-><?= $reverseReference->objectMemberVariable ?>-><?= $reverseReferenceColumn->propertyName ?> = $this-><?= $table->primaryKeyColumnArray[0]->variableName ?>;
-					$this-><?= $reverseReference->objectMemberVariable ?>->save();
+				if ($this-><?= $reverseReference->loadedMember ?>) {
+					$this-><?= $reverseReference->loadedMember ?>-><?= $reverseReferenceColumn->propertyName ?> = $this-><?= $table->primaryKeyColumnArray[0]->propertyName ?>;
+					$this-><?= $reverseReference->loadedMember ?>->save();
 				}
 
 				// Reset the "Dirty" flag
@@ -222,7 +222,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 		$this->__restored = true;
 <?php foreach ($table->primaryKeyColumnArray as $column) { ?>
 <?php if ((!$column->identity) && $column->primaryKey) { ?>
-		$this->__<?= $column->variableName ?> = $this-><?= $column->variableName ?>;
+		$this->__<?= $column->propertyName ?> = $this-><?= $column->propertyName ?>;
 <?php } ?>
 <?php } ?>
 
@@ -243,7 +243,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 
 		$objRow = $result->fetchArray();
 		// A nullable token that the database left NULL must stay null; new DateTimeImmutable(null) would be "now"
-		$this-><?= $column->variableName ?> = isset($objRow[0]) ? new DateTimeImmutable($objRow[0]) : null;
+		$this-><?= $column->propertyName ?> = isset($objRow[0]) ? new DateTimeImmutable($objRow[0]) : null;
 <?php } ?>
 <?php } ?>
 		return $mixToReturn;

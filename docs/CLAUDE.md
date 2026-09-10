@@ -108,12 +108,13 @@ static, so templates use `\Cog\Codegen\Utils::goBack(2)` rather than reaching th
 `Utils::pluralize()` duplicates `Cog\Util\StringUtils::pluralize()` on purpose - the latter resolves
 its inflector from the DI container, which codegen cannot assume has been booted.
 
-`Cog\Codegen\VariableNameCreator` is the same idea for naming: every pure `Column` -> name function
-lives there, all static, so templates call `VariableNameCreator::translationNameForColumn($column)`
-rather than going through `$codegen`. What stayed on `DatabaseCodeGenBase` are the ones that need
-generator state - `classNameFromTableName()` and `variableNameFromTable()` read `$classPrefix` and
-`stripPrefixFromTable()` - plus the `*ForUniqueReverseReference` / `*ForManyToManyReference` family,
-which take something other than a `Column`.
+Naming follows one rule: a name that follows from something the value object already holds is
+computed on the value object, never stored and never a helper. `Column::$propertyName`,
+`$referencePropertyName` and `$label` follow from the column name; `Reference::$loadedMember` is
+`loaded` + the property name; `ReverseReference::$parameterName` is the class name in lower camel
+case. What lives on `DatabaseCodeGenBase` are the rules that need generator settings -
+`classNameFromTableName()` and `calculateObjectPropertyName()` read `$classPrefix`,
+`$associatedObjectPrefix` and `stripPrefixFromTable()`.
 
 **The first line of an entry-point template is a `<template/>` tag**, parsed by
 `Cog\Codegen\CodeGen::generateFile()`:

@@ -36,22 +36,22 @@ use Cog\Type;
 	$default = ($column->primaryKey || $column->reference || $column->hasCurrentTimestampDefault()) ? 'null' : $column->getDefaultAsString();
 ?>
 <?php if ($column->reference && !$column->reference->isType) { ?>
-	<?= $visibility ?> ?<?= $column->variableTyped ?> $<?= $column->variableName ?> = <?= $default ?> {
+	<?= $visibility ?> ?<?= $column->variableTyped ?> $<?= $column->propertyName ?> = <?= $default ?> {
 		set {
-			$this-><?= $column->variableName ?> = $value;
+			$this-><?= $column->propertyName ?> = $value;
 			// The cached <?= $column->reference->variableType ?> belongs to the previous key
-			$this-><?= $column->reference->variableName ?> = null;
+			$this-><?= $column->reference->loadedMember ?> = null;
 		}
 	}
 <?php } else { ?>
-	<?= $visibility ?> ?<?= $column->variableTyped ?> $<?= $column->variableName ?> = <?= $default ?>;
+	<?= $visibility ?> ?<?= $column->variableTyped ?> $<?= $column->propertyName ?> = <?= $default ?>;
 <?php } ?>
 <?php if (!$column->identity && $column->primaryKey) { ?>
 
 	/**
 	 * The value of <?= $column->propertyName ?> as restored from the database, so that save() can UPDATE a row whose primary key was changed
 	 */
-	protected ?<?= $column->variableTyped ?> $__<?= $column->variableName ?> = null;
+	protected ?<?= $column->variableTyped ?> $__<?= $column->propertyName ?> = null;
 <?php } ?>
 
 <?php } ?>

@@ -132,7 +132,7 @@
 				if ($item) {
 					$toReturn[] = $item;
 <?php if ($table->primaryKeyColumnArray)  {?>
-					$prevItemArray[$item-><?= $table->primaryKeyColumnArray[0]->variableName ?>][] = $item;
+					$prevItemArray[$item-><?= $table->primaryKeyColumnArray[0]->propertyName ?>][] = $item;
 <?php } else { ?>
 					$prevItemArray[] = $item;
 <?php } ?>

@@ -44,40 +44,9 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 	 * @param string $tableName
 	 * @return string
 	 */
-	public function variableNameFromTable(string $tableName): string {
-		$tableName = $this->stripPrefixFromTable($tableName);
-		return ConvertNotation::camelCase($tableName);
-	}
-
-	/**
-	 * @param string $tableName
-	 * @return string
-	 */
-	public function reverseReferenceVariableNameFromTable(string $tableName): string {
-		$tableName = $this->stripPrefixFromTable($tableName);
-		return $this->variableNameFromTable($tableName);
-	}
-
-	/**
-	 * @param string $tableName
-	 * @return string
-	 */
 	public function reverseReferenceVariableTypeFromTable(string $tableName): string {
 		$tableName = $this->stripPrefixFromTable($tableName);
 		return $this->classNameFromTableName($tableName);
-	}
-
-	/**
-	 * @param Column $column
-	 * @param bool $includeEquality
-	 * @return string
-	 */
-	protected function parameterCleanupFromColumn(Column $column, bool $includeEquality = false): string {
-		if ($includeEquality) {
-			return sprintf('$%s = $database->sqlVariable($%s, true);', $column->variableName, $column->variableName);
-		}
-
-		return sprintf('$%s = $database->sqlVariable($%s);', $column->variableName, $column->variableName);
 	}
 
 	/**
@@ -178,121 +147,6 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 		}
 
 		return $toReturn;
-	}
-
-	/**
-	 * @param Column $column
-	 * @return string
-	 */
-	public function formControlClassForColumn(Column $column): string {
-		if ($column->identity || $column->timestamp) {
-			return 'Label';
-		}
-
-		if ($column->reference) {
-			return 'ListControlInterface';
-		}
-
-		return match ($column->variableType) {
-			Type::BOOLEAN => 'CheckBoxInterface',
-			Type::DATETIME => 'DateTimePickerInterface',
-			Type::INTEGER => 'IntegerTextBox',
-			Type::FLOAT => 'FloatTextBox',
-			default => 'TextBox',
-		};
-	}
-
-	/**
-	 * @param ReverseReference $reverseReference
-	 * @return string
-	 * @throws Exception
-	 */
-	public function formControlVariableNameForUniqueReverseReference(ReverseReference $reverseReference): string {
-		if ($reverseReference->unique) {
-			return sprintf('lst%s', $reverseReference->objectDescriptionUppercase);
-		}
-
-		throw new Exception('FormControlVariableNameForUniqueReverseReference requires ReverseReference to be unique');
-	}
-
-	/**
-	 * @param ManyToManyReference $manyToManyReference
-	 * @return string
-	 */
-	public function formControlVariableNameForManyToManyReference(ManyToManyReference $manyToManyReference): string {
-		return sprintf('lst%s', $manyToManyReference->objectDescriptionPluralUppercase);
-	}
-
-	/**
-	 * @param ReverseReference $reverseReference
-	 * @return string
-	 * @throws Exception
-	 */
-	public function formLabelVariableNameForUniqueReverseReference(ReverseReference $reverseReference): string {
-		if ($reverseReference->unique) {
-			return sprintf('lbl%s', $reverseReference->objectDescription);
-		}
-
-		throw new Exception('FormControlVariableNameForUniqueReverseReference requires ReverseReference to be unique');
-	}
-
-	/**
-	 * @param ManyToManyReference $manyToManyReference
-	 * @return string
-	 */
-	public function formLabelVariableNameForManyToManyReference(ManyToManyReference $manyToManyReference): string {
-		return sprintf('lbl%s', $manyToManyReference->objectDescriptionPluralUppercase);
-	}
-
-	/**
-	 * @param Column $column
-	 * @return string|null
-	 * @throws Exception
-	 */
-	public function formControlTypeForColumn(Column $column): ?string {
-		if ($column->identity || $column->timestamp) {
-			return 'Label';
-		}
-
-		if ($column->reference) {
-			return 'ListBox';
-		}
-
-		return match ($column->variableType) {
-			Type::BOOLEAN => 'CheckBox',
-			Type::DATETIME => 'Calendar',
-			Type::FLOAT => 'FloatTextBox',
-			Type::INTEGER => 'IntegerTextBox',
-			Type::STRING => 'TextBox',
-			default => throw new Exception('Unknown type for Column: %s' . $column->variableType),
-		};
-	}
-
-	/**
-	 * @param ReverseReference $reverseReference
-	 * @return string
-	 * @throws Exception
-	 */
-	public function translationNameForUniqueReverseReference(ReverseReference $reverseReference): string {
-		return ConvertNotation::translationNameFromString($this->formControlVariableNameForUniqueReverseReference($reverseReference));
-	}
-
-	/**
-	 * @param ManyToManyReference $manyToManyReference
-	 * @return string
-	 */
-	public function translationNameForManyToManyReference(ManyToManyReference $manyToManyReference): string {
-		return ConvertNotation::translationNameFromString($this->formControlVariableNameForManyToManyReference($manyToManyReference));
-	}
-
-	/**
-	 * @param string $tableName
-	 * @param string $columnName
-	 * @param string $referencedTableName
-	 * @return string
-	 */
-	protected function calculateObjectMemberVariable(string $tableName, string $columnName, string $referencedTableName): string {
-		return 'loaded' . ucfirst($this->calculateObjectPropertyName($tableName, $columnName, $referencedTableName));
 	}
 
 	/**

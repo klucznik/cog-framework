@@ -33,7 +33,7 @@ class <?= $table->className ?> extends <?= $table->className ?>Gen {
 	 * @return string a nicely formatted string representation of this object
 	 */
 	public function __toString() {
-		return sprintf('<?= $table->className ?> Object <?php foreach ($table->primaryKeyColumnArray as $column) { ?>%s - <?php } ?><?php \Cog\Codegen\Utils::goBack(3); ?>', <?php foreach ($table->primaryKeyColumnArray as $column) { ?> $this-><?= $column->variableName ?>, <?php } ?><?php \Cog\Codegen\Utils::goBack(2); ?>);
+		return sprintf('<?= $table->className ?> Object <?php foreach ($table->primaryKeyColumnArray as $column) { ?>%s - <?php } ?><?php \Cog\Codegen\Utils::goBack(3); ?>', <?php foreach ($table->primaryKeyColumnArray as $column) { ?> $this-><?= $column->propertyName ?>, <?php } ?><?php \Cog\Codegen\Utils::goBack(2); ?>);
 	}
 
 

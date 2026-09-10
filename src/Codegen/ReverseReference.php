@@ -17,15 +17,14 @@ use Symfony\Component\String\ByteString;
  * 	@property string $column
  * 	@property bool $notNull
  * 	@property bool $unique
- *  @property string $variableName
  *  @property string $variableType
  * 	@property string $propertyName
  * 	@property string $objectDescription
  * 	@property string $objectDescriptionPlural
- * 	@property string $objectMemberVariable
  * 	@property string $objectPropertyName
  *
- *	@property-read string $variableNameUppercase
+ *	@property-read string $parameterName
+ *	@property-read string $loadedMember
  *  @property-read string $propertyNameUppercase
  *  @property-read string objectDescriptionUppercase
  *  @property-read string objectDescriptionPluralUppercase
@@ -48,15 +47,8 @@ class ReverseReference extends Cog\Base {
 	protected bool $unique;
 
 	/**
-	 * Name of the reverse-referenced object as an function parameter. So if this is a reverse reference
-	 * to "person" via "report.person_id", the variableName would be "report"
-	 * @var string
-	 */
-	protected string $variableName;
-
-	/**
 	 * Type of the reverse-referenced object as a class. So if this is a reverse reference
-	 * to "person" via "report.person_id", the variableName would be "report"
+	 * to "person" via "report.person_id", the variableType would be "Report"
 	 * @var string
 	 */
 	protected string $variableType;
@@ -84,13 +76,6 @@ class ReverseReference extends Cog\Base {
 	protected string $objectDescriptionPlural;
 
 	/**
-	 * A member variable name to be used by classes that contain the local member variable
-	 * for this unique reverse reference.  Only aggregated when blnUnique is true.
-	 * @var string
-	 */
-	protected string $objectMemberVariable;
-
-	/**
 	 * A property name to be used by classes that contain the property
 	 * for this unique reverse reference.  Only aggregated when blnUnique is true.
 	 * @var string
@@ -116,8 +101,6 @@ class ReverseReference extends Cog\Base {
 				return $this->notNull;
 			case 'unique':
 				return $this->unique;
-			case 'variableName':
-				return $this->variableName;
 			case 'variableType':
 				return $this->variableType;
 			case 'variableTyped':
@@ -128,15 +111,17 @@ class ReverseReference extends Cog\Base {
 				return $this->objectDescription;
 			case 'objectDescriptionPlural':
 				return $this->objectDescriptionPlural;
-			case 'objectMemberVariable':
-				return $this->objectMemberVariable;
 			case 'objectPropertyName':
 				return $this->objectPropertyName;
 
 			case 'propertyNameUppercase':
 				return (new ByteString($this->propertyName))->title();
-			case 'variableNameUppercase':
-				return (new ByteString($this->variableName))->title();
+			case 'parameterName':
+				// The object as a method parameter: $blogPost for a BlogPost
+				return lcfirst($this->variableType);
+			case 'loadedMember':
+				// The member caching the adjoined object once loaded; only a unique reverse reference has one
+				return 'loaded' . ucfirst($this->objectPropertyName);
 			case 'objectDescriptionUppercase':
 				return (new ByteString($this->objectDescription))->title();
 			case 'objectDescriptionPluralUppercase':
@@ -172,8 +157,6 @@ class ReverseReference extends Cog\Base {
 					return $this->notNull = Type::cast($value, Type::BOOLEAN);
 				case 'unique':
 					return $this->unique = Type::cast($value, Type::BOOLEAN);
-				case 'variableName':
-					return $this->variableName = Type::cast($value, Type::STRING);
 				case 'variableType':
 					return $this->variableType = Type::cast($value, Type::STRING);
 				case 'propertyName':
@@ -182,8 +165,6 @@ class ReverseReference extends Cog\Base {
 					return $this->objectDescription = Type::cast($value, Type::STRING);
 				case 'objectDescriptionPlural':
 					return $this->objectDescriptionPlural = Type::cast($value, Type::STRING);
-				case 'objectMemberVariable':
-					return $this->objectMemberVariable = Type::cast($value, Type::STRING);
 				case 'objectPropertyName':
 					return $this->objectPropertyName = Type::cast($value, Type::STRING);
 				default:

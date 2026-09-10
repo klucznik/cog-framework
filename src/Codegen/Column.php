@@ -16,8 +16,9 @@ use Symfony\Component\String\ByteString;
  * @property TableBase $ownerTable Cog\Codegen\Table The table in which this column exists.
  * @property bool $primaryKey Specifies whether the column is a Primary Key
  * @property string $name Name of the column as defined in the database So for example, "first_name"
- * @property string $propertyName Name of the column as an object Property
- * @property string $variableName Name of the column as the generated class property, so for "first_name" it would be firstName (the same as $propertyName)
+ * @property-read string $propertyName The column name in camelCase: the generated property, so "first_name" gives firstName
+ * @property-read string $referencePropertyName The name of the object property behind a foreign key: a trailing _id is dropped, otherwise _object is appended
+ * @property-read string $label The property name as words, for a form label
  * @property string $variableType The type of the protected member variable (uses one of the string constants from the Type class)
  * @property-read string $variableTyped The type declaration of the member variable
  * @property-read string $variableTypeJs The JS type declaration of the member variable
@@ -34,7 +35,6 @@ use Symfony\Component\String\ByteString;
  * @property string $comment The string value of the comment field in the database.
  *
  * @property-read string $propertyNameUppercase
- * @property-read string $variableNameUppercase
  * @property-read string $constantPropertyName
  */
 class Column extends Base {
@@ -47,12 +47,6 @@ class Column extends Base {
 
 	/** @var string Name of the column as defined in the database so for example, "first_name" */
 	private string $name;
-
-	/** @var string Name of the column as an object property, so for "first_name" it would be firstName */
-	private string $propertyName;
-
-	/** @var string Name of the column as the generated class property, so for "first_name" it would be firstName */
-	private string $variableName;
 
 	/** @var string The type of the protected member variable (uses one of the string constants from the Type class) */
 	private string $variableType;
@@ -158,6 +152,20 @@ class Column extends Base {
 	}
 
 	/**
+	 * A foreign key column carries both the id and the object it points at, so the two
+	 * need different names. A trailing "_id" is dropped ("author_id" -> "author"); any
+	 * other name gains "_object" ("person INT" -> "person_object") so the object cannot
+	 * collide with the column it was mapped from.
+	 */
+	private function referenceColumnName(): string {
+		if (strlen($this->name) > 3 && str_ends_with($this->name, '_id')) {
+			return substr($this->name, 0, -3);
+		}
+
+		return $this->name . '_object';
+	}
+
+	/**
 	 * Override method to perform a property "Get"
 	 * This will get the value of $name
 	 * @param string $name Name of the property to get
@@ -173,9 +181,11 @@ class Column extends Base {
 			case 'name':
 				return $this->name;
 			case 'propertyName':
-				return $this->propertyName;
-			case 'variableName':
-				return $this->variableName;
+				return ConvertNotation::camelCase($this->name);
+			case 'referencePropertyName':
+				return ConvertNotation::camelCase($this->referenceColumnName());
+			case 'label':
+				return ConvertNotation::wordsFromCamelCase($this->propertyName);
 			case 'variableType':
 				return $this->variableType;
 			case 'variableTyped':
@@ -215,8 +225,6 @@ class Column extends Base {
 
 			case 'propertyNameUppercase':
 				return (new ByteString($this->propertyName))->title();
-			case 'variableNameUppercase':
-				return (new ByteString($this->variableName))->title();
 			case 'constantPropertyName':
 				return strtoupper(ConvertNotation::snakeCase($this->propertyName));
 
@@ -247,10 +255,6 @@ class Column extends Base {
 					return $this->primaryKey = Type::cast($value, Type::BOOLEAN);
 				case 'name':
 					return $this->name = Type::cast($value, Type::STRING);
-				case 'propertyName':
-					return $this->propertyName = Type::cast($value, Type::STRING);
-				case 'variableName':
-					return $this->variableName = Type::cast($value, Type::STRING);
 				case 'variableType':
 					return $this->variableType = Type::cast($value, Type::STRING);
 				case 'variableTypeAsConstant':

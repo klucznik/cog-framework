@@ -8,7 +8,6 @@ use Cog\Codegen\ForeignKey;
 use Cog\Codegen\Reference;
 use Cog\Codegen\Table;
 use Cog\Codegen\Utils;
-use Cog\Codegen\VariableNameCreator;
 use Cog\Database\FieldType;
 use Cog\Exceptions\UndefinedPropertyException;
 use Cog\Type;
@@ -41,7 +40,6 @@ class TestCodegenHelpers extends TestCase {
 			<stripFromTableName prefix="%s"/>
 			<excludeTables pattern="" list=""/>
 			<includeTables pattern="" list=""/>
-			<columnCommentForMetaControl delimiter=""/>
 		</database>';
 
 	/**
@@ -101,8 +99,6 @@ class TestCodegenHelpers extends TestCase {
 		// initializer, so a column without one is not a state the generator can
 		// reach - reading it would be an uninitialized typed property error.
 		$column->default = null;
-		$column->propertyName = \Cog\Util\ConvertNotation::camelCase($name);
-		$column->variableName = \Cog\Util\ConvertNotation::camelCase($name);
 
 		foreach ($properties as $property => $value) {
 			$column->__set($property, $value);
@@ -156,52 +152,13 @@ class TestCodegenHelpers extends TestCase {
 	// Column names
 	//
 
-	/** The generated property is the column name in camelCase, whatever its type. */
-	public function testVariableNameFromColumn() {
-		$this->assertSame('id', VariableNameCreator::variableNameFromColumn($this->column('id', Type::INTEGER)));
-		$this->assertSame('firstName', VariableNameCreator::variableNameFromColumn($this->column('first_name', Type::STRING)));
-		$this->assertSame('emailVerified', VariableNameCreator::variableNameFromColumn($this->column('email_verified', Type::BOOLEAN)));
-		$this->assertSame('creationDate', VariableNameCreator::variableNameFromColumn($this->column('creation_date', Type::DATETIME)));
-		$this->assertSame('rating', VariableNameCreator::variableNameFromColumn($this->column('rating', Type::FLOAT)));
+	public function testTypeNameFromColumnName() {
+		$this->assertSame('blogType', $this->codegen()->typeNameFromColumnName('blog_type'));
 	}
 
-	/** The typed variant and the property name are both plain camelCase - no prefix. */
-	public function testPropertyNameFromColumn() {
-		$codegen = $this->codegen();
-		$column = $this->column('first_name', Type::STRING);
-
-		$this->assertSame('firstName', VariableNameCreator::propertyNameFromColumn($column));
-		$this->assertSame('firstName', VariableNameCreator::variableNameFromColumnWithType($column));
-		$this->assertSame('blogType', $codegen->typeNameFromColumnName('blog_type'));
-	}
-
-	/**
-	 * A foreign key column carries both the id and the object it points at, so the
-	 * two need different names. A trailing "_id" is dropped; anything else gains
-	 * "_object" so the object cannot collide with the column it was mapped from.
-	 */
-	public function testReferenceColumnNameFromColumn() {
-		$this->assertSame('author', VariableNameCreator::referenceColumnNameFromColumn($this->column('author_id', Type::INTEGER)));
-		$this->assertSame('person_object', VariableNameCreator::referenceColumnNameFromColumn($this->column('person', Type::INTEGER)));
-
-		// Too short to be an "_id" suffix, so it takes the _object branch.
-		$this->assertSame('_id_object', VariableNameCreator::referenceColumnNameFromColumn($this->column('_id', Type::INTEGER)));
-	}
-
-	public function testReferenceNamesFromColumn() {
-		$column = $this->column('author_id', Type::INTEGER);
-
-		$this->assertSame('loadedAuthor', VariableNameCreator::referenceVariableNameFromColumn($column));
-		$this->assertSame('author', VariableNameCreator::referencePropertyNameFromColumn($column));
-	}
-
-	/** Reverse references are named after the table they come back from. */
-	public function testNamesFromTable() {
-		$codegen = $this->codegen();
-
-		$this->assertSame('blogPost', $codegen->variableNameFromTable('blog_post'));
-		$this->assertSame('blogPost', $codegen->reverseReferenceVariableNameFromTable('blog_post'));
-		$this->assertSame('BlogPost', $codegen->reverseReferenceVariableTypeFromTable('blog_post'));
+	/** Reverse references are typed after the table they come back from. */
+	public function testReverseReferenceVariableTypeFromTable() {
+		$this->assertSame('BlogPost', $this->codegen()->reverseReferenceVariableTypeFromTable('blog_post'));
 	}
 
 	//
@@ -251,21 +208,15 @@ class TestCodegenHelpers extends TestCase {
 		$this->assertSame('personAsManager', $codegen->callCalculateObjectDescription('person', 'manager_id', 'person', false));
 	}
 
-	/** The description is what the member variable and property names are built from. */
-	public function testObjectMemberVariableAndPropertyName() {
-		$codegen = $this->codegen();
-
-		$this->assertSame(
-			'loadedBlogPostAsReviewer',
-			$codegen->callCalculateObjectMemberVariable('blog_post', 'reviewer_id', 'person')
-		);
+	/** The description is what the adjoined object's property name is built from. */
+	public function testObjectPropertyName() {
 		$this->assertSame(
 			'blogPostAsReviewer',
-			$codegen->callCalculateObjectPropertyName('blog_post', 'reviewer_id', 'person')
+			$this->codegen()->callCalculateObjectPropertyName('blog_post', 'reviewer_id', 'person')
 		);
 	}
 
-	public function testObjectMemberVariableWithConfiguredAffixes() {
+	public function testObjectPropertyNameWithConfiguredAffixes() {
 		$codegen = $this->codegen(['objectPrefix' => 'Assoc', 'objectSuffix' => 'Ref']);
 
 		$this->assertSame(
@@ -401,20 +352,6 @@ class TestCodegenHelpers extends TestCase {
 		$this->assertSame('', $codegen->implodeObjectArray(', ', "'", "'", 'name', []));
 	}
 
-	public function testParameterCleanupFromColumn() {
-		$codegen = $this->codegen();
-		$column = $this->column('name', Type::STRING);
-
-		$this->assertSame(
-			'$name = $database->sqlVariable($name);',
-			$codegen->callParameterCleanupFromColumn($column)
-		);
-		$this->assertSame(
-			'$name = $database->sqlVariable($name, true);',
-			$codegen->callParameterCleanupFromColumn($column, true)
-		);
-	}
-
 	//
 	// Column defaults
 	//
@@ -514,15 +451,14 @@ class TestCodegenHelpers extends TestCase {
 	//
 
 	/**
-	 * Note the casts: despite the @property-read string annotation, the two
-	 * uppercase properties hand back the Symfony ByteString they were built from.
-	 * Templates interpolate them into strings, so it has never mattered there.
+	 * Note the cast: despite the @property-read string annotation, the uppercase
+	 * property hands back the Symfony ByteString it was built from. Templates
+	 * interpolate it into strings, so it has never mattered there.
 	 */
 	public function testColumnComputedProperties() {
 		$column = $this->column('first_name', Type::STRING);
 
 		$this->assertSame('FirstName', (string)$column->propertyNameUppercase);
-		$this->assertSame('FirstName', (string)$column->variableNameUppercase);
 		$this->assertSame('FIRST_NAME', $column->constantPropertyName);
 	}
 
@@ -702,10 +638,6 @@ class CodegenHelperHarness extends DatabaseCodeGen {
 		return $this->calculateObjectDescriptionForAssociation($associationTableName, $tableName, $referencedTableName, $pluralize);
 	}
 
-	public function callCalculateObjectMemberVariable(string $tableName, string $columnName, string $referencedTableName): string {
-		return $this->calculateObjectMemberVariable($tableName, $columnName, $referencedTableName);
-	}
-
 	public function callCalculateObjectPropertyName(string $tableName, string $columnName, string $referencedTableName): string {
 		return $this->calculateObjectPropertyName($tableName, $columnName, $referencedTableName);
 	}
@@ -716,9 +648,5 @@ class CodegenHelperHarness extends DatabaseCodeGen {
 
 	public function callCalculateGraphPrefixArray(array $foreignKeyArray): array {
 		return $this->calculateGraphPrefixArray($foreignKeyArray);
-	}
-
-	public function callParameterCleanupFromColumn(Column $column, bool $includeEquality = false): string {
-		return $this->parameterCleanupFromColumn($column, $includeEquality);
 	}
 }

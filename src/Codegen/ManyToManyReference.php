@@ -17,17 +17,15 @@ use Symfony\Component\String\ByteString;
  * 	@property string $oppositeColumn
  * 	@property string $oppositeVariableType
  * 	@property-read string $oppositeVariableTyped
- * 	@property string $oppositeVariableName
  * 	@property string $oppositePropertyName
  * 	@property string $oppositeObjectDescription
  * 	@property string $associatedTable
- * 	@property string $variableName
  * 	@property string $variableType
  * 	@property string $objectDescription
  * 	@property string $objectDescriptionPlural
  * 	@property Column[] $columnArray
  *
- *  @property-read string $variableNameUppercase
+ *  @property-read string $parameterName
  *  @property-read string $propertyNameUppercase
  *  @property-read string objectDescriptionUppercase
  *  @property-read string objectDescriptionPluralUppercase
@@ -57,13 +55,6 @@ class ManyToManyReference extends Cog\Base {
 
 	/**
 	 * Name of the opposite column (the column that owns the foreign key to the related table)
-	 * as a Variable name (for example, to be used as an input parameter to a Load function)
-	 * @var string
-	 */
-	protected string $oppositeVariableName;
-
-	/**
-	 * Name of the opposite column (the column that owns the foreign key to the related table)
 	 * as a Property name (for example, to be used as a Cog\Query\QQAssociationNode parameter name for the
 	 * column itself)
 	 * @var string
@@ -85,17 +76,9 @@ class ManyToManyReference extends Cog\Base {
 	protected string $associatedTable;
 
 	/**
-	 * Name of the reverse-referenced object as an function parameter.
-	 * So if this is a reverse reference to "person" via "report.person_id",
-	 * the variableName would be "report"
-	 * @var string
-	 */
-	protected string $variableName;
-
-	/**
 	 * Type of the reverse-referenced object as a class.
 	 * So if this is a reverse reference to "person" via "report.person_id",
-	 * the variableName would be "Report"
+	 * the variableType would be "Report"
 	 * @var string
 	 */
 	protected string $variableType;
@@ -141,16 +124,12 @@ class ManyToManyReference extends Cog\Base {
 				return $this->oppositeVariableType;
 			case 'oppositeVariableTyped':
 				return Type::getDeclarationType($this->oppositeVariableType);
-			case 'oppositeVariableName':
-				return $this->oppositeVariableName;
 			case 'oppositePropertyName':
 				return $this->oppositePropertyName;
 			case 'oppositeObjectDescription':
 				return $this->oppositeObjectDescription;
 			case 'associatedTable':
 				return $this->associatedTable;
-			case 'variableName':
-				return $this->variableName;
 			case 'variableType':
 				return $this->variableType;
 			case 'variableTyped':
@@ -164,8 +143,9 @@ class ManyToManyReference extends Cog\Base {
 
 			case 'propertyNameUppercase':
 				return (new ByteString($this->propertyName))->title();
-			case 'variableNameUppercase':
-				return (new ByteString($this->variableName))->title();
+			case 'parameterName':
+				// The associated object as a method parameter: $tag for a Tag
+				return lcfirst($this->variableType);
 			case 'objectDescriptionUppercase':
 				return (new ByteString($this->objectDescription))->title();
 			case 'objectDescriptionPluralUppercase':
@@ -201,16 +181,12 @@ class ManyToManyReference extends Cog\Base {
 					return $this->oppositeColumn = Type::cast($value, Type::STRING);
 				case 'oppositeVariableType':
 					return $this->oppositeVariableType = Type::cast($value, Type::STRING);
-				case 'oppositeVariableName':
-					return $this->oppositeVariableName = Type::cast($value, Type::STRING);
 				case 'oppositePropertyName':
 					return $this->oppositePropertyName = Type::cast($value, Type::STRING);
 				case 'oppositeObjectDescription':
 					return $this->oppositeObjectDescription = Type::cast($value, Type::STRING);
 				case 'associatedTable':
 					return $this->associatedTable = Type::cast($value, Type::STRING);
-				case 'variableName':
-					return $this->variableName = Type::cast($value, Type::STRING);
 				case 'variableType':
 					return $this->variableType = Type::cast($value, Type::STRING);
 				case 'objectDescription':

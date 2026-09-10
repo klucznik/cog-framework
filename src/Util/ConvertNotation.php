@@ -91,7 +91,4 @@ abstract class ConvertNotation {
 		return StringUtils::firstCharacter($toReturn) . mb_strtolower(mb_substr($toReturn, 1));
 	}
 
-	public static function translationNameFromString(string $str): string {
-		return self::camelCase(substr($str, 3));
-	}
 }

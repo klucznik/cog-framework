@@ -16,9 +16,9 @@
 	public function getIterator(): ArrayIterator {
 <?php foreach ($table->columnArray as $column) { ?>
 <?php if ($column->variableType === \Cog\Type::DATETIME) { ?>
-		$iArray['<?= $column->propertyName ?>'] = Utils::dateTimeToJson($this-><?= $column->variableName ?>);
+		$iArray['<?= $column->propertyName ?>'] = Utils::dateTimeToJson($this-><?= $column->propertyName ?>);
 <?php } else { ?>
-		$iArray['<?= $column->propertyName ?>'] = $this-><?= $column->variableName ?>;
+		$iArray['<?= $column->propertyName ?>'] = $this-><?= $column->propertyName ?>;
 <?php } ?>
 <?php } ?>
 		return new ArrayIterator($iArray);

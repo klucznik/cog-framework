@@ -12,7 +12,7 @@
 	 * @return void
 	 */
 	public function delete(): void {
-		if (<?= $codegen->implodeObjectArray(' || ', 'null === $this->', '', 'variableName', $table->primaryKeyColumnArray) ?>) {
+		if (<?= $codegen->implodeObjectArray(' || ', 'null === $this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>) {
 			throw new UndefinedPrimaryKeyException('Cannot delete this <?= $table->className ?> with an unset primary key.');
 		}
 
@@ -32,7 +32,7 @@
 
 		// Optional -- if you **KNOW** that you do not want to EVER run any level of business logic on the disassocation,
 		// you *could* override delete() so that this step can be a single hard coded query to optimize performance.
-		if ($associated = <?= $reverseReference->variableType ?>::loadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'variableName', $table->primaryKeyColumnArray) ?>)) {
+		if ($associated = <?= $reverseReference->variableType ?>::loadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>)) {
 			$associated-><?= $reverseReferenceColumn->propertyName ?> = null;
 			$associated->save();
 		}
@@ -45,7 +45,7 @@
 
 		// Optional -- if you **KNOW** that you do not want to EVER run any level of business logic on the disassocation,
 		// you *could* override delete() so that this step can be a single hard coded query to optimize performance.
-		if ($associated = <?= $reverseReference->variableType ?>::loadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'variableName', $table->primaryKeyColumnArray) ?>)) {
+		if ($associated = <?= $reverseReference->variableType ?>::loadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>)) {
 			$associated->delete();
 		}
 <?php } ?>
@@ -59,7 +59,7 @@
 
 			WHERE
 <?php foreach ($table->primaryKeyColumnArray as $column) { ?>
-				<?= $escapeIdentifierBegin ?><?= $column->name ?><?= $escapeIdentifierEnd ?> = ' . $database->sqlVariable(<?= $column->identity ? '$this->' . $column->variableName : '$this->__' . $column->variableName . ' ?? $this->' . $column->variableName ?>) . ' AND
+				<?= $escapeIdentifierBegin ?><?= $column->name ?><?= $escapeIdentifierEnd ?> = ' . $database->sqlVariable(<?= $column->identity ? '$this->' . $column->propertyName : '$this->__' . $column->propertyName . ' ?? $this->' . $column->propertyName ?>) . ' AND
 <?php } ?><?php \Cog\Codegen\Utils::goBack(8); ?>);
 	}
 

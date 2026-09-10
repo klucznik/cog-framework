@@ -47,7 +47,6 @@ class TestCodegenAnalysis extends TestCase {
 			<stripFromTableName prefix=""/>
 			<excludeTables pattern="" list=""/>
 			<includeTables pattern="" list=""/>
-			<columnCommentForMetaControl delimiter=""/>
 		</database>';
 
 	private ?array $savedCodegenArray = null;
@@ -474,7 +473,7 @@ class TestCodegenAnalysis extends TestCase {
 		$reverse = $codegen->getTable('person')->reverseReferenceArray[0];
 		$this->assertSame('id', $reverse->column);
 		$this->assertTrue($reverse->unique, 'the templates emit an array of managers otherwise');
-		$this->assertSame('loadedManager', $reverse->objectMemberVariable);
+		$this->assertSame('loadedManager', $reverse->loadedMember);
 		$this->assertSame('Manager', $reverse->objectPropertyName);
 		$this->assertSame('Manager', $reverse->objectDescription);
 		$this->assertSame('Managers', $reverse->objectDescriptionPlural);
