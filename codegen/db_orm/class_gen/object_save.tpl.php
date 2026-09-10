@@ -118,7 +118,7 @@ foreach ($table->primaryKeyColumnArray as $objPkColumn) {
 		$mixToReturn = null;
 
 		try {
-			if (!$this->__blnRestored || (<?= $codegen->implodeObjectArray(' && ', '$', ' != null', 'propertyName', $table->primaryKeyColumnArray); ?>)) {
+			if (!$this->__restored || (<?= $codegen->implodeObjectArray(' && ', '$', ' != null', 'propertyName', $table->primaryKeyColumnArray); ?>)) {
 				// Perform an INSERT query
 
 				if (<?= $codegen->implodeObjectArray(' && ', '$', ' == null', 'propertyName', $table->primaryKeyColumnArray); ?>) {
@@ -195,7 +195,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 
 			// Update the adjoined <?= $reverseReference->objectDescription ?> object (if applicable)
 			// TODO: Make this into hard-coded SQL queries
-			if ($this->blnDirty<?= $reverseReference->objectPropertyName ?>) {
+			if ($this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty) {
 				// Unassociate the old one (if applicable)
 				if ($associated = <?= $reverseReference->variableType ?>::LoadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'variableName', $table->primaryKeyColumnArray) ?>)) {
 					$associated-><?= $reverseReferenceColumn->propertyName ?> = null;
@@ -209,7 +209,7 @@ foreach ($table->primaryKeyColumnArray as $column) {
 				}
 
 				// Reset the "Dirty" flag
-				$this->blnDirty<?= $reverseReference->objectPropertyName ?> = false;
+				$this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty = false;
 			}
 <?php } ?>
 <?php } ?>
@@ -218,8 +218,8 @@ foreach ($table->primaryKeyColumnArray as $column) {
 			throw $exception;
 		}
 
-		// Update __blnRestored and any Non-Identity PK Columns (if applicable)
-		$this->__blnRestored = true;
+		// Update __restored and any Non-Identity PK Columns (if applicable)
+		$this->__restored = true;
 <?php foreach ($table->primaryKeyColumnArray as $column) { ?>
 <?php if ((!$column->identity) && $column->primaryKey) { ?>
 		$this->__<?= $column->variableName ?> = $this-><?= $column->variableName ?>;

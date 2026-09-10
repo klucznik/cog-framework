@@ -41,10 +41,10 @@ class Reference extends Cog\Base {
 	private string $propertyName;
 
 	/**
-	 * Name of the referenced object as a class protected Member object
+	 * Name of the member caching the referenced object once loaded
 	 * So if the column that this reference points from is named
-	 * "primary_annual_report_id", it would be objPrimaryAnnualReport
-	 * @var string Name of the referenced object as a class protected Member object
+	 * "primary_annual_report_id", it would be loadedPrimaryAnnualReport
+	 * @var string Name of the member caching the referenced object once loaded
 	 */
 	private string $variableName;
 

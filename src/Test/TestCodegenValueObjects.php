@@ -45,7 +45,7 @@ class TestCodegenValueObjects extends TestCase {
 		$column->variableType = $variableType;
 		$column->default = null;
 		$column->propertyName = ConvertNotation::camelCase($name);
-		$column->variableName = ConvertNotation::prefixFromType($variableType) . ConvertNotation::pascalCase($name);
+		$column->variableName = ConvertNotation::camelCase($name);
 
 		foreach ($properties as $property => $value) {
 			$column->__set($property, $value);
@@ -308,7 +308,7 @@ class TestCodegenValueObjects extends TestCase {
 		$reference->table = 'person';
 		$reference->column = 'id';
 		$reference->propertyName = 'author';
-		$reference->variableName = 'objAuthor';
+		$reference->variableName = 'loadedAuthor';
 		$reference->variableType = 'Person';
 		$reference->isType = false;
 
@@ -316,7 +316,7 @@ class TestCodegenValueObjects extends TestCase {
 		$this->assertSame('person', $reference->table);
 		$this->assertSame('id', $reference->column);
 		$this->assertSame('author', $reference->propertyName);
-		$this->assertSame('objAuthor', $reference->variableName);
+		$this->assertSame('loadedAuthor', $reference->variableName);
 		$this->assertSame('Person', $reference->variableType);
 		$this->assertFalse($reference->isType);
 	}
@@ -330,10 +330,10 @@ class TestCodegenValueObjects extends TestCase {
 	public function testReferenceComputedUppercaseNames() {
 		$reference = new Reference();
 		$reference->propertyName = 'author';
-		$reference->variableName = 'objAuthor';
+		$reference->variableName = 'loadedAuthor';
 
 		$this->assertSame('Author', (string)$reference->propertyNameUppercase);
-		$this->assertSame('ObjAuthor', (string)$reference->variableNameUppercase);
+		$this->assertSame('LoadedAuthor', (string)$reference->variableNameUppercase);
 	}
 
 	public function testReferenceUnknownPropertyThrows() {
@@ -354,7 +354,7 @@ class TestCodegenValueObjects extends TestCase {
 		$reverse->column = 'author_id';
 		$reverse->notNull = true;
 		$reverse->unique = false;
-		$reverse->variableName = 'objBlogPost';
+		$reverse->variableName = 'blogPost';
 		$reverse->variableType = 'BlogPost';
 		$reverse->propertyName = 'blogPost';
 		$reverse->objectDescription = 'BlogPostAsAuthor';
@@ -371,12 +371,12 @@ class TestCodegenValueObjects extends TestCase {
 
 	public function testReverseReferenceComputedUppercaseNames() {
 		$reverse = new ReverseReference();
-		$reverse->variableName = 'objBlogPost';
+		$reverse->variableName = 'blogPost';
 		$reverse->propertyName = 'blogPost';
 		$reverse->objectDescription = 'blogPostAsAuthor';
 		$reverse->objectDescriptionPlural = 'blogPostsAsAuthor';
 
-		$this->assertSame('ObjBlogPost', (string)$reverse->variableNameUppercase);
+		$this->assertSame('BlogPost', (string)$reverse->variableNameUppercase);
 		$this->assertSame('BlogPost', (string)$reverse->propertyNameUppercase);
 		$this->assertSame('BlogPostAsAuthor', (string)$reverse->objectDescriptionUppercase);
 		$this->assertSame('BlogPostsAsAuthor', (string)$reverse->objectDescriptionPluralUppercase);
@@ -404,11 +404,11 @@ class TestCodegenValueObjects extends TestCase {
 		$reference->column = 'person_id';
 		$reference->oppositeColumn = 'tag_id';
 		$reference->oppositeVariableType = 'Tag';
-		$reference->oppositeVariableName = 'objTag';
+		$reference->oppositeVariableName = 'tag';
 		$reference->oppositePropertyName = 'tag';
 		$reference->oppositeObjectDescription = 'Tag';
 		$reference->associatedTable = 'tag';
-		$reference->variableName = 'objTag';
+		$reference->variableName = 'tag';
 		$reference->variableType = 'Tag';
 		$reference->objectDescription = 'Tag';
 		$reference->objectDescriptionPlural = 'Tags';
@@ -430,11 +430,11 @@ class TestCodegenValueObjects extends TestCase {
 
 	public function testManyToManyReferenceComputedUppercaseNames() {
 		$reference = new ManyToManyReference();
-		$reference->variableName = 'objTag';
+		$reference->variableName = 'tag';
 		$reference->objectDescription = 'tag';
 		$reference->objectDescriptionPlural = 'tags';
 
-		$this->assertSame('ObjTag', (string)$reference->variableNameUppercase);
+		$this->assertSame('Tag', (string)$reference->variableNameUppercase);
 		$this->assertSame('Tag', (string)$reference->objectDescriptionUppercase);
 		$this->assertSame('Tags', (string)$reference->objectDescriptionPluralUppercase);
 	}

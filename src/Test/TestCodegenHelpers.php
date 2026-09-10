@@ -102,7 +102,7 @@ class TestCodegenHelpers extends TestCase {
 		// reach - reading it would be an uninitialized typed property error.
 		$column->default = null;
 		$column->propertyName = \Cog\Util\ConvertNotation::camelCase($name);
-		$column->variableName = \Cog\Util\ConvertNotation::prefixFromType($variableType) . \Cog\Util\ConvertNotation::pascalCase($name);
+		$column->variableName = \Cog\Util\ConvertNotation::camelCase($name);
 
 		foreach ($properties as $property => $value) {
 			$column->__set($property, $value);
@@ -156,16 +156,13 @@ class TestCodegenHelpers extends TestCase {
 	// Column names
 	//
 
-	/**
-	 * The Hungarian prefixes belong to generated output only, and they come from
-	 * the column's variable type rather than from its database type.
-	 */
+	/** The generated property is the column name in camelCase, whatever its type. */
 	public function testVariableNameFromColumn() {
-		$this->assertSame('intId', VariableNameCreator::variableNameFromColumn($this->column('id', Type::INTEGER)));
-		$this->assertSame('strFirstName', VariableNameCreator::variableNameFromColumn($this->column('first_name', Type::STRING)));
-		$this->assertSame('blnEmailVerified', VariableNameCreator::variableNameFromColumn($this->column('email_verified', Type::BOOLEAN)));
-		$this->assertSame('dttCreationDate', VariableNameCreator::variableNameFromColumn($this->column('creation_date', Type::DATETIME)));
-		$this->assertSame('fltRating', VariableNameCreator::variableNameFromColumn($this->column('rating', Type::FLOAT)));
+		$this->assertSame('id', VariableNameCreator::variableNameFromColumn($this->column('id', Type::INTEGER)));
+		$this->assertSame('firstName', VariableNameCreator::variableNameFromColumn($this->column('first_name', Type::STRING)));
+		$this->assertSame('emailVerified', VariableNameCreator::variableNameFromColumn($this->column('email_verified', Type::BOOLEAN)));
+		$this->assertSame('creationDate', VariableNameCreator::variableNameFromColumn($this->column('creation_date', Type::DATETIME)));
+		$this->assertSame('rating', VariableNameCreator::variableNameFromColumn($this->column('rating', Type::FLOAT)));
 	}
 
 	/** The typed variant and the property name are both plain camelCase - no prefix. */
@@ -194,7 +191,7 @@ class TestCodegenHelpers extends TestCase {
 	public function testReferenceNamesFromColumn() {
 		$column = $this->column('author_id', Type::INTEGER);
 
-		$this->assertSame('objAuthor', VariableNameCreator::referenceVariableNameFromColumn($column));
+		$this->assertSame('loadedAuthor', VariableNameCreator::referenceVariableNameFromColumn($column));
 		$this->assertSame('author', VariableNameCreator::referencePropertyNameFromColumn($column));
 	}
 
@@ -202,8 +199,8 @@ class TestCodegenHelpers extends TestCase {
 	public function testNamesFromTable() {
 		$codegen = $this->codegen();
 
-		$this->assertSame('objBlogPost', $codegen->variableNameFromTable('blog_post'));
-		$this->assertSame('objBlogPost', $codegen->reverseReferenceVariableNameFromTable('blog_post'));
+		$this->assertSame('blogPost', $codegen->variableNameFromTable('blog_post'));
+		$this->assertSame('blogPost', $codegen->reverseReferenceVariableNameFromTable('blog_post'));
 		$this->assertSame('BlogPost', $codegen->reverseReferenceVariableTypeFromTable('blog_post'));
 	}
 
@@ -259,7 +256,7 @@ class TestCodegenHelpers extends TestCase {
 		$codegen = $this->codegen();
 
 		$this->assertSame(
-			'objblogPostAsReviewer',
+			'loadedBlogPostAsReviewer',
 			$codegen->callCalculateObjectMemberVariable('blog_post', 'reviewer_id', 'person')
 		);
 		$this->assertSame(
@@ -409,11 +406,11 @@ class TestCodegenHelpers extends TestCase {
 		$column = $this->column('name', Type::STRING);
 
 		$this->assertSame(
-			'$strName = $database->sqlVariable($strName);',
+			'$name = $database->sqlVariable($name);',
 			$codegen->callParameterCleanupFromColumn($column)
 		);
 		$this->assertSame(
-			'$strName = $database->sqlVariable($strName, true);',
+			'$name = $database->sqlVariable($name, true);',
 			$codegen->callParameterCleanupFromColumn($column, true)
 		);
 	}
@@ -525,7 +522,7 @@ class TestCodegenHelpers extends TestCase {
 		$column = $this->column('first_name', Type::STRING);
 
 		$this->assertSame('FirstName', (string)$column->propertyNameUppercase);
-		$this->assertSame('StrFirstName', (string)$column->variableNameUppercase);
+		$this->assertSame('FirstName', (string)$column->variableNameUppercase);
 		$this->assertSame('FIRST_NAME', $column->constantPropertyName);
 	}
 

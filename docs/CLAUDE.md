@@ -50,9 +50,9 @@ is additionally pulled in through composer's `files` autoload.
 - `readonly` is rare in `src/` - `BaseConfig` uses it deliberately for its set-once properties,
   and that is currently the only place. This is an observation, not a rule: use it where
   set-once semantics genuinely apply, and don't retrofit it elsewhere as a drive-by change.
-- Plain camelCase members in framework code. The Hungarian prefixes (`str`, `int`, `flt`, `bln`,
-  `dtt`, `obj`, from `Cog\Util\ConvertNotation::prefixFromType()`) belong to **generated ORM output
-  only** - never write them by hand.
+- Plain camelCase members everywhere, generated ORM output included: a column is a property named
+  after it (`firstName`), and the member caching a lazily loaded object is `loaded`-prefixed
+  (`loadedAuthor`). Do not introduce Hungarian prefixes.
 
 ## The Base property pattern
 
@@ -68,6 +68,16 @@ The most-repeated idiom in the codebase. `src/Codegen/Column.php` is the referen
 
 `Cog\Base::__get`/`__set` themselves always throw `UndefinedPropertyException`, so a missing `case`
 surfaces as an undefined-property error, not a silent null.
+
+The generated ORM classes are the exception: they declare no `__get`/`__set`/`__isset` at all.
+`column_properties.tpl.php` emits every column as a **typed public property** - `public protected(set)`
+for identity and timestamp columns, with a `set` hook on foreign-key columns that drops the cached
+object - and `reference_properties.tpl.php` emits each referenced or adjoined object (`author`,
+`personProfile`) as a **hooked property** whose `get` lazy-loads into a `loaded*` member. A wrong type
+is a `TypeError` at the assignment rather than a `Type::cast()`. `Cog\Base` is still the parent, so a
+typo in a property name lands in its `UndefinedPropertyException` instead of creating a dynamic property.
+Two consequences: `isset()` and `??` on a reference run its `get` hook, so they load it (once); and
+`??` on an undeclared name fetches through `Cog\Base::__get`, so a typo under `??` throws too.
 
 ## Codegen templates
 

@@ -46,7 +46,7 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 	 */
 	public function variableNameFromTable(string $tableName): string {
 		$tableName = $this->stripPrefixFromTable($tableName);
-		return ConvertNotation::prefixFromType(Type::OBJECT) . ConvertNotation::pascalCase($tableName);
+		return ConvertNotation::camelCase($tableName);
 	}
 
 	/**
@@ -292,11 +292,7 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 	 * @return string
 	 */
 	protected function calculateObjectMemberVariable(string $tableName, string $columnName, string $referencedTableName): string {
-		return sprintf('%s%s%s%s',
-			ConvertNotation::prefixFromType(Type::OBJECT),
-			$this->associatedObjectPrefix,
-			$this->calculateObjectDescription($tableName, $columnName, $referencedTableName, false),
-			$this->associatedObjectSuffix);
+		return 'loaded' . ucfirst($this->calculateObjectPropertyName($tableName, $columnName, $referencedTableName));
 	}
 
 	/**

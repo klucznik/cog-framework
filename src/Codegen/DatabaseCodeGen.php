@@ -9,7 +9,6 @@ use Cog\Database\FieldType;
 use Cog\Exceptions\CogException;
 use Cog\Exceptions\InvalidCastException;
 use Cog\Type;
-use Cog\Util\ConvertNotation;
 use Cog\Util\NamespaceUtil;
 use SimpleXMLElement;
 use Symfony\Component\String\ByteString;
@@ -953,7 +952,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 								// See if ReverseReference is due to an ORM-based Class Inheritance Chain
 								if ($column->primaryKey && count($table->primaryKeyColumnArray) === 1) {
-									$reverseReference->objectMemberVariable = ConvertNotation::prefixFromType(Type::OBJECT) . $reverseReference->variableType;
+									$reverseReference->objectMemberVariable = 'loaded' . $reverseReference->variableType;
 									$reverseReference->objectPropertyName = $reverseReference->variableType;
 									$reverseReference->objectDescription = $reverseReference->variableType;
 									$reverseReference->objectDescriptionPlural = Utils::pluralize($reverseReference->variableType);

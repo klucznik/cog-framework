@@ -9,7 +9,6 @@ use App\Data\Person;
 use Cog\Database\Exceptions\OptimisticLockingException;
 use Cog\Database\Exceptions\UndefinedPrimaryKeyException;
 use Cog\Exceptions\CogException;
-use Cog\Exceptions\InvalidCastException;
 use Cog\Query\QQ;
 use DateTimeImmutable;
 use Generated\Node\QQNodePerson;
@@ -270,10 +269,11 @@ class TestGeneratedLifecycle extends QueryTestCase {
 		}
 	}
 
+	/** The reference is typed, so the wrong class fails at the assignment. */
 	public function testAssigningTheWrongClassToAReferenceThrows() {
 		$post = BlogPost::load(1);
 
-		$this->expectException(InvalidCastException::class);
+		$this->expectException(\TypeError::class);
 
 		$post->author = Obj::load(1);
 	}
@@ -289,6 +289,39 @@ class TestGeneratedLifecycle extends QueryTestCase {
 
 		$this->assertSame(2, $post->authorId);
 		$this->assertSame($before, $this->queryCount());
+	}
+
+	/** Writing the key column drops the loaded object, so the next read loads the row for the new key. */
+	public function testAssigningTheForeignKeyColumnDropsTheLoadedReference() {
+		$post = BlogPost::load(1);
+		$this->assertSame('Adam Kluczyk', $post->author->name);
+
+		$post->authorId = 2;
+
+		$this->assertSame('Maria Nowak', $post->author->name);
+	}
+
+	//
+	// Columns are typed properties
+	//
+
+	/** A wrong type fails at the assignment, as a TypeError, rather than being cast on the way in. */
+	public function testAssigningTheWrongTypeToAColumnThrows() {
+		$post = BlogPost::load(1);
+
+		$this->expectException(\TypeError::class);
+
+		$post->title = ['not', 'a', 'string'];
+	}
+
+	/** An identity column is `protected(set)`: assignable by the class, an Error from anywhere else. */
+	public function testAssigningAnIdentityColumnFromOutsideThrows() {
+		$post = BlogPost::load(1);
+
+		$this->expectException(\Error::class);
+		$this->expectExceptionMessage('Cannot modify protected(set) property');
+
+		$post->id = 5;
 	}
 
 	//

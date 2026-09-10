@@ -183,7 +183,7 @@ class TestCodegen extends TestCase {
 	public function testGeneratedPersonClass() {
 		$person = new \ReflectionClass('Generated\Data\PersonGen');
 
-		foreach (['intId', 'strName', 'strEmail', 'blnEmailVerified', 'strPassword'] as $property) {
+		foreach (['id', 'name', 'email', 'emailVerified', 'password'] as $property) {
 			$this->assertTrue($person->hasProperty($property), 'PersonGen is missing the ' . $property . ' property');
 		}
 
@@ -238,7 +238,7 @@ class TestCodegen extends TestCase {
 	public function testTimestampColumnDrivesOptimisticLocking() {
 		$blogPost = new \ReflectionClass('Generated\Data\BlogPostGen');
 
-		$this->assertTrue($blogPost->hasProperty('dttModificationDate'), 'BlogPostGen is missing the timestamp column property');
+		$this->assertTrue($blogPost->hasProperty('modificationDate'), 'BlogPostGen is missing the timestamp column property');
 		$this->assertStringContainsString(
 			'OptimisticLockingException',
 			file_get_contents(CodegenFixture::getBuildPath('generated/Data/BlogPostGen.php')),
@@ -320,8 +320,8 @@ class TestCodegen extends TestCase {
 	public function testGeneratedForeignKey() {
 		$blogPost = new \ReflectionClass('Generated\Data\BlogPostGen');
 
-		$this->assertTrue($blogPost->hasProperty('intAuthorId'), 'BlogPostGen is missing the author_id column property');
-		$this->assertTrue($blogPost->hasProperty('objAuthor'), 'BlogPostGen is missing the Author associated object');
+		$this->assertTrue($blogPost->hasProperty('authorId'), 'BlogPostGen is missing the author_id column property');
+		$this->assertTrue($blogPost->hasProperty('loadedAuthor'), 'BlogPostGen is missing the Author associated object');
 		$this->assertTrue($blogPost->hasMethod('loadArrayByAuthorId'), 'BlogPostGen is missing loadArrayByAuthorId()');
 	}
 
@@ -335,8 +335,8 @@ class TestCodegen extends TestCase {
 	public function testSelfReferencingForeignKey() {
 		$category = new \ReflectionClass('Generated\Data\CategoryGen');
 
-		$this->assertTrue($category->hasProperty('intParentId'), 'CategoryGen is missing the parent_id column property');
-		$this->assertTrue($category->hasProperty('objParent'), 'CategoryGen is missing the Parent associated object');
+		$this->assertTrue($category->hasProperty('parentId'), 'CategoryGen is missing the parent_id column property');
+		$this->assertTrue($category->hasProperty('loadedParent'), 'CategoryGen is missing the Parent associated object');
 		$this->assertTrue($category->hasMethod('loadArrayByParentId'), 'CategoryGen is missing loadArrayByParentId()');
 	}
 
@@ -347,16 +347,16 @@ class TestCodegen extends TestCase {
 	public function testForeignKeyColumnNotNamedId() {
 		$category = new \ReflectionClass('Generated\Data\CategoryGen');
 
-		$this->assertTrue($category->hasProperty('intOwner'), 'CategoryGen is missing the owner column property');
-		$this->assertTrue($category->hasProperty('objOwnerObject'), 'CategoryGen is missing the OwnerObject associated object');
+		$this->assertTrue($category->hasProperty('owner'), 'CategoryGen is missing the owner column property');
+		$this->assertTrue($category->hasProperty('loadedOwnerObject'), 'CategoryGen is missing the OwnerObject associated object');
 	}
 
 	/** A reference to a `_type` table resolves to the generated Type class, not an ORM class. */
 	public function testReferenceToTypeTable() {
 		$category = new \ReflectionClass('Generated\Data\CategoryGen');
 
-		$this->assertTrue($category->hasProperty('intPriorityTypeId'), 'CategoryGen is missing the priority_type_id property');
-		$this->assertFalse($category->hasProperty('objPriorityType'), 'a type reference should not become an associated object');
+		$this->assertTrue($category->hasProperty('priorityTypeId'), 'CategoryGen is missing the priority_type_id property');
+		$this->assertFalse($category->hasProperty('loadedPriorityType'), 'a type reference should not become an associated object');
 	}
 
 	/**
@@ -367,11 +367,11 @@ class TestCodegen extends TestCase {
 	public function testUniqueForeignKeyGivesASingleReverseReference() {
 		$generated = file_get_contents(CodegenFixture::getBuildPath('generated/Data/PersonGen.php'));
 
-		$this->assertStringContainsString('@property PersonProfile $personProfile', $generated);
+		$this->assertStringContainsString('public ?PersonProfile $personProfile {', $generated);
 		$this->assertStringNotContainsString('$personProfileArray', $generated);
 
 		// The non-unique reverse reference on the same class is an array, and read-only
-		$this->assertStringContainsString('@property-read BlogPost[] $_blogPostAsAuthorArray', $generated);
+		$this->assertStringContainsString('public protected(set) ?array $_blogPostAsAuthorArray = null;', $generated);
 	}
 
 	/** The adjoined object is saved with its parent, which needs a dirty flag to track. */

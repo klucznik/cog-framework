@@ -11,7 +11,7 @@
 	 */
 	public function reload(): void {
 		// Make sure we are actually Restored from the database
-		if (!$this->__blnRestored) {
+		if (!$this->__restored) {
 			throw new CogException('Cannot call reload() on a new, unsaved <?= $table->className ?> object.');
 		}
 
@@ -21,11 +21,8 @@
 		// Update local variables to match
 <?php foreach ($table->columnArray as $column) { ?>
 <?php if (!$column->identity) { ?>
-<?php if ($column->reference) { ?>
-		$this-><?= $column->propertyName ?> = $reloaded-><?= $column->propertyName ?>;
-<?php } ?><?php if (!$column->reference) { ?>
 		$this-><?= $column->variableName ?> = $reloaded-><?= $column->variableName ?>;
-<?php } ?><?php if ($column->primaryKey) { ?>
+<?php if ($column->primaryKey) { ?>
 		$this->__<?= $column->variableName ?> = $this-><?= $column->variableName ?>;
 <?php } ?><?php } ?><?php } ?>
 	}

@@ -17,7 +17,7 @@ use Symfony\Component\String\ByteString;
  * @property bool $primaryKey Specifies whether the column is a Primary Key
  * @property string $name Name of the column as defined in the database So for example, "first_name"
  * @property string $propertyName Name of the column as an object Property
- * @property string $variableName Name of the column as an object protected Member Variable So for "first_name VARCHAR(50)", it would be strFirstName
+ * @property string $variableName Name of the column as the generated class property, so for "first_name" it would be firstName (the same as $propertyName)
  * @property string $variableType The type of the protected member variable (uses one of the string constants from the Type class)
  * @property-read string $variableTyped The type declaration of the member variable
  * @property-read string $variableTypeJs The JS type declaration of the member variable
@@ -48,10 +48,10 @@ class Column extends Base {
 	/** @var string Name of the column as defined in the database so for example, "first_name" */
 	private string $name;
 
-	/** @var string Name of the column as an object Property So for "first_name", it would be FirstName */
+	/** @var string Name of the column as an object property, so for "first_name" it would be firstName */
 	private string $propertyName;
 
-	/** @var string Name of the column as an object protected Member Variable So for "first_name VARCHAR(50)", it would be strFirstName */
+	/** @var string Name of the column as the generated class property, so for "first_name" it would be firstName */
 	private string $variableName;
 
 	/** @var string The type of the protected member variable (uses one of the string constants from the Type class) */

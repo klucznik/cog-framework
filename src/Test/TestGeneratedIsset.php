@@ -6,27 +6,23 @@ use App\Data\BlogPost;
 use App\Data\Category;
 use App\Data\Person;
 use App\Data\PersonProfile;
+use Cog\Exceptions\UndefinedPropertyException;
 
 /**
  * isset(), empty() and ?? against the generated ORM classes.
  *
- * These all route through __isset(), which PHP consults before __get(). Cog\Base
- * used to declare one returning false unconditionally, so every magic property on
- * every generated class reported as unset: isset() false, empty() true, and
- * `$person->name ?? $default` handing back the default even with a name set -
- * silently, with no error. Removing that fixed ??; generating a real __isset()
- * per class fixes isset() and empty() too.
+ * Every property of a generated class is a real declaration, so PHP answers
+ * these natively and no __isset() is involved. What differs is the cost:
  *
- * The other half of the contract is that none of it costs a query. __get()
- * lazy-loads references and adjoined objects, so a generated __isset() that
- * delegated to it would put a SELECT behind what reads as a null check - an N+1
- * waiting to happen. It reads the backing fields instead, and the tests below
- * assert the query count does not move.
+ * - A column or an expansion collection is plain storage. isset() reads it and
+ *   never costs a query.
+ * - A reference or an adjoined object is a hooked property. isset(), empty() and
+ *   ?? all run its get hook, which loads the object the first time and hands
+ *   back the cached one after that. So isset() on a reference with a foreign key
+ *   set costs the load - once - while a reference whose key is null is answered
+ *   without a query, because the hook does not look up a null key.
  *
- * That guarantee covers isset(), not empty(). PHP evaluates empty($x) as
- * !isset($x) || !$x, so a property that __isset() reports as set is then read
- * through __get() to test its truthiness. empty() on a set reference therefore
- * loads it; no __isset() implementation can change that.
+ * The tests assert on the query count so a change to either behaviour is caught.
  */
 class TestGeneratedIsset extends QueryTestCase {
 
@@ -52,11 +48,18 @@ class TestGeneratedIsset extends QueryTestCase {
 		$this->assertSame('fallback', $profile->website ?? 'fallback');
 	}
 
-	public function testUnknownPropertyIsNotSet() {
+	/**
+	 * Nothing is declared under that name. isset() is false without consulting
+	 * anything, but ?? fetches the value, which for an undeclared name means
+	 * Cog\Base::__get - and that throws on what is, after all, a typo.
+	 */
+	public function testUnknownPropertyIsNotSetAndCoalescingItThrows() {
 		$person = Person::load(1);
 
 		$this->assertFalse(isset($person->noSuchProperty));
-		$this->assertSame('fallback', $person->noSuchProperty ?? 'fallback');
+
+		$this->expectException(UndefinedPropertyException::class);
+		$person->noSuchProperty ?? 'fallback';
 	}
 
 	/** An id is set on a loaded row and absent on a new one. */
@@ -66,26 +69,21 @@ class TestGeneratedIsset extends QueryTestCase {
 	}
 
 	//
-	// References: answered from the foreign key, without loading
+	// References: answered by the get hook, which loads once
 	//
 
-	public function testReferenceWithAForeignKeySet() {
+	public function testIssetOnAReferenceLoadsItOnce() {
 		$blogPost = BlogPost::load(1);
 		$before = $this->queryCount();
 
 		$this->assertTrue(isset($blogPost->author));
+		$this->assertSame($before + 1, $this->queryCount(), 'the first isset() runs the get hook, which loads the author');
 
-		$this->assertSame($before, $this->queryCount(), 'isset() on a reference must not load it');
+		$this->assertTrue(isset($blogPost->author));
+		$this->assertSame('Adam Kluczyk', ($blogPost->author ?? null)?->name);
+		$this->assertSame($before + 1, $this->queryCount(), 'the loaded author is reused');
 	}
 
-	/**
-	 * empty() is not free the way isset() is, and cannot be made so.
-	 *
-	 * PHP evaluates empty($x) as !isset($x) || !$x, so once __isset() answers true
-	 * it calls __get() to test the value's truthiness - which loads the reference.
-	 * Nothing in __isset() can prevent that. isset() is the query-free check;
-	 * empty() on a set reference costs the load it would have cost anyway.
-	 */
 	public function testEmptyOnASetReferenceLoadsIt() {
 		$blogPost = BlogPost::load(1);
 		$before = $this->queryCount();
@@ -95,63 +93,46 @@ class TestGeneratedIsset extends QueryTestCase {
 		$this->assertGreaterThan($before, $this->queryCount());
 	}
 
-	/** When __isset() answers false, empty() short-circuits and stays free. */
-	public function testEmptyOnAnUnsetReferenceDoesNotLoad() {
-		$category = Category::load(3);
-		$before = $this->queryCount();
-
-		$this->assertTrue(empty($category->ownerObject));
-
-		$this->assertSame($before, $this->queryCount());
-	}
-
-	public function testReferenceWithANullForeignKey() {
+	/** A null foreign key is answered by the hook without a lookup. */
+	public function testReferenceWithANullForeignKeyIsNotSetAndCostsNothing() {
 		// category 3 has no owner
 		$category = Category::load(3);
 		$before = $this->queryCount();
 
 		$this->assertNull($category->owner);
 		$this->assertFalse(isset($category->ownerObject));
+		$this->assertTrue(empty($category->ownerObject));
+		$this->assertSame('fallback', $category->ownerObject ?? 'fallback');
 
 		$this->assertSame($before, $this->queryCount());
-	}
-
-	/** Reading the reference still loads it - only isset() is free. */
-	public function testReadingAReferenceStillLoadsIt() {
-		$blogPost = BlogPost::load(1);
-		$before = $this->queryCount();
-
-		$this->assertSame('Adam Kluczyk', $blogPost->author->name);
-
-		$this->assertGreaterThan($before, $this->queryCount(), 'reading a reference is expected to load it');
 	}
 
 	//
 	// Adjoined objects and unexpanded collections
 	//
 
-	/**
-	 * An adjoined object that has not been loaded reads as not set: saying
-	 * otherwise would mean querying for it, which isset() must not do.
-	 */
-	public function testUnloadedAdjoinedObjectIsNotSet() {
+	/** The adjoined object is looked up by the hook, so isset() loads it. */
+	public function testIssetOnAnAdjoinedObjectLoadsIt() {
 		$person = Person::load(1);
 		$before = $this->queryCount();
 
-		$this->assertFalse(isset($person->personProfile));
+		$this->assertTrue(isset($person->personProfile));
 
-		$this->assertSame($before, $this->queryCount(), 'isset() on an adjoined object must not load it');
+		$this->assertGreaterThan($before, $this->queryCount());
 	}
 
-	/** Once it is in hand, it is set. */
+	/** Once it is in hand, isset() is free. */
 	public function testLoadedAdjoinedObjectIsSet() {
 		$person = Person::load(1);
-
 		$this->assertNotNull($person->personProfile);
+		$before = $this->queryCount();
+
 		$this->assertTrue(isset($person->personProfile));
+
+		$this->assertSame($before, $this->queryCount());
 	}
 
-	/** A collection that was never expanded is not set, rather than an empty array. */
+	/** A collection that was never expanded is not set, rather than an empty array, and costs nothing. */
 	public function testUnexpandedCollectionIsNotSet() {
 		$person = Person::load(1);
 		$before = $this->queryCount();
@@ -162,16 +143,12 @@ class TestGeneratedIsset extends QueryTestCase {
 		$this->assertSame($before, $this->queryCount());
 	}
 
-	//
-	// The whole surface stays query-free
-	//
-
-	/** Every documented property of a loaded row, tested at once, costing nothing. */
-	public function testIssetNeverQueries() {
+	/** Columns and collections stay query-free however many are tested. */
+	public function testIssetOnStorageNeverQueries() {
 		$person = Person::load(1);
 		$before = $this->queryCount();
 
-		foreach (['id', 'name', 'email', 'emailVerified', 'password', 'personProfile',
+		foreach (['id', 'name', 'email', 'emailVerified', 'password',
 			'_objArray', '_blogPostAsAuthorArray', '_personArray', 'noSuchProperty'] as $property) {
 			isset($person->$property);
 		}

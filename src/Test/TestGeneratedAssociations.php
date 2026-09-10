@@ -9,7 +9,6 @@ use App\Data\Person;
 use App\Data\PersonProfile;
 use App\Data\Tag;
 use Cog\Database\Exceptions\UndefinedPrimaryKeyException;
-use Cog\Exceptions\InvalidCastException;
 
 /**
  * The association methods on the generated ORM classes, driven against the
@@ -169,10 +168,11 @@ class TestGeneratedAssociations extends QueryTestCase {
 		$this->assertSame('Newcomer', Person::load(3)->personProfile->bio);
 	}
 
+	/** The adjoined object is typed, so the wrong class fails at the assignment. */
 	public function testAssigningTheWrongClassAsAProfileThrows() {
 		$person = Person::load(3);
 
-		$this->expectException(InvalidCastException::class);
+		$this->expectException(\TypeError::class);
 
 		$person->personProfile = Obj::load(1);
 	}

@@ -17,7 +17,7 @@ abstract class VariableNameCreator {
 	 * @return string
 	 */
 	public static function variableNameFromColumn(Column $column): string {
-		return ConvertNotation::prefixFromType($column->variableType) . ConvertNotation::pascalCase($column->name);
+		return ConvertNotation::camelCase($column->name);
 	}
 
 	/**
@@ -101,9 +101,14 @@ abstract class VariableNameCreator {
 	 * @param Column $column
 	 * @return string
 	 */
+	/**
+	 * Name of the member that caches the referenced object once it has been loaded,
+	 * kept apart from the property that lazy-loads it: `loadedAuthor` behind `author`.
+	 * @param Column $column
+	 * @return string
+	 */
 	public static function referenceVariableNameFromColumn(Column $column): string {
-		$name = self::referenceColumnNameFromColumn($column);
-		return ConvertNotation::prefixFromType(Type::OBJECT) . ConvertNotation::pascalCase($name);
+		return 'loaded' . ConvertNotation::pascalCase(self::referenceColumnNameFromColumn($column));
 	}
 
 	/**

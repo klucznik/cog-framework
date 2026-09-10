@@ -87,7 +87,7 @@ class ManyToManyReference extends Cog\Base {
 	/**
 	 * Name of the reverse-referenced object as an function parameter.
 	 * So if this is a reverse reference to "person" via "report.person_id",
-	 * the variableName would be "objReport"
+	 * the variableName would be "report"
 	 * @var string
 	 */
 	protected string $variableName;

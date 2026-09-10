@@ -253,7 +253,7 @@
 
 		// No Groups - return the sql-calculated count(*) value
 		$dbRow = $result->fetchRow();
-		return Type::cast($dbRow[0], Type::INTEGER);
+		return (int)$dbRow[0];
 	}
 
 	/**

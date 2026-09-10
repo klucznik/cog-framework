@@ -1,41 +1,18 @@
 // Override or Create New Properties and Variables
-	// For performance reasons, these variables and __set and __get override methods
-	// are commented out.  But if you wish to implement or override any
-	// of the data generated properties, please feel free to uncomment them.
+	// Columns and references are typed properties on the generated class: a new
+	// property is a plain declaration, a computed one is a virtual hooked property,
+	// and a generated reference can be redeclared with hooks that defer to it.
 /*
-	protected $strSomeNewProperty;
+	public ?string $someNewProperty = null;
 
-	public function __get($name): mixed {
-		switch ($name) {
-			case 'SomeNewProperty': return $this->strSomeNewProperty;
-
-			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
-		}
+	public string $someComputedProperty {
+		get => trim($this->firstName . ' ' . $this->lastName);
 	}
 
-	public function __set($name, $value) {
-		switch ($name) {
-			case 'SomeNewProperty':
-				try {
-					return ($this->strSomeNewProperty = Type::cast($value, Type::STRING));
-				} catch (InvalidCastException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
-
-			default:
-				try {
-					return (parent::__set($name, $value));
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+	public ?SomeClass $someReference {
+		get => parent::$someReference::get() ?? SomeClass::load(1);
+		set {
+			parent::$someReference::set($value);
 		}
 	}
 */

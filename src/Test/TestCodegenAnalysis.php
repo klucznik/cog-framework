@@ -474,7 +474,7 @@ class TestCodegenAnalysis extends TestCase {
 		$reverse = $codegen->getTable('person')->reverseReferenceArray[0];
 		$this->assertSame('id', $reverse->column);
 		$this->assertTrue($reverse->unique, 'the templates emit an array of managers otherwise');
-		$this->assertSame('objManager', $reverse->objectMemberVariable);
+		$this->assertSame('loadedManager', $reverse->objectMemberVariable);
 		$this->assertSame('Manager', $reverse->objectPropertyName);
 		$this->assertSame('Manager', $reverse->objectDescription);
 		$this->assertSame('Managers', $reverse->objectDescriptionPlural);
@@ -495,13 +495,35 @@ class TestCodegenAnalysis extends TestCase {
 
 		$file = $this->docroot . '/generated/Data/PersonGen.php';
 		$source = file_get_contents($file);
-		$this->assertStringContainsString("case 'Manager':", $source);
+		$this->assertStringContainsString('public ?Manager $Manager {', $source);
 		// The loader is named from the column's property name, so the casing is LoadByid;
 		// PHP resolves method names case-insensitively.
 		$this->assertStringContainsStringIgnoringCase('Manager::loadById(', $source);
-		$this->assertStringContainsString('$this->objManager', $source);
+		$this->assertStringContainsString('$this->loadedManager', $source);
 		$this->assertStringNotContainsString('getManagerArray', $source);
 		$this->assertStringNotContainsString('unassociateAllManagers', $source);
+
+		exec(sprintf('%s -l %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($file)), $output, $status);
+		$this->assertSame(0, $status, "the generated class does not lint:\n" . implode("\n", $output));
+	}
+
+	/**
+	 * A primary key the database does not assign can be changed after the row was
+	 * restored, so save() has to remember the value it was restored with. The
+	 * generated class keeps that in a `__`-prefixed shadow of the column property.
+	 */
+	public function testNonIdentityPrimaryKeyKeepsItsRestoredValue() {
+		$schema = self::schema()
+			->addTable('country', [self::varchar('code', primaryKey: true), self::varchar('name')]);
+		$codegen = $this->analyze($schema, [], $this->scratchDocroot());
+
+		$this->assertTrue($codegen->generateTable($codegen->getTable('country')));
+
+		$file = $this->docroot . '/generated/Data/CountryGen.php';
+		$source = file_get_contents($file);
+		$this->assertStringContainsString('public ?string $code = null;', $source);
+		$this->assertStringContainsString('protected ?string $__code = null;', $source);
+		$this->assertStringContainsString('$this->__code = $this->code;', $source);
 
 		exec(sprintf('%s -l %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($file)), $output, $status);
 		$this->assertSame(0, $status, "the generated class does not lint:\n" . implode("\n", $output));

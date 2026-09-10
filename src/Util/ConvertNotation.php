@@ -10,31 +10,6 @@ use Symfony\Component\String\ByteString;
  */
 abstract class ConvertNotation {
 
-	public static function prefixFromType(string $type): string {
-		switch ($type) {
-			case Type::OBJECT:
-			case Type::ARRAY:
-				return 'obj';
-
-			case Type::BOOLEAN:
-				return 'bln';
-
-			case Type::DATETIME:
-				return 'dtt';
-
-			case Type::FLOAT:
-				return 'flt';
-
-			case Type::INTEGER:
-				return 'int';
-
-			case Type::STRING:
-				return 'str';
-		}
-
-		return '';
-	}
-
 	public static function phpTypeFromType(string $type): string {
 		switch ($type) {
 			case Type::OBJECT:

@@ -66,18 +66,6 @@ class TestConvertNotation extends TestCase {
 		$this->assertEquals('Line 1234', ConvertNotation::wordsFromCamelCase('line1234'));
 	}
 
-	public function testPrefixFromType() {
-		$this->assertEquals('obj', ConvertNotation::prefixFromType(Type::OBJECT));
-		$this->assertEquals('obj', ConvertNotation::prefixFromType(Type::ARRAY));
-		$this->assertEquals('bln', ConvertNotation::prefixFromType(Type::BOOLEAN));
-		$this->assertEquals('dtt', ConvertNotation::prefixFromType(Type::DATETIME));
-		$this->assertEquals('flt', ConvertNotation::prefixFromType(Type::FLOAT));
-		$this->assertEquals('int', ConvertNotation::prefixFromType(Type::INTEGER));
-		$this->assertEquals('str', ConvertNotation::prefixFromType(Type::STRING));
-
-		$this->assertEquals('', ConvertNotation::prefixFromType('stdClass'));
-	}
-
 	public function testPhpTypeFromType() {
 		$this->assertEquals('object', ConvertNotation::phpTypeFromType(Type::OBJECT));
 		$this->assertEquals('array', ConvertNotation::phpTypeFromType(Type::ARRAY));

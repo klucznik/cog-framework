@@ -8,7 +8,6 @@ namespace <?= $codegen->namespaceData ?>;
 
 use Generated\Data\<?= $table->className ?>Gen;
 use Cog\Exceptions\CogException;
-use Cog\Exceptions\InvalidCastException;
 
 /**
  * The <?= $table->className ?> class defined here contains any
@@ -29,7 +28,7 @@ class <?= $table->className ?> extends <?= $table->className ?>Gen {
 	 * Allows pages to _p()/echo()/print() this object, and to define the default
 	 * way this object would be outputted.
 	 *
-	 * Can also be called directly via $obj<?= $table->className ?>->__toString().
+	 * Can also be called directly via $<?= lcfirst($table->className) ?>->__toString().
 	 *
 	 * @return string a nicely formatted string representation of this object
 	 */

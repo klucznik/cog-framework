@@ -51,7 +51,7 @@ if (count($table->primaryKeyColumnArray) > 1 && $blnImmediateExpansions) {
 				$longAlias = $childNode->extendedAlias();
 
 				if ($childNode->expandAsArray) {
-					$variableName = '_obj' . $propNameUppercase . 'Array';
+					$variableName = '_' . $childNode->propertyName . 'Array';
 
 					if ($previousItem->$variableName === null) {
 						$previousItem->$variableName = [];
@@ -76,9 +76,9 @@ if (count($table->primaryKeyColumnArray) > 1 && $blnImmediateExpansions) {
 					// Follow single node if keys match
 					$nodeType = $childNode->type;
 					if ($nodeType === 'reverse_reference' || $nodeType === 'association') {
-						$variableName = '_obj' . $propNameUppercase;
+						$variableName = '_' . $childNode->propertyName;
 					} else {
-						$variableName = 'obj' . $propNameUppercase;
+						$variableName = 'loaded' . $propNameUppercase;
 					}
 
 					if ($previousItem->$variableName === null) {
@@ -139,7 +139,7 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 
 		// Create a new instance of the <?= $table->className ?> object
 		$toReturn = new <?= $table->className ?>();
-		$toReturn->__blnRestored = true;
+		$toReturn->__restored = true;
 
 <?php foreach ($table->columnArray as $column) { ?>
 		$alias = $aliasPrefix . '<?= $column->name ?>';
@@ -167,7 +167,7 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 		$virtualPrefixLength = strlen($virtualPrefix);
 		foreach ($dbRow->getColumnNameArray() as $columnName => $value) {
 			if (str_starts_with($columnName, $virtualPrefix)) {
-				$toReturn->__strVirtualAttributeArray[substr($columnName, $virtualPrefixLength)] = $value;
+				$toReturn->__virtualAttributeArray[substr($columnName, $virtualPrefixLength)] = $value;
 			}
 		}
 
@@ -217,14 +217,14 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 		$aliasName = !empty($columnAliasArray[$alias]) ? $columnAliasArray[$alias] : $alias;
 		$expansionNode = (empty($expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']) ? null : $expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']);
 		$expanded = ($expansionNode && $expansionNode->expandAsArray);
-		if ($expanded && null === $toReturn->_obj<?= $reference->objectDescriptionUppercase ?>Array) {
-			$toReturn->_obj<?= $reference->objectDescriptionUppercase ?>Array = [];
+		if ($expanded && null === $toReturn->_<?= $reference->objectDescription ?>Array) {
+			$toReturn->_<?= $reference->objectDescription ?>Array = [];
 		}
 		if (null !== $dbRow->getColumn($aliasName)) {
 			if ($expanded) {
-				$toReturn->_obj<?= $reference->objectDescriptionUppercase ?>Array[] = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__<?= $reference->oppositeColumn ?>__', $expansionNode, null, $columnAliasArray);
-			} elseif (null === $toReturn->_obj<?= $reference->objectDescriptionUppercase ?>) {
-				$toReturn->_obj<?= $reference->objectDescriptionUppercase ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__<?= $reference->oppositeColumn ?>__', $expansionNode, null, $columnAliasArray);
+				$toReturn->_<?= $reference->objectDescription ?>Array[] = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__<?= $reference->oppositeColumn ?>__', $expansionNode, null, $columnAliasArray);
+			} elseif (null === $toReturn->_<?= $reference->objectDescription ?>) {
+				$toReturn->_<?= $reference->objectDescription ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__<?= $reference->oppositeColumn ?>__', $expansionNode, null, $columnAliasArray);
 			}
 		}
 
@@ -235,14 +235,14 @@ if ($blnImmediateExpansions || $blnExtendedExpansions) {
 		$aliasName = !empty($columnAliasArray[$alias]) ? $columnAliasArray[$alias] : $alias;
 		$expansionNode = (empty($expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']) ? null : $expansionAliasArray['<?= strtolower($reference->objectDescription) ?>']);
 		$expanded = ($expansionNode && $expansionNode->expandAsArray);
-		if ($expanded && null === $toReturn->_obj<?= $reference->objectDescriptionUppercase ?>Array) {
-			$toReturn->_obj<?= $reference->objectDescriptionUppercase ?>Array = [];
+		if ($expanded && null === $toReturn->_<?= $reference->objectDescription ?>Array) {
+			$toReturn->_<?= $reference->objectDescription ?>Array = [];
 		}
 		if (null !== $dbRow->getColumn($aliasName)) {
 			if ($expanded) {
-				$toReturn->_obj<?= $reference->objectDescriptionUppercase ?>Array[] = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
-			} elseif (null === $toReturn->_obj<?= $reference->objectDescriptionUppercase ?>) {
-				$toReturn->_obj<?= $reference->objectDescriptionUppercase ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
+				$toReturn->_<?= $reference->objectDescription ?>Array[] = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
+			} elseif (null === $toReturn->_<?= $reference->objectDescription ?>) {
+				$toReturn->_<?= $reference->objectDescription ?> = <?= $reference->variableType ?>::instantiateDbRow($dbRow, $aliasPrefix . '<?= strtolower($reference->objectDescription) ?>__', $expansionNode, null, $columnAliasArray);
 			}
 		}
 

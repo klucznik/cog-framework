@@ -34,13 +34,11 @@ use Cog\Query\QQGroupBy;
 use Cog\Query\QQAggregationClause;
 use Cog\Query\QQBaseNode;
 use Cog\Query\QQSelect;
-use Cog\Type;
 use Cog\Database\Database;
 use Cog\Database\Exceptions\UndefinedPrimaryKeyException;
 use Cog\Database\ResultBase;
 use Cog\Database\RowBase;
 use Cog\Exceptions\CogException;
-use Cog\Exceptions\InvalidCastException;
 use Cog\Util\Utils;
 use JsonException;
 use Generated\Node\QQNode<?= $table->className ?>;
@@ -64,15 +62,13 @@ use Generated\Node\QQNode<?= $table->className ?>;
  * @package <?= Cog\Codegen\CodeGenRunner::$applicationName ?>
 
  * @subpackage GeneratedDataObjects
-<?php include __DIR__ . '/property_comments.tpl.php'; ?>
-
  */
 class <?= $table->className ?>Gen extends Base implements IteratorAggregate {
 
-	<?php include __DIR__ . '/protected_member_variables.tpl.php'; ?>
+	<?php include __DIR__ . '/column_properties.tpl.php'; ?>
 
 
-	<?php include __DIR__ . '/protected_member_objects.tpl.php'; ?>
+	<?php include __DIR__ . '/reference_properties.tpl.php'; ?>
 
 
 	<?php include __DIR__ . '/object_construct.tpl.php'; ?>
@@ -113,21 +109,8 @@ class <?= $table->className ?>Gen extends Base implements IteratorAggregate {
 <?php foreach ($table->primaryKeyColumnArray as $column) { ?>
 		$this-><?= $column->variableName ?> = $<?= $column->propertyName ?>;
 <?php } ?>
-		$this->__blnRestored = true;
+		$this->__restored = true;
 	}
-
-
-	////////////////////
-	// PUBLIC OVERRIDERS
-	////////////////////
-
-	<?php include __DIR__ . '/property_get.tpl.php'; ?>
-
-
-	<?php include __DIR__ . '/property_set.tpl.php'; ?>
-
-
-	<?php include __DIR__ . '/property_isset.tpl.php'; ?>
 
 
 	/**
@@ -136,8 +119,8 @@ class <?= $table->className ?>Gen extends Base implements IteratorAggregate {
 	 * @return string|null
 	 */
 	public function getVirtualAttribute(string $name): ?string {
-		if (array_key_exists($name, $this->__strVirtualAttributeArray)) {
-			return $this->__strVirtualAttributeArray[$name];
+		if (array_key_exists($name, $this->__virtualAttributeArray)) {
+			return $this->__virtualAttributeArray[$name];
 		}
 		return null;
 	}
