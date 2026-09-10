@@ -12,7 +12,6 @@ use Cog\Exceptions\CogException;
 final class MockedBaseObject extends Base {
 
 	private $property;
-	public $overrideProperty;
 
 	/**
 	 * @param string $name Name of the property to get

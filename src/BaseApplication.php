@@ -58,7 +58,7 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
  * deliberately left out of this class - it lives on App\CogApplication,
  * which extends this class and overrides/implements those specific hooks.
  */
-abstract class BaseApplication extends Base {
+abstract class BaseApplication {
 
 	public const string FRAMEWORK_VERSION = '0.9.2';
 
