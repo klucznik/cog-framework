@@ -31,7 +31,8 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 
 	protected Cog\Database\Base $database;
 
-	protected int $databaseIndex;
+	// Null until the settings name a valid index; a bad one is reported, never replaced by a default
+	protected ?int $databaseIndex = null;
 
 	// Namespaces the generated subclasses live in. Templates read these rather
 	// than writing the namespace out, so an application is not tied to App\Data.
@@ -103,7 +104,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	}
 
 	public function getTitle(): string {
-		if (array_key_exists($this->databaseIndex, Database::$databases)) {
+		if ($this->databaseIndex !== null && array_key_exists($this->databaseIndex, Database::$databases)) {
 			$database = Database::$databases[$this->databaseIndex];
 			return sprintf('Database Index #%s (%s / %s / %s)', $this->databaseIndex, $database->adapter, $database->server, $database->database);
 		}
@@ -215,7 +216,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		parent::__construct($docroot, $templatePaths, $settingsXml);
 
 		// Set the databaseIndex
-		$this->databaseIndex = Utils::lookupSetting($settingsXml, null, 'index', Type::INTEGER) ?? 0;
+		$this->databaseIndex = Utils::lookupSetting($settingsXml, null, 'index', Type::INTEGER);
 
 		// Append Suffix/Prefixes
 		$this->classPrefix = Utils::lookupSetting($settingsXml, 'className', 'prefix');
@@ -258,7 +259,8 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 		$this->includeListArray = array_map('trim', explode(',', $includeList));
 
 		// Check to make sure things that are required are there
-		if (!$this->databaseIndex) {
+		// 0 is a valid index - it is the first connection Database hands out - so only a missing or unparseable one is an error
+		if ($this->databaseIndex === null) {
 			$this->errors .= "CodeGen Settings XML Fatal Error: databaseIndex was invalid or not set\r\n";
 		}
 

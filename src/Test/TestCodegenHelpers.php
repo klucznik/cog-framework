@@ -574,10 +574,32 @@ class TestCodegenHelpers extends TestCase {
 	// it has recorded an error.
 	//
 
+	/**
+	 * A missing or unparseable index is reported. It must not fall back to 0, the first
+	 * connection Database hands out, or a typo would generate against the wrong database.
+	 */
 	public function testMissingDatabaseIndexIsAnError() {
-		$codegen = new DatabaseCodeGen('/docroot', ['/codegen'], $this->settingsXml(['index' => '0']));
+		$missing = $this->settingsXml();
+		unset($missing['index']);
+		$codegen = new DatabaseCodeGen('/docroot', ['/codegen'], $missing);
+		$this->assertStringContainsString('databaseIndex was invalid or not set', $codegen->errors, 'no index attribute');
+		$this->assertNull($codegen->databaseIndex);
 
-		$this->assertStringContainsString('databaseIndex was invalid or not set', $codegen->errors);
+		foreach (['', 'abc', '1a'] as $index) {
+			$codegen = new DatabaseCodeGen('/docroot', ['/codegen'], $this->settingsXml(['index' => $index]));
+
+			$this->assertStringContainsString('databaseIndex was invalid or not set', $codegen->errors, sprintf('index="%s"', $index));
+			$this->assertNull($codegen->databaseIndex, sprintf('index="%s"', $index));
+			$this->assertSame('Database Index # (N/A)', $codegen->getTitle(), 'a misconfigured source still renders its title');
+		}
+	}
+
+	/** 0 is the first connection Database hands out, so it is as valid as any other index. */
+	public function testDatabaseIndexZeroIsValid() {
+		$codegen = $this->codegen(['index' => '0']);
+
+		$this->assertSame(0, $codegen->databaseIndex);
+		$this->assertStringNotContainsString('databaseIndex', $codegen->errors);
 	}
 
 	/**
