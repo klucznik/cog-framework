@@ -2,11 +2,13 @@
 
 namespace Cog\Util;
 
+use Countable;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use JsonException;
+use Stringable;
 
 /**
  * Other helpful functions
@@ -105,5 +107,26 @@ abstract class Utils {
 
 		$host = strtolower(preg_replace('/:\d+$/', '', $host)); // strip port, normalise case
 		return $host === $needle || str_ends_with($host, '.' . $needle);
+	}
+
+	public static function hasValue($value): bool {
+		if ($value === null) {
+			return false;
+		}
+
+		if (is_string($value)) {
+			return trim($value) !== '';
+		}
+
+		// Checked before Stringable, so an object that is both is judged by what it holds
+		if (is_array($value) || $value instanceof Countable) {
+			return count($value) > 0;
+		}
+
+		if ($value instanceof Stringable) {
+			return trim((string)$value) !== '';
+		}
+
+		return true; // 0, 0.0, false are values
 	}
 }

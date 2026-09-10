@@ -7,6 +7,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use JsonException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class TestUtil extends TestCase {
@@ -133,5 +134,46 @@ class TestUtil extends TestCase {
 		$this->expectException(JsonException::class);
 
 		Utils::encodeJsonColumn(NAN);
+	}
+
+	/**
+	 * Only null, an empty array or Countable, and a string or Stringable that is empty once
+	 * trimmed count as no value.
+	 * Everything else is a value, including the ones PHP treats as falsy - 0, 0.0, '0' and
+	 * false - which is the point of the helper over a plain truthiness check.
+	 */
+	public static function hasValueProvider(): array {
+		return [
+			'null' => [null, false],
+			'empty string' => ['', false],
+			'whitespace only' => [" \t\n\r\0\x0B", false],
+			'string' => ['a', true],
+			'padded string' => ['  a  ', true],
+			'string zero' => ['0', true],
+			'empty array' => [[], false],
+			'array' => [[1], true],
+			'array holding only null' => [[null], true],
+			'int zero' => [0, true],
+			'int' => [7, true],
+			'negative int' => [-1, true],
+			'float zero' => [0.0, true],
+			'false' => [false, true],
+			'true' => [true, true],
+			'object' => [new \stdClass(), true],
+			'empty countable' => [new \ArrayObject(), false],
+			'countable' => [new \ArrayObject([1]), true],
+			'empty stringable' => [new class implements \Stringable { public function __toString(): string { return ''; } }, false],
+			'whitespace stringable' => [new class implements \Stringable { public function __toString(): string { return "  \t"; } }, false],
+			'stringable' => [new class implements \Stringable { public function __toString(): string { return 'a'; } }, true],
+			'empty countable that is also stringable' => [new class implements \Countable, \Stringable {
+				public function count(): int { return 0; }
+				public function __toString(): string { return 'not empty'; }
+			}, false],
+		];
+	}
+
+	#[DataProvider('hasValueProvider')]
+	public function testHasValue(mixed $value, bool $expected) {
+		$this->assertSame($expected, Utils::hasValue($value));
 	}
 }
