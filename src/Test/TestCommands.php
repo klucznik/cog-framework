@@ -17,6 +17,7 @@ use Cog\Command\WhiteCharsCommand;
 use Cog\Console\CommandApplication;
 use Cog\BaseApplication;
 use Cog\BaseConfig;
+use Cog\Database\Database;
 use Cog\Util\FileSystem;
 use League\Container\Container;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -465,6 +466,28 @@ class TestCommands extends TestCase {
 	public function testPsyshCommandIsEnabledWhenPsyshIsInstalled() {
 		$this->assertTrue(class_exists(\Psy\Shell::class));
 		$this->assertTrue((new PsyshCommand())->isEnabled());
+	}
+
+	/** The shell starts with the application's live container, config and database connections in scope. */
+	public function testPsyshCommandScopeVariablesAreTheLiveApplicationState() {
+		$originalConfig = MockedApplication::config();
+		$originalContainer = BaseApplication::$container;
+		$config = new BaseConfig(dirCache: '/cog-psysh-scope-test');
+		$container = new Container();
+		MockedApplication::setConfig($config);
+		MockedApplication::setContainer($container);
+
+		try {
+			$scope = (new PsyshCommand())->scopeVariables();
+		} finally {
+			MockedApplication::setConfig($originalConfig);
+			MockedApplication::setContainer($originalContainer);
+		}
+
+		$this->assertSame(['container', 'config', 'databases'], array_keys($scope));
+		$this->assertSame($container, $scope['container']);
+		$this->assertSame($config, $scope['config']);
+		$this->assertSame(Database::$databases, $scope['databases']);
 	}
 
 	//

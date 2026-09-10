@@ -2,6 +2,8 @@
 
 namespace Cog\Command;
 
+use Cog\BaseApplication;
+use Cog\Database\Database;
 use Psy\Shell;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -28,11 +30,25 @@ final class PsyshCommand extends Command {
 		return class_exists(Shell::class);
 	}
 
+	/**
+	 * Variables predefined in the shell. The application is already initialized
+	 * by the runner's prepend.inc.php before any command executes, so these are
+	 * the live objects, not fresh ones.
+	 * @return array<string, mixed>
+	 */
+	public function scopeVariables(): array {
+		return [
+			'container' => BaseApplication::$container,
+			'config' => BaseApplication::config(),
+			'databases' => Database::$databases,
+		];
+	}
+
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		// Reset input & output if they are the default ones used. Indeed,
-		// We call Psysh Application here which will do the necessary bootstrapping.
-		// If we don't we would force the regular Symfony Application
-		// bootstrapping instead not allowing the Psysh one to kick in at all.
+		// Shell::run() always replaces the input with its own, and builds its own
+		// output (pager, shell formatting) only when given null. The default
+		// ArgvInput and ConsoleOutput are dropped so PsySH's take their place;
+		// anything else, such as a tester's buffered output, is passed through.
 		if ($input instanceof ArgvInput) {
 			$input = null;
 		}
@@ -41,6 +57,9 @@ final class PsyshCommand extends Command {
 			$output = null;
 		}
 
-		return (new Shell())->run($input, $output);
+		$shell = new Shell();
+		$shell->setScopeVariables($this->scopeVariables());
+
+		return $shell->run($input, $output);
 	}
 }
