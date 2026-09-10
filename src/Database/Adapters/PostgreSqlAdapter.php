@@ -75,12 +75,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 				return $this->lastResult === null ? 0 : pg_affected_rows($this->lastResult);
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -154,19 +149,13 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 
 		// QQLimitInfo hands over MySQL's "offset,count" (or a bare "count"),
 		// which has to be turned around for PostgreSQL's LIMIT ... OFFSET.
-		$parts = explode(',', $limitInfo);
-
-		foreach ($parts as $part) {
-			if (!is_numeric(trim($part))) {
-				throw new \Exception('Invalid LIMIT Info: ' . $limitInfo);
-			}
-		}
+		$parts = $this->limitInfoParts($limitInfo);
 
 		if (count($parts) === 2) {
-			return sprintf('LIMIT %s OFFSET %s', trim($parts[1]), trim($parts[0]));
+			return sprintf('LIMIT %s OFFSET %s', $parts[1], $parts[0]);
 		}
 
-		return sprintf('LIMIT %s', trim($parts[0]));
+		return sprintf('LIMIT %s', $parts[0]);
 	}
 
 	public function sqlSortByVariable(string $sortByInfo): ?string {
@@ -175,7 +164,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 		}
 
 		if (str_contains($sortByInfo, ';')) {
-			throw new \Exception('Invalid Semicolon in ORDER BY Info');
+			throw new CogException('Invalid Semicolon in ORDER BY Info');
 		}
 
 		return 'ORDER BY ' . $sortByInfo;

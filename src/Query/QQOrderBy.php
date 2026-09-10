@@ -37,15 +37,15 @@ class QQOrderBy extends QQClause {
 		foreach ($nodeArray as $node) {
 			if (($node instanceof QQNode || $node instanceof QQCondition) === false) {
 				if (!$previousIsNode) {
-					throw new CogException('orderBy clause parameters must all be QQNode or QQCondition objects followed by an optional true/false "Ascending Order" option', 3);
+					throw new CogException('orderBy clause parameters must all be QQNode or QQCondition objects followed by an optional true/false "Ascending Order" option');
 				}
 				$previousIsNode = false;
 			} else {
 				if ($node instanceof QQReverseReferenceNode) {
-					throw new InvalidCastException('Cannot order by a ReverseReferenceNode: ' . $node->name, 4);
+					throw new InvalidCastException('Cannot order by a ReverseReferenceNode: ' . $node->name);
 				}
 				if ($node instanceof QQNode && !$node->isColumnBased()) {
-					throw new InvalidCastException('Unable to cast "' . $node->getNodeName() . '" table to Column-based QQNode', 4);
+					throw new InvalidCastException('Unable to cast "' . $node->getNodeName() . '" table to Column-based QQNode');
 				}
 				$previousIsNode = true;
 			}
@@ -55,7 +55,7 @@ class QQOrderBy extends QQClause {
 			return $nodeArray;
 		}
 
-		throw new CogException('No parameters passed in to orderBy clause', 3);
+		throw new CogException('No parameters passed in to orderBy clause');
 	}
 
 	/** @inheritdoc */
@@ -73,7 +73,8 @@ class QQOrderBy extends QQClause {
 			}
 
 			// Check to see if they want a ASC/DESC declarator
-			if (($index + 1) < $length && !$this->nodeArray[$index + 1] instanceof QQNode) {
+			// A condition is a sort term of its own, so only a following item that is neither a node nor a condition is the ASC/DESC flag
+			if (($index + 1) < $length && !($this->nodeArray[$index + 1] instanceof QQNode || $this->nodeArray[$index + 1] instanceof QQCondition)) {
 				if (!$this->nodeArray[$index + 1] || strtoupper(trim($this->nodeArray[$index + 1])) === 'DESC') {
 					$orderByCommand .= ' DESC';
 				} else {

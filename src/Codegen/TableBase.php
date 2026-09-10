@@ -162,12 +162,7 @@ class TableBase extends Cog\Base {
 				}
 				return $count;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -179,28 +174,23 @@ class TableBase extends Cog\Base {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'name':
-					return $this->name = Type::cast($value, Type::STRING);
-				case 'className':
-					return $this->className = Type::cast($value, Type::STRING);
-				case 'classNamePlural':
-					return $this->classNamePlural = Type::cast($value, Type::STRING);
-				case 'columnArray':
-					return $this->columnArray = Type::cast($value, Type::ARRAY);
-				case 'indexArray':
-					return $this->indexArray = Type::cast($value, Type::ARRAY);
-				case 'reverseReferenceArray':
-					return $this->reverseReferenceArray = Type::cast($value, Type::ARRAY);
-				case 'manyToManyReferenceArray':
-					return $this->manyToManyReferenceArray = Type::cast($value, Type::ARRAY);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch ($name) {
+			case 'name':
+				return $this->name = Type::cast($value, Type::STRING);
+			case 'className':
+				return $this->className = Type::cast($value, Type::STRING);
+			case 'classNamePlural':
+				return $this->classNamePlural = Type::cast($value, Type::STRING);
+			case 'columnArray':
+				return $this->columnArray = Type::cast($value, Type::ARRAY);
+			case 'indexArray':
+				return $this->indexArray = Type::cast($value, Type::ARRAY);
+			case 'reverseReferenceArray':
+				return $this->reverseReferenceArray = Type::cast($value, Type::ARRAY);
+			case 'manyToManyReferenceArray':
+				return $this->manyToManyReferenceArray = Type::cast($value, Type::ARRAY);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

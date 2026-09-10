@@ -47,31 +47,16 @@ abstract class ResultBase extends Cog\Base {
 			case 'queryBuilder':
 				return $this->queryBuilder;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
 	public function __set($name, $value) {
 		switch ($name) {
 			case 'queryBuilder':
-				try {
-					return ($this->queryBuilder = Type::cast($value, QueryBuilder::class));
-				} catch (InvalidCastException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return ($this->queryBuilder = Type::cast($value, QueryBuilder::class));
 			default:
-				try {
-					return parent::__set($name, $value);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__set($name, $value);
 		}
 	}
 }

@@ -24,12 +24,7 @@
 			return [];
 		}
 
-		try {
-			return <?= $reverseReference->variableType ?>::loadArrayBy<?= $reverseReferenceColumn->propertyNameUppercase ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>, $optionalClauses);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		return <?= $reverseReference->variableType ?>::loadArrayBy<?= $reverseReferenceColumn->propertyNameUppercase ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>, $optionalClauses);
 	}
 
 	/**

@@ -19,13 +19,7 @@ class QQConditionIn extends QQConditionComparison {
 		} elseif ($valuesArray instanceof QQSubQueryNode) {
 			$this->operand = $valuesArray;
 		} else {
-			try {
-				$this->operand = Type::cast($valuesArray, Type::ARRAY);
-			} catch (Cog\Exceptions\CogException $exception) {
-				$exception->incrementOffset();
-				$exception->incrementOffset();
-				throw $exception;
-			}
+			$this->operand = Type::cast($valuesArray, Type::ARRAY);
 		}
 	}
 

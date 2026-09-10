@@ -245,12 +245,7 @@ class Column extends Base {
 				return $this->propertyName . 'Decoded';
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -263,54 +258,49 @@ class Column extends Base {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'ownerTable':
-					return $this->ownerTable = Type::cast($value, Cog\Codegen\TableBase::class);
-				case 'primaryKey':
-					return $this->primaryKey = Type::cast($value, Type::BOOLEAN);
-				case 'name':
-					return $this->name = Type::cast($value, Type::STRING);
-				case 'variableType':
-					return $this->variableType = Type::cast($value, Type::STRING);
-				case 'variableTypeAsConstant':
-					return $this->variableTypeAsConstant = Type::cast($value, Type::STRING);
-				case 'dbType':
-					return $this->dbType = Type::cast($value, Type::STRING);
-				case 'length':
-					return $this->length = Type::cast($value, Type::INTEGER);
-				case 'default':
-					if ($value === null || (($value === '0000-00-00 00:00:00' || $value === '0000-00-00') && !$this->notNull)) {
-						return $this->default = null;
-					}
-					if (is_int($value)) {
-						return $this->default = Type::cast($value, Type::INTEGER);
-					}
-					if (is_numeric($value)) {
-						return $this->default = Type::cast($value, Type::FLOAT);
-					}
-					return $this->default = Type::cast($value, Type::STRING);
+		switch ($name) {
+			case 'ownerTable':
+				return $this->ownerTable = Type::cast($value, Cog\Codegen\TableBase::class);
+			case 'primaryKey':
+				return $this->primaryKey = Type::cast($value, Type::BOOLEAN);
+			case 'name':
+				return $this->name = Type::cast($value, Type::STRING);
+			case 'variableType':
+				return $this->variableType = Type::cast($value, Type::STRING);
+			case 'variableTypeAsConstant':
+				return $this->variableTypeAsConstant = Type::cast($value, Type::STRING);
+			case 'dbType':
+				return $this->dbType = Type::cast($value, Type::STRING);
+			case 'length':
+				return $this->length = Type::cast($value, Type::INTEGER);
+			case 'default':
+				if ($value === null || (($value === '0000-00-00 00:00:00' || $value === '0000-00-00') && !$this->notNull)) {
+					return $this->default = null;
+				}
+				if (is_int($value)) {
+					return $this->default = Type::cast($value, Type::INTEGER);
+				}
+				if (is_numeric($value)) {
+					return $this->default = Type::cast($value, Type::FLOAT);
+				}
+				return $this->default = Type::cast($value, Type::STRING);
 
-				case 'notNull':
-					return $this->notNull = Type::cast($value, Type::BOOLEAN);
-				case 'identity':
-					return $this->identity = Type::cast($value, Type::BOOLEAN);
-				case 'indexed':
-					return $this->indexed = Type::cast($value, Type::BOOLEAN);
-				case 'unique':
-					return $this->unique = Type::cast($value, Type::BOOLEAN);
-				case 'timestamp':
-					return $this->timestamp = Type::cast($value, Type::BOOLEAN);
-				case 'reference':
-					return $this->reference = Type::cast($value, Cog\Codegen\Reference::class);
-				case 'comment':
-					return $this->comment = Type::cast($value, Type::STRING);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+			case 'notNull':
+				return $this->notNull = Type::cast($value, Type::BOOLEAN);
+			case 'identity':
+				return $this->identity = Type::cast($value, Type::BOOLEAN);
+			case 'indexed':
+				return $this->indexed = Type::cast($value, Type::BOOLEAN);
+			case 'unique':
+				return $this->unique = Type::cast($value, Type::BOOLEAN);
+			case 'timestamp':
+				return $this->timestamp = Type::cast($value, Type::BOOLEAN);
+			case 'reference':
+				return $this->reference = Type::cast($value, Cog\Codegen\Reference::class);
+			case 'comment':
+				return $this->comment = Type::cast($value, Type::STRING);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

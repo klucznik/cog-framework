@@ -4,6 +4,7 @@ namespace Cog\Database\Adapters;
 
 use Cog;
 use Cog\Database\FieldType;
+use Cog\Exceptions\CogException;
 use PgSql\Result as PgSqlResult;
 
 /**
@@ -157,7 +158,7 @@ class PostgreSqlField extends Cog\Database\FieldBase {
 				break;
 
 			default:
-				throw new \Exception('Unable to determine PostgreSql Field Type: ' . $udtName);
+				throw new CogException('Unable to determine PostgreSql Field Type: ' . $udtName);
 		}
 	}
 }

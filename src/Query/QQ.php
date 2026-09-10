@@ -104,42 +104,37 @@ class QQ {
 
 	// QQ Condition Shortcuts
 	public static function _(QQNode $queryNode, $symbol, $value, $valueTwo = null): QQCondition {
-		try {
-			switch (strtolower(trim($symbol))) {
-				case '=':
-					return self::equal($queryNode, $value);
-				case '!=':
-					return self::notEqual($queryNode, $value);
-				case '>':
-					return self::greaterThan($queryNode, $value);
-				case '<':
-					return self::lessThan($queryNode, $value);
-				case '>=':
-					return self::greaterOrEqual($queryNode, $value);
-				case '<=':
-					return self::lessOrEqual($queryNode, $value);
-				case 'in':
-					return self::in($queryNode, $value);
-				case 'not in':
-					return self::notIn($queryNode, $value);
-				case 'like':
-					return self::like($queryNode, $value);
-				case 'not like':
-					return self::notLike($queryNode, $value);
-				case 'is null':
-					return self::isNull($queryNode);
-				case 'is not null':
-					return self::isNotNull($queryNode);
-				case 'between':
-					return self::between($queryNode, $value, $valueTwo);
-				case 'not between':
-					return self::notBetween($queryNode, $value, $valueTwo);
-				default:
-					throw new \Cog\Exceptions\CogException('Unknown Query Comparison Operation: ' . $symbol, 0);
-			}
-		} catch (\Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch (strtolower(trim($symbol))) {
+			case '=':
+				return self::equal($queryNode, $value);
+			case '!=':
+				return self::notEqual($queryNode, $value);
+			case '>':
+				return self::greaterThan($queryNode, $value);
+			case '<':
+				return self::lessThan($queryNode, $value);
+			case '>=':
+				return self::greaterOrEqual($queryNode, $value);
+			case '<=':
+				return self::lessOrEqual($queryNode, $value);
+			case 'in':
+				return self::in($queryNode, $value);
+			case 'not in':
+				return self::notIn($queryNode, $value);
+			case 'like':
+				return self::like($queryNode, $value);
+			case 'not like':
+				return self::notLike($queryNode, $value);
+			case 'is null':
+				return self::isNull($queryNode);
+			case 'is not null':
+				return self::isNotNull($queryNode);
+			case 'between':
+				return self::between($queryNode, $value, $valueTwo);
+			case 'not between':
+				return self::notBetween($queryNode, $value, $valueTwo);
+			default:
+				throw new \Cog\Exceptions\CogException('Unknown Query Comparison Operation: ' . $symbol, 0);
 		}
 	}
 

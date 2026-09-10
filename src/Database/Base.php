@@ -162,12 +162,7 @@ abstract class Base extends Cog\Base {
 				return $this->onlyFullGroupBy;
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -388,6 +383,22 @@ abstract class Base extends Cog\Base {
 	 */
 	public function sqlEmptyList(): string {
 		return 'SELECT NULL WHERE 1=0';
+	}
+
+	/**
+	 * Splits QQLimitInfo's "count" or "offset,count" into its numbers, dropping surrounding spaces.
+	 * The adapters splice the result into the statement, so anything but one or two non-negative
+	 * integers is refused rather than filtered.
+	 * @param string $limitInfo
+	 * @return string[] one or two digit strings
+	 * @throws CogException
+	 */
+	protected function limitInfoParts(string $limitInfo): array {
+		if (!preg_match('/^\s*(\d+)\s*(?:,\s*(\d+)\s*)?$/D', $limitInfo, $matches)) {
+			throw new CogException('Invalid LIMIT Info: ' . $limitInfo);
+		}
+
+		return array_slice($matches, 1);
 	}
 
 	/**

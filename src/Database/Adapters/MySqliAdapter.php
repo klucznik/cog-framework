@@ -46,28 +46,22 @@ class MySqliAdapter extends Cog\Database\Base {
 	}
 
 	public function sqlLimitVariableSuffix($limitInfo): ?string {
-		// Setup limit suffix (if applicable) via a LIMIT clause
-		if ($limitInfo !== '' && $limitInfo !== null) {
-			if (str_contains($limitInfo, ';')) {
-				throw new \Exception('Invalid Semicolon in LIMIT Info');
-			}
-			if (str_contains($limitInfo, '`')) {
-				throw new \Exception('Invalid Backtick in LIMIT Info');
-			}
-			return 'LIMIT ' . $limitInfo;
+		if ($limitInfo === '' || $limitInfo === null) {
+			return null;
 		}
 
-		return null;
+		// MySQL takes QQLimitInfo's "offset,count" as it is, once the parts are known to be integers
+		return 'LIMIT ' . implode(',', $this->limitInfoParts((string)$limitInfo));
 	}
 
 	public function sqlSortByVariable(string $sortByInfo): ?string {
 		// Setup sorting information (if applicable) via a ORDER BY clause
 		if ($sortByInfo !== '') {
 			if (str_contains($sortByInfo, ';')) {
-				throw new \Exception('Invalid Semicolon in ORDER BY Info');
+				throw new CogException('Invalid Semicolon in ORDER BY Info');
 			}
 			if (str_contains($sortByInfo, '`')) {
-				throw new \Exception('Invalid Backtick in ORDER BY Info');
+				throw new CogException('Invalid Backtick in ORDER BY Info');
 			}
 
 			return 'ORDER BY ' . $sortByInfo;
@@ -131,12 +125,7 @@ class MySqliAdapter extends Cog\Database\Base {
 				return $this->mySqli->affected_rows;
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -271,7 +260,7 @@ class MySqliAdapter extends Cog\Database\Base {
 	/**
 	 * @param string $tableName
 	 * @return Index[]
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	public function getIndexesForTable(string $tableName): array {
 		// Figure out the Table Type (InnoDB, MyISAM, etc.) by parsing the Create Table description
@@ -286,14 +275,14 @@ class MySqliAdapter extends Cog\Database\Base {
 				return $this->parseForIndexes($createStatement);
 
 			default:
-				throw new \Exception('Table Type is not supported: '. $tableType);
+				throw new CogException('Table Type is not supported: '. $tableType);
 		}
 	}
 
 	/**
 	 * @param $tableName
 	 * @return ForeignKey[]
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	public function getForeignKeysForTable($tableName): array {
 		$foreignKeyArray = [];
@@ -313,7 +302,7 @@ class MySqliAdapter extends Cog\Database\Base {
 				break;
 
 			default:
-				throw new \Exception('Table Type is not supported: ' . $tableType);
+				throw new CogException('Table Type is not supported: ' . $tableType);
 		}
 
 		return $foreignKeyArray;
@@ -324,7 +313,7 @@ class MySqliAdapter extends Cog\Database\Base {
 	 * If the key name exists, this will parse it out and return it
 	 * @param string $keyDefinition
 	 * @return string|null
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	private function parseNameFromKeyDefinition(string $keyDefinition): ?string {
 		$keyDefinition = trim($keyDefinition);
@@ -332,7 +321,7 @@ class MySqliAdapter extends Cog\Database\Base {
 		$position = strpos($keyDefinition, '(');
 
 		if ($position === false) {
-			throw new \Exception('Invalid Key Definition: ' . $keyDefinition);
+			throw new CogException('Invalid Key Definition: ' . $keyDefinition);
 		}
 
 		if ($position === 0) {
@@ -360,7 +349,7 @@ class MySqliAdapter extends Cog\Database\Base {
 	 * This will return an array of strings that are the names [COL], etc.
 	 * @param string $keyDefinition
 	 * @return array
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	private function parseColumnNameArrayFromKeyDefinition(string $keyDefinition): array {
 		$keyDefinition = trim($keyDefinition);
@@ -368,13 +357,13 @@ class MySqliAdapter extends Cog\Database\Base {
 		// Get rid of the opening "(" and the closing ")"
 		$position = strpos($keyDefinition, '(');
 		if ($position === false) {
-			throw new \Exception('Invalid Key Definition: ' . $keyDefinition);
+			throw new CogException('Invalid Key Definition: ' . $keyDefinition);
 		}
 		$keyDefinition = trim(substr($keyDefinition, $position + 1));
 
 		$position = strpos($keyDefinition, ')');
 		if ($position === false) {
-			throw new \Exception('Invalid Key Definition: ' . $keyDefinition);
+			throw new CogException('Invalid Key Definition: ' . $keyDefinition);
 		}
 		$keyDefinition = trim(substr($keyDefinition, 0, $position));
 
@@ -399,7 +388,7 @@ class MySqliAdapter extends Cog\Database\Base {
 	/**
 	 * @param string $createStatement
 	 * @return Index[]
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	private function parseForIndexes(string $createStatement): array {
 		$indexArray = [];
@@ -467,7 +456,7 @@ class MySqliAdapter extends Cog\Database\Base {
 	/**
 	 * @param string $createStatement
 	 * @return ForeignKey[]
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	private function parseForInnoDbForeignKeys(string $createStatement): array {
 		// MySql nicely splits each object in a table into its own line
@@ -519,7 +508,7 @@ class MySqliAdapter extends Cog\Database\Base {
 				// Ensure the FK object has matching column numbers (or else, throw)
 
 				if (count($foreignKey->columnNameArray) === 0 || count($foreignKey->columnNameArray) !== count($foreignKey->referenceColumnNameArray)) {
-					throw new \Exception('Invalid Foreign Key definition: ' . $line);
+					throw new CogException('Invalid Foreign Key definition: ' . $line);
 				}
 			}
 		}
@@ -548,7 +537,7 @@ class MySqliAdapter extends Cog\Database\Base {
 				return trim(substr($finalLine, 9));
 
 			default:
-				throw new \Exception('Invalid Table Description');
+				throw new CogException('Invalid Table Description');
 		}
 	}
 

@@ -7,7 +7,6 @@ use Cog\Exceptions\CogException;
 use Cog\Type;
 use Cog\Util\ConvertNotation;
 use Cog\Util\StringUtils;
-use Exception;
 
 /**
  * This is the class holds helper functions for the DatabaseCodeGen
@@ -330,7 +329,7 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 	/**
 	 * @param string $dbType
 	 * @return string
-	 * @throws Exception
+	 * @throws CogException
 	 */
 	public function variableTypeFromDbType(string $dbType): string {
 		return match ($dbType) {
@@ -340,7 +339,7 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 			FieldType::DATE, FieldType::TIME, FieldType::DATETIME, FieldType::TIMESTAMP => Type::DATETIME,
 			FieldType::FLOAT => Type::FLOAT,
 			FieldType::INTEGER => Type::INTEGER,
-			default => throw new Exception('Invalid Db Type to Convert:' . $dbType),
+			default => throw new CogException('Invalid Db Type to Convert:' . $dbType),
 		};
 	}
 }

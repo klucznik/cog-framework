@@ -60,12 +60,7 @@
 
 		// Apply any conditions
 		if ($conditions) {
-			try {
-				$conditions->updateQueryBuilder($queryBuilder);
-			} catch (CogException $exception) {
-				$exception->incrementOffset();
-				throw $exception;
-			}
+			$conditions->updateQueryBuilder($queryBuilder);
 		}
 
 		// Iterate through all the Optional Clauses (if any) and perform accordingly
@@ -113,12 +108,7 @@
 	 */
 	public static function querySingle(QQCondition $conditions, QQClause|array|null $optionalClauses = null, ?array $parameterArray = null): ?<?= $table->className ?> {
 		// Get the Query Statement
-		try {
-			$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray);
 
 		// Perform the Query, Get the First Row, and Instantiate a new <?= $table->className ?> object
 		$result = $queryBuilder->database->query($query);
@@ -164,12 +154,7 @@
 	 */
 	public static function queryArray(QQCondition $conditions, QQClause|array|null $optionalClauses = null, ?array $parameterArray = null): array {
 		// Get the Query Statement
-		try {
-			$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray);
 
 		// Perform the Query and Instantiate the Array Result
 		$result = $queryBuilder->database->query($query);
@@ -187,12 +172,7 @@
 	 */
 	public static function queryCursor(QQCondition $conditions, QQClause|array|null $optionalClauses = null, ?array $parameterArray = null): ResultBase {
 		// Get the query statement
-		try {
-			$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray);
 
 		// Perform the query
 		$result = $queryBuilder->database->query($query);
@@ -216,12 +196,7 @@
 		$optionalClauses = QQ::clausesForCount($optionalClauses);
 
 		// Get the Query Statement
-		try {
-			$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray, true);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$query = <?= $table->className ?>::buildQueryStatement($queryBuilder, $conditions, $optionalClauses, $parameterArray, true);
 
 		// Perform the Query and return the row_count
 		$result = $queryBuilder->database->query($query);

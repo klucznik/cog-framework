@@ -344,6 +344,17 @@ class TestQuery extends QueryTestCase {
 		$this->assertEquals('manual.pdf', $assets[0]->filename);
 	}
 
+	/** A condition after a node is a sort term of its own, not the node's ASC/DESC flag. */
+	public function testOrderByConditionAfterANode() {
+		$people = Person::queryArray(QQ::all(), QQ::orderBy($this->person()->name, QQ::equal($this->person()->emailVerified, true)));
+
+		$this->assertQueryContains('ORDER BY `t0`.`name`, `t0`.`email_verified` != 0');
+		$this->assertCount(3, $people);
+
+		Person::queryArray(QQ::all(), QQ::orderBy($this->person()->name, QQ::equal($this->person()->emailVerified, true), false));
+		$this->assertQueryContains('ORDER BY `t0`.`name`, `t0`.`email_verified` != 0 DESC', 'a flag after the condition applies to the condition');
+	}
+
 	public function testLimitInfo() {
 		$people = Person::queryArray(QQ::all(), [QQ::orderBy($this->person()->id), QQ::limitInfo(2)]);
 
@@ -358,6 +369,14 @@ class TestQuery extends QueryTestCase {
 		$this->assertQueryContains('LIMIT 1,2');
 		$this->assertCount(2, $people);
 		$this->assertEquals('Maria Nowak', $people[0]->name);
+	}
+
+	/** A limit of 0 is a limit: no rows, rather than the LIMIT being dropped and every row coming back. */
+	public function testLimitInfoOfZero() {
+		$people = Person::queryArray(QQ::all(), [QQ::orderBy($this->person()->id), QQ::limitInfo(0)]);
+
+		$this->assertQueryContains('LIMIT 0');
+		$this->assertCount(0, $people);
 	}
 
 	public function testDistinct() {

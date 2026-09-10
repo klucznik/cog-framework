@@ -29,12 +29,7 @@ class Table extends TableBase {
 			case 'ownerDbIndex':
 				return $this->ownerDbIndex;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -46,16 +41,11 @@ class Table extends TableBase {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'ownerDbIndex':
-					return $this->ownerDbIndex = Type::cast($value, Type::INTEGER);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch ($name) {
+			case 'ownerDbIndex':
+				return $this->ownerDbIndex = Type::cast($value, Type::INTEGER);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

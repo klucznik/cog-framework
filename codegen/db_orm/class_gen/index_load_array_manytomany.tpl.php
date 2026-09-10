@@ -20,16 +20,11 @@
 		$optionalClauses = Utils::extendArray(<?= $table->className ?>::getDefaultOptionalClauses(), $optionalClauses);
 
 		// Call <?= $table->className ?>::queryArray to perform the loadArrayBy<?= $manyToManyReference->objectDescriptionUppercase ?> query
-		try {
-			return <?= $table->className ?>::queryArray(
-				QQ::equal((new QQNode<?= $table->className ?>)-><?= $manyToManyReference->objectDescription ?>-><?= $manyToManyReference->oppositePropertyName ?>, $<?= $manyToManyReference->oppositePropertyName ?>),
-				$optionalClauses,
-				$parameterArray
-			);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		return <?= $table->className ?>::queryArray(
+			QQ::equal((new QQNode<?= $table->className ?>)-><?= $manyToManyReference->objectDescription ?>-><?= $manyToManyReference->oppositePropertyName ?>, $<?= $manyToManyReference->oppositePropertyName ?>),
+			$optionalClauses,
+			$parameterArray
+		);
 	}
 
 	/**

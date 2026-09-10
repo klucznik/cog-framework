@@ -11,6 +11,7 @@ use Cog\Exceptions\UndefinedPropertyException;
 use Cog\Query\QQNamedValue;
 use DateTime;
 use DateTimeImmutable;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class TestDatabase extends TestCase {
@@ -460,6 +461,38 @@ class TestDatabase extends TestCase {
 		$this->assertEquals('LIMIT 1,2', $this->database->sqlLimitVariableSuffix('1,2'));
 		$this->assertEquals('ORDER BY id ASC', $this->database->sqlSortByVariable('id ASC'));
 		$this->assertNull($this->database->sqlSortByVariable(''));
+	}
+
+	/** Surrounding spaces are dropped, and 0 is a valid count. */
+	public function testSqlLimitVariableSuffixNormalises() {
+		$this->assertSame('LIMIT 0', $this->database->sqlLimitVariableSuffix('0'));
+		$this->assertSame('LIMIT 1', $this->database->sqlLimitVariableSuffix(' 1 '));
+		$this->assertSame('LIMIT 10,20', $this->database->sqlLimitVariableSuffix(' 10 , 20 '));
+		$this->assertNull($this->database->sqlLimitVariableSuffix(''));
+	}
+
+	public static function invalidLimitInfoProvider(): array {
+		return [
+			'second statement' => ['1; DROP TABLE person'],
+			'into outfile' => ["1 INTO OUTFILE '/tmp/cog'"],
+			'trailing comment' => ['1 -- '],
+			'locking clause' => ['1 FOR UPDATE'],
+			'negative' => ['-1'],
+			'fraction' => ['1.5'],
+			'exponent' => ['1e3'],
+			'three parts' => ['1,2,3'],
+			'empty part' => ['1,'],
+			'not a number' => ['abc'],
+		];
+	}
+
+	/** The limit is spliced into the statement, so anything but one or two non-negative integers is refused. */
+	#[DataProvider('invalidLimitInfoProvider')]
+	public function testSqlLimitVariableSuffixRejects(string $limitInfo) {
+		$this->expectException(\Exception::class);
+		$this->expectExceptionMessage('Invalid LIMIT Info');
+
+		$this->database->sqlLimitVariableSuffix($limitInfo);
 	}
 
 	/** Escaping goes through the driver, so it follows the connection charset. */

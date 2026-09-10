@@ -2,6 +2,7 @@
 
 namespace Cog\Test;
 
+use Composer\Autoload\ClassLoader;
 use Cog\Codegen\CodeGenRunner;
 use Cog\Database\Database;
 use Throwable;
@@ -120,8 +121,22 @@ abstract class CodegenFixture {
 	 * generated` mapping. Without that the suite loads whatever was last written
 	 * to the repository's generated/ directory and never sees what the bootstrap
 	 * just generated, which makes every assertion about generated code vacuous.
+	 *
+	 * Prepending alone is not enough: this loader returns without loading when the
+	 * build directory lacks a class, and composer would then serve the stale copy.
+	 * So composer's own mapping for these namespaces is pointed at the build too.
+	 * The loader below stays in front because composer remembers a class it failed
+	 * to find, and a subclass can be asked for before generation has written it.
 	 */
 	public static function registerAutoloader(): void {
+		foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+			foreach (['Generated\\' => 'generated', 'App\\' => 'app'] as $prefix => $subPath) {
+				if (array_key_exists($prefix, $loader->getPrefixesPsr4())) {
+					$loader->setPsr4($prefix, [self::getBuildPath($subPath)]);
+				}
+			}
+		}
+
 		spl_autoload_register(static function (string $class): void {
 			$prefixes = [
 				'Generated\\' => self::getBuildPath('generated'),

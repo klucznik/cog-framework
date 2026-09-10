@@ -56,12 +56,7 @@
 			throw new CogException('loadAll must be called with an array of optional clauses as a single argument');
 		}
 		// Call <?= $table->className ?>::queryArray to perform the loadAll query
-		try {
-			return <?= $table->className ?>::queryArray(QQ::all(), $optionalClauses);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		return <?= $table->className ?>::queryArray(QQ::all(), $optionalClauses);
 	}
 
 	/**

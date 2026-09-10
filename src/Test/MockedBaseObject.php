@@ -24,12 +24,7 @@ final class MockedBaseObject extends Base {
 				return $this->property;
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -54,20 +49,10 @@ final class MockedBaseObject extends Base {
 	public function __set($name, $value) {
 		switch ($name) {
 			case 'MagicProperty':
-				try {
-					return $this->property = $value;
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return $this->property = $value;
 
 			default:
-				try {
-					return parent::__set($name, $value);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__set($name, $value);
 		}
 	}
 }

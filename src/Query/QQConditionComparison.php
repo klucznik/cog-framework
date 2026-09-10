@@ -12,22 +12,22 @@ abstract class QQConditionComparison extends QQCondition {
 	public function __construct(QQNode $queryNode, $operand) {
 		$this->queryNode = $queryNode;
 		if (!$queryNode->isColumnBased()) {
-			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode', 3);
+			throw new InvalidCastException('Unable to cast "' . $queryNode->getNodeName() . '" table to Column-based QQNode');
 		}
 
 		if ($operand instanceof QQNamedValue) {
 			$this->operand = $operand;
 		} elseif ($operand instanceof QQAssociationNode) {
-			throw new InvalidCastException('Comparison operand cannot be an Association-based QQNode', 3);
+			throw new InvalidCastException('Comparison operand cannot be an Association-based QQNode');
 		} elseif ($operand instanceof QQCondition) {
-			throw new InvalidCastException('Comparison operand cannot be a QQCondition', 3);
+			throw new InvalidCastException('Comparison operand cannot be a QQCondition');
 		} elseif ($operand instanceof QQClause) {
-			throw new InvalidCastException('Comparison operand cannot be a QQClause', 3);
+			throw new InvalidCastException('Comparison operand cannot be a QQClause');
 		} elseif (!($operand instanceof QQNode)) {
 			$this->operand = $operand;
 		} else {
 			if (!$operand->isColumnBased()) {
-				throw new InvalidCastException('Unable to cast "' . $operand->getNodeName() . '" table to Column-based QQNode', 3);
+				throw new InvalidCastException('Unable to cast "' . $operand->getNodeName() . '" table to Column-based QQNode');
 			}
 			$this->operand = $operand;
 		}

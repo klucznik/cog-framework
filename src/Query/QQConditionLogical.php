@@ -54,12 +54,7 @@ abstract class QQConditionLogical extends QQCondition {
 					throw new Cog\Exceptions\CogException($this->operator . ' clause has elements that are not Conditions');
 				}
 
-				try {
-					$this->conditionArray[$i]->updateQueryBuilder($queryBuilder);
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				$this->conditionArray[$i]->updateQueryBuilder($queryBuilder);
 
 				if (($i + 1) !== $length) {
 					$queryBuilder->addWhereItem($this->operator);

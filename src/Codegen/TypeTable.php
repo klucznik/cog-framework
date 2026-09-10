@@ -61,12 +61,7 @@ class TypeTable extends TableBase {
 			case 'extraFieldNamesArray':
 				return $this->extraFieldNamesArray;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -80,22 +75,17 @@ class TypeTable extends TableBase {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'nameArray':
-					return $this->nameArray = Type::cast($value, Type::ARRAY);
-				case 'tokenArray':
-					return $this->tokenArray = Type::cast($value, Type::ARRAY);
-				case 'extraPropertyArray':
-					return $this->extraPropertyArray = Type::cast($value, Type::ARRAY);
-				case 'extraFieldNamesArray':
-					return $this->extraFieldNamesArray = Type::cast($value, Type::ARRAY);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch ($name) {
+			case 'nameArray':
+				return $this->nameArray = Type::cast($value, Type::ARRAY);
+			case 'tokenArray':
+				return $this->tokenArray = Type::cast($value, Type::ARRAY);
+			case 'extraPropertyArray':
+				return $this->extraPropertyArray = Type::cast($value, Type::ARRAY);
+			case 'extraFieldNamesArray':
+				return $this->extraFieldNamesArray = Type::cast($value, Type::ARRAY);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

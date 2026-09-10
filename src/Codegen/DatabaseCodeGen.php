@@ -90,12 +90,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	 * @throws CogException
 	 */
 	public function getColumn(string $tableName, string $columnName): Column {
-		try {
-			$table = $this->getTable($tableName);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$table = $this->getTable($tableName);
 		$columnName = strtolower($columnName);
 		if (array_key_exists($columnName, $table->columnArray)) {
 			return $table->columnArray[$columnName];
@@ -182,7 +177,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	/**
 	 * @param DatabaseCodeGen[] $codeGenArray
 	 * @return string[]
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	public static function generateAggregateHelper(array $codeGenArray): array {
 		$toReturn = [];
@@ -456,7 +451,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	/**
 	 * @param Table $table
 	 * @return bool
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	public function generateTable(Table $table): bool {
 		return $this->generateFiles('db_orm', [
@@ -469,7 +464,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 	/**
 	 * @param TypeTable $typeTable
 	 * @return bool
-	 * @throws \Exception
+	 * @throws CogException
 	 */
 	public function generateTypeTable(TypeTable $typeTable): bool {
 		return $this->generateFiles('db_type', [
@@ -559,7 +554,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 			) {
 				$oppositeColumn = clone $this->getTable($manyToManyReference->associatedTable)->primaryKeyColumnArray[0];
 			} else {
-				throw new \Exception(sprintf("AssociationTable %s has foreign keys that cannot be resolved.\n", $tableName));
+				throw new CogException(sprintf("AssociationTable %s has foreign keys that cannot be resolved.\n", $tableName));
 			}
 
 			$oppositeColumn->name = $manyToManyReference->oppositeColumn;
@@ -1094,12 +1089,7 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 			case 'namespaceType':
 				return $this->namespaceType;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

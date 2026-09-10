@@ -117,75 +117,74 @@ foreach ($table->primaryKeyColumnArray as $objPkColumn) {
 
 		$mixToReturn = null;
 
-		try {
-			if (!$this->__restored || (<?= $codegen->implodeObjectArray(' && ', '$', ' != null', 'propertyName', $table->primaryKeyColumnArray); ?>)) {
-				// Perform an INSERT query
+		if (!$this->__restored || (<?= $codegen->implodeObjectArray(' && ', '$', ' != null', 'propertyName', $table->primaryKeyColumnArray); ?>)) {
+			// Perform an INSERT query
 
-				if (<?= $codegen->implodeObjectArray(' && ', '$', ' == null', 'propertyName', $table->primaryKeyColumnArray); ?>) {
-					$database->nonQuery('
-						INSERT INTO <?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?><?= $strCols ?><?= $strValues ?>
-					');
-				} else {
-					$database->nonQuery('
-						INSERT INTO <?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?><?= $strIdentityCols ?><?= $strIdentityValues ?>
-					');
-				}
+			if (<?= $codegen->implodeObjectArray(' && ', '$', ' == null', 'propertyName', $table->primaryKeyColumnArray); ?>) {
+				$database->nonQuery('
+					INSERT INTO <?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?><?= $strCols ?><?= $strValues ?>
+				');
+			} else {
+				$database->nonQuery('
+					INSERT INTO <?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?><?= $strIdentityCols ?><?= $strIdentityValues ?>
+				');
+			}
 
 <?php
 foreach ($table->primaryKeyColumnArray as $column) {
 	if ($column->identity) {
 		print sprintf('		   		// Update Identity column and return its value
-				$mixToReturn = $this->%s = $database->insertId(\'%s\', \'%s\');',
+			$mixToReturn = $this->%s = $database->insertId(\'%s\', \'%s\');',
 			$column->propertyName, $table->name, $column->name);
 	}
 }
 ?>
 
-			} else {
-				// Perform an UPDATE query
+		} else {
+			// Perform an UPDATE query
 
-				// First checking for Optimistic Locking constraints (if applicable)
+			// First checking for Optimistic Locking constraints (if applicable)
 <?php foreach ($table->columnArray as $column) { ?>
 <?php if ($column->timestamp) { ?>
-				if (!$forceUpdate) {
-					// Perform the Optimistic Locking check
-					$result = $database->query('
-						SELECT
-							<?= $escapeIdentifierBegin ?><?= $column->name ?><?= $escapeIdentifierEnd ?>
+			if (!$forceUpdate) {
+				// Perform the Optimistic Locking check
+				$result = $database->query('
+					SELECT
+						<?= $escapeIdentifierBegin ?><?= $column->name ?><?= $escapeIdentifierEnd ?>
 
-						FROM
-							<?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?>
-
-						WHERE
-<?= $strIds ?>
-
-					');
-
-					$objRow = $result->fetchArray();
-					if (($objRow[0] ?? null) != $this-><?= $column->propertyName ?>?->format('Y-m-d H:i:s')) {
-						throw new OptimisticLockingException('<?= $table->className ?>');
-					}
-				}
-<?php } ?>
-<?php } ?>
-
-				// Perform the UPDATE query
-<?php if ($strColUpdates) { ?>
-				$database->nonQuery('
-					UPDATE
+					FROM
 						<?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?>
-
-					SET
-<?= $strColUpdates ?>
 
 					WHERE
 <?= $strIds ?>
 
 				');
-<?php } else { ?>
-				// Nothing to update
-<?php }?>
+
+				$objRow = $result->fetchArray();
+				if (($objRow[0] ?? null) != $this-><?= $column->propertyName ?>?->format('Y-m-d H:i:s')) {
+					throw new OptimisticLockingException('<?= $table->className ?>');
+				}
 			}
+<?php } ?>
+<?php } ?>
+
+			// Perform the UPDATE query
+<?php if ($strColUpdates) { ?>
+			$database->nonQuery('
+				UPDATE
+					<?= $escapeIdentifierBegin ?><?= $table->name ?><?= $escapeIdentifierEnd ?>
+
+				SET
+<?= $strColUpdates ?>
+
+				WHERE
+<?= $strIds ?>
+
+			');
+<?php } else { ?>
+			// Nothing to update
+<?php }?>
+		}
 
 <?php foreach ($table->reverseReferenceArray as $reverseReference) { ?>
 <?php if ($reverseReference->unique) { ?>
@@ -193,30 +192,26 @@ foreach ($table->primaryKeyColumnArray as $column) {
 <?php $reverseReferenceColumn = $reverseReferenceTable->columnArray[strtolower($reverseReference->column)]; ?>
 
 
-			// Update the adjoined <?= $reverseReference->objectDescription ?> object (if applicable)
-			// TODO: Make this into hard-coded SQL queries
-			if ($this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty) {
-				// Unassociate the old one (if applicable)
-				if ($associated = <?= $reverseReference->variableType ?>::LoadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>)) {
-					$associated-><?= $reverseReferenceColumn->propertyName ?> = null;
-					$associated->save();
-				}
-
-				// Associate the new one (if applicable)
-				if ($this-><?= $reverseReference->loadedMember ?>) {
-					$this-><?= $reverseReference->loadedMember ?>-><?= $reverseReferenceColumn->propertyName ?> = $this-><?= $table->primaryKeyColumnArray[0]->propertyName ?>;
-					$this-><?= $reverseReference->loadedMember ?>->save();
-				}
-
-				// Reset the "Dirty" flag
-				$this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty = false;
+		// Update the adjoined <?= $reverseReference->objectDescription ?> object (if applicable)
+		// TODO: Make this into hard-coded SQL queries
+		if ($this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty) {
+			// Unassociate the old one (if applicable)
+			if ($associated = <?= $reverseReference->variableType ?>::LoadBy<?= $reverseReferenceColumn->propertyName ?>(<?= $codegen->implodeObjectArray(', ', '$this->', '', 'propertyName', $table->primaryKeyColumnArray) ?>)) {
+				$associated-><?= $reverseReferenceColumn->propertyName ?> = null;
+				$associated->save();
 			}
-<?php } ?>
-<?php } ?>
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+
+			// Associate the new one (if applicable)
+			if ($this-><?= $reverseReference->loadedMember ?>) {
+				$this-><?= $reverseReference->loadedMember ?>-><?= $reverseReferenceColumn->propertyName ?> = $this-><?= $table->primaryKeyColumnArray[0]->propertyName ?>;
+				$this-><?= $reverseReference->loadedMember ?>->save();
+			}
+
+			// Reset the "Dirty" flag
+			$this-><?= lcfirst($reverseReference->objectPropertyName) ?>Dirty = false;
 		}
+<?php } ?>
+<?php } ?>
 
 		// Update __restored and any Non-Identity PK Columns (if applicable)
 		$this->__restored = true;

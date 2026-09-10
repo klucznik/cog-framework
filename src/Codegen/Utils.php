@@ -6,7 +6,6 @@ use Cog\Exceptions\CogException;
 use Cog\Type;
 use Cog\Util\StringUtils;
 use Cog\Util\Template;
-use Exception;
 use SimpleXMLElement;
 use Symfony\Component\String\Inflector\EnglishInflector;
 use Symfony\Component\String\Inflector\InflectorInterface;
@@ -164,12 +163,12 @@ abstract class Utils {
 
 	/**
 	 * @param string $filePath
-	 * @throws Exception
+	 * @throws CogException
 	 */
 	public static function setGeneratedFilePermissions(string $filePath): void {
 		$chmodResult = chmod($filePath, 0666);
 		if ($chmodResult === false) {
-			throw new Exception('Unable to chmod ' . $filePath);
+			throw new CogException('Unable to chmod ' . $filePath);
 		}
 	}
 

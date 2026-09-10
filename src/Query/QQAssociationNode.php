@@ -29,7 +29,7 @@ class QQAssociationNode extends QQBaseNode {
 	 * the rule rather than carrying an unreachable copy of QQNode's implementation.
 	 */
 	public function getColumnAlias(QueryBuilder $queryBuilder, bool $expandSelection = false, ?QQCondition $joinCondition = null, ?QQSelect $select = null): ?string {
-		throw new InvalidCastException('Unable to cast "' . $this->name . '" association to a Column-based QQNode', 3);
+		throw new InvalidCastException('Unable to cast "' . $this->name . '" association to a Column-based QQNode');
 	}
 
 	public function getColumnAliasHelper(QueryBuilder $queryBuilder, bool $expandSelection, ?QQSelect $select = null): string {

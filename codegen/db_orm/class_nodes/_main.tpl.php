@@ -97,12 +97,7 @@ class QQNode<?= $table->className ?> extends QQNode {
 	print $objPkColumn->reference->variableType;
 } ?>('<?= $objPkColumn->name ?>', '<?= $objPkColumn->propertyName ?>', '<?= $objPkColumn->dbType ?>', $this);
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

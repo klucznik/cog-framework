@@ -106,12 +106,7 @@ abstract class QQBaseNode extends Cog\Base {
 				return $this->childNodeArray;
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -123,28 +118,13 @@ abstract class QQBaseNode extends Cog\Base {
 				 * @param string $value
 				 * @return string
 				 */
-				try {
-					return ($this->alias = Type::cast($value, Type::STRING));
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return ($this->alias = Type::cast($value, Type::STRING));
 
 			case 'expandAsArray':
-				try {
-					return ($this->expandAsArray = Type::cast($value, Type::BOOLEAN));
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return ($this->expandAsArray = Type::cast($value, Type::BOOLEAN));
 
 			default:
-				try {
-					return parent::__set($name, $value);
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__set($name, $value);
 		}
 	}
 

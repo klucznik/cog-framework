@@ -3,6 +3,7 @@
 namespace Cog\Test;
 
 use Cog\Exceptions\CogException;
+use Composer\Autoload\ClassLoader;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;
@@ -115,6 +116,22 @@ class TestCodegen extends TestCase {
 			$this->assertTrue(class_exists('Generated\Node\QQNode' . $className), 'QQNode' . $className . ' does not load');
 			$this->assertTrue(class_exists('App\Data\\' . $className), $className . ' subclass does not load');
 		}
+	}
+
+	/**
+	 * composer.json maps Generated\ onto the repository's generated/ directory, which holds whatever
+	 * was last generated there. Every loader that knows the namespace has to resolve it into the build
+	 * directory instead, or a template that stops emitting a class still passes wherever a stale
+	 * generated/ is lying around.
+	 */
+	public function testGeneratedNamespaceResolvesOnlyIntoTheBuildDirectory() {
+		$paths = [];
+		foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+			$paths = array_merge($paths, $loader->getPrefixesPsr4()['Generated\\'] ?? []);
+		}
+
+		$this->assertSame([CodegenFixture::getBuildPath('generated')], array_values(array_unique($paths)));
+		$this->assertFalse(class_exists('Generated\Data\NoSuchTableGen'), 'a class the generator did not write must not load');
 	}
 
 	/**

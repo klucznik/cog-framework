@@ -14,12 +14,7 @@ class QQExpandVirtualNode extends QQClause {
 
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
-		try {
-			$queryBuilder->addSelectFunction(null, $this->node->getColumnAlias($queryBuilder), $this->node->getAttributeName());
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$queryBuilder->addSelectFunction(null, $this->node->getColumnAlias($queryBuilder), $this->node->getAttributeName());
 	}
 
 	/** @inheritdoc */

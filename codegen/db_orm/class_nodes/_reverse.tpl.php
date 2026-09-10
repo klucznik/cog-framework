@@ -69,12 +69,7 @@ class QQReverseReferenceNode<?= $table->className ?> extends QQReverseReferenceN
 } ?>('<?= $objPkColumn->name ?>', '<?= $objPkColumn->propertyName ?>', '<?= $objPkColumn->variableType ?>', $this);
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

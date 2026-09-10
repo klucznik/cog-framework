@@ -50,12 +50,7 @@ class Index extends Cog\Base {
 			case 'columnNameArray':
 				return $this->columnNameArray;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -67,22 +62,17 @@ class Index extends Cog\Base {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'keyName':
-					return $this->keyName = Type::cast($value, Type::STRING);
-				case 'unique':
-					return $this->unique = Type::cast($value, Type::BOOLEAN);
-				case 'primaryKey':
-					return $this->primaryKey = Type::cast($value, Type::BOOLEAN);
-				case 'columnNameArray':
-					return $this->columnNameArray = Type::cast($value, Type::ARRAY);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch ($name) {
+			case 'keyName':
+				return $this->keyName = Type::cast($value, Type::STRING);
+			case 'unique':
+				return $this->unique = Type::cast($value, Type::BOOLEAN);
+			case 'primaryKey':
+				return $this->primaryKey = Type::cast($value, Type::BOOLEAN);
+			case 'columnNameArray':
+				return $this->columnNameArray = Type::cast($value, Type::ARRAY);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

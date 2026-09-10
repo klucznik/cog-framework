@@ -24,13 +24,8 @@ class QQLimitInfo extends QQClause {
 	 * @throws \Cog\Exceptions\CogException
 	 */
 	public function __construct($maxRowCount, $offset = 0) {
-		try {
-			$this->maxRowCount = Type::cast($maxRowCount, Type::INTEGER);
-			$this->offset = Type::cast($offset, Type::INTEGER);
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$this->maxRowCount = Type::cast($maxRowCount, Type::INTEGER);
+		$this->offset = Type::cast($offset, Type::INTEGER);
 	}
 
 	/** @inheritdoc */
@@ -54,12 +49,7 @@ class QQLimitInfo extends QQClause {
 			case 'offset':
 				return $this->offset;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

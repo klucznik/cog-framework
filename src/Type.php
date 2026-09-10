@@ -79,12 +79,7 @@ abstract class Type {
 						return (string)$item;
 
 					case self::INTEGER:
-						try {
-							return self::cast((string)$item, self::INTEGER);
-						} catch (InvalidCastException $exception) {
-							$exception->incrementOffset();
-							throw $exception;
-						}
+						return self::cast((string)$item, self::INTEGER);
 
 					case self::BOOLEAN:
 						return self::castValueTo(strtolower(trim((string)$item)), self::BOOLEAN);
@@ -175,7 +170,7 @@ abstract class Type {
 	 * Will throw an exception if the cast fails, causes unexpected side effects,
 	 * if attempting to cast an object to a value (or vice versa), or if an object
 	 * is being cast to a class that isn't a subclass (e.g. parent). The exception
-	 * thrown will be an InvalidCastException, which extends CallerException.
+	 * thrown will be an InvalidCastException.
 	 *
 	 * @param mixed $item the value, array or object that you want to cast
 	 * @param string $type the type to cast to. Can be a Type::XXX constant (e.g. Type::INTEGER), or the name of a Class
@@ -192,23 +187,13 @@ abstract class Type {
 		// Figure out what PHP thinks the type is
 		switch (gettype($item)) {
 			case self::OBJECT:
-				try {
-					return self::castObjectTo($item, $type);
-				} catch (InvalidCastException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return self::castObjectTo($item, $type);
 
 			case self::STRING:
 			case self::INTEGER:
 			case self::FLOAT:
 			case self::BOOLEAN:
-				try {
-					return self::castValueTo($item, $type);
-				} catch (InvalidCastException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return self::castValueTo($item, $type);
 
 			case self::ARRAY:
 				if ($type === self::ARRAY) {

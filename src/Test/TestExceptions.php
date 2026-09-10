@@ -2,108 +2,32 @@
 
 namespace Cog\Test;
 
+use Cog\Database\Adapters\MySqliException;
 use Cog\Exceptions\CogException;
 use Cog\Exceptions\InvalidCastException;
 use Cog\Exceptions\RedirectException;
 use Cog\Exceptions\UndefinedPropertyException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
-/**
- * Covers the exception hierarchy, in particular CogException's offset
- * mechanism: the offset picks the frame in the backtrace that gets reported as
- * the file and line responsible for the exception, so that the CALLER of a
- * method is blamed rather than the throw statement inside it.
- */
 class TestExceptions extends TestCase {
 
-	public function testMessageAndDefaultOffset() {
-		$exception = new CogException('Something went wrong');
+	public function testCogExceptionIsAPlainRuntimeException() {
+		$previous = new RuntimeException('cause');
+		$exception = new CogException('Something went wrong', 42, $previous);
 
+		$this->assertInstanceOf(RuntimeException::class, $exception);
 		$this->assertEquals('Something went wrong', $exception->getMessage());
-		$this->assertEquals(1, $exception->offset);
+		$this->assertEquals(42, $exception->getCode());
+		$this->assertSame($previous, $exception->getPrevious());
 	}
 
-	public function testExplicitOffset() {
-		$this->assertEquals(0, (new CogException('message', 0))->offset);
-		$this->assertEquals(3, (new CogException('message', 3))->offset);
-	}
-
-	/** Offset 0 is the frame that constructed the exception, so this method's own line. */
-	public function testOffsetZeroPointsAtTheThrowSite() {
+	public function testCogExceptionReportsTheThrowSite() {
 		$line = __LINE__ + 1;
-		$exception = new CogException('message', 0);
+		$exception = new CogException('message');
 
 		$this->assertEquals(__FILE__, $exception->getFile());
 		$this->assertEquals($line, $exception->getLine());
-	}
-
-	/** Offset 1 is the caller, so a throw inside a helper is blamed on this method. */
-	public function testOffsetOnePointsAtTheCaller() {
-		$line = __LINE__ + 1;
-		$exception = $this->makeException(1);
-
-		$this->assertEquals(__FILE__, $exception->getFile());
-		$this->assertEquals($line, $exception->getLine());
-	}
-
-	public function testIncrementAndDecrementOffset() {
-		$exception = $this->makeException(0);
-
-		$this->assertEquals(0, $exception->offset);
-		$file = $exception->getFile();
-		$line = $exception->getLine();
-
-		$exception->incrementOffset();
-		$this->assertEquals(1, $exception->offset);
-		$this->assertNotEquals($line, $exception->getLine());
-
-		$exception->decrementOffset();
-		$this->assertEquals(0, $exception->offset);
-		$this->assertEquals($file, $exception->getFile());
-		$this->assertEquals($line, $exception->getLine());
-	}
-
-	/** An offset past the end of the backtrace leaves file and line cleared rather than erroring. */
-	public function testOffsetBeyondTheBacktrace() {
-		$exception = new CogException('message', 0);
-
-		for ($i = 0; $i < 200; $i++) {
-			$exception->incrementOffset();
-		}
-
-		$this->assertEquals('', $exception->getFile());
-		$this->assertEquals(0, $exception->getLine());
-	}
-
-	public function testMagicGet() {
-		$exception = new CogException('message');
-
-		$this->assertIsInt($exception->offset);
-		$this->assertIsArray($exception->traceArray);
-		$this->assertIsString($exception->backTrace);
-	}
-
-	public function testMagicGetUndefinedProperty() {
-		$exception = new CogException('message');
-
-		$this->expectException(UndefinedPropertyException::class);
-		$exception->missingProperty;
-	}
-
-	public function testMagicSetAlwaysThrows() {
-		$exception = new CogException('message');
-
-		$this->expectException(UndefinedPropertyException::class);
-		$exception->offset = 5;
-	}
-
-	public function testMagicIsset() {
-		$exception = new CogException('message');
-
-		$this->assertTrue(isset($exception->offset));
-		$this->assertTrue(isset($exception->traceArray));
-		$this->assertTrue(isset($exception->backTrace));
-		$this->assertFalse(isset($exception->missingProperty));
 	}
 
 	public function testUndefinedPropertyException() {
@@ -114,7 +38,6 @@ class TestExceptions extends TestCase {
 			'Undefined GET property or variable in "Cog\Test\MockedBaseObject" class: missingProperty',
 			$exception->getMessage()
 		);
-		$this->assertEquals(2, $exception->offset);
 	}
 
 	public function testInvalidCastException() {
@@ -122,8 +45,22 @@ class TestExceptions extends TestCase {
 
 		$this->assertInstanceOf(CogException::class, $exception);
 		$this->assertEquals('Unable to cast', $exception->getMessage());
-		$this->assertEquals(2, $exception->offset);
-		$this->assertEquals(4, (new InvalidCastException('Unable to cast', 4))->offset);
+	}
+
+	public function testDatabaseExceptionProperties() {
+		$exception = new MySqliException('boom', 1064, 'SELECT 1');
+
+		$this->assertInstanceOf(CogException::class, $exception);
+		$this->assertSame(1064, $exception->errorNumber);
+		$this->assertSame(1064, $exception->getCode());
+		$this->assertSame('SELECT 1', $exception->query);
+	}
+
+	public function testDatabaseExceptionUndefinedProperty() {
+		$exception = new MySqliException('boom', 1064, 'SELECT 1');
+
+		$this->expectException(UndefinedPropertyException::class);
+		$exception->missingProperty;
 	}
 
 	public function testRedirectException() {
@@ -134,10 +71,5 @@ class TestExceptions extends TestCase {
 		$this->assertEquals('Redirect exception', $exception->getMessage());
 
 		$this->assertEquals(301, (new RedirectException('/permanent', 301))->status);
-	}
-
-	/** Throws from one frame down, so offset 1 resolves to this helper's caller. */
-	private function makeException(int $offset): CogException {
-		return new CogException('message', $offset);
 	}
 }

@@ -60,9 +60,7 @@ The most-repeated idiom in the codebase. `src/Codegen/Column.php` is the referen
 
 - Backing fields are **private and typed**.
 - The public surface is documented in a `@property` / `@property-read` block on the class.
-- `__get`/`__set` are a `switch ($name)`, whose `default:` delegates to `parent::__get($name)`
-  wrapped in `catch (CogException $exception) { $exception->incrementOffset(); throw $exception; }`
-  so the reported error points at the caller rather than at `Base`.
+- `__get`/`__set` are a `switch ($name)`, whose `default:` delegates to `parent::__get($name)`.
 - Setters cast through `Type::cast($value, Type::STRING)` and friends.
 - Computed pseudo-properties (no backing field) live in `__get` only, and are `@property-read`.
 

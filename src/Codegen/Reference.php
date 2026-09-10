@@ -80,12 +80,7 @@ class Reference extends Cog\Base {
 				return (new ByteString($this->propertyName))->title();
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -97,26 +92,21 @@ class Reference extends Cog\Base {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'keyName':
-					return $this->keyName = Type::cast($value, Type::STRING);
-				case 'table':
-					return $this->table = Type::cast($value, Type::STRING);
-				case 'column':
-					return $this->column = Type::cast($value, Type::STRING);
-				case 'propertyName':
-					return $this->propertyName = Type::cast($value, Type::STRING);
-				case 'variableType':
-					return $this->variableType = Type::cast($value, Type::STRING);
-				case 'isType':
-					return $this->isType = Type::cast($value, Type::BOOLEAN);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch ($name) {
+			case 'keyName':
+				return $this->keyName = Type::cast($value, Type::STRING);
+			case 'table':
+				return $this->table = Type::cast($value, Type::STRING);
+			case 'column':
+				return $this->column = Type::cast($value, Type::STRING);
+			case 'propertyName':
+				return $this->propertyName = Type::cast($value, Type::STRING);
+			case 'variableType':
+				return $this->variableType = Type::cast($value, Type::STRING);
+			case 'isType':
+				return $this->isType = Type::cast($value, Type::BOOLEAN);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

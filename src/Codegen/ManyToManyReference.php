@@ -152,12 +152,7 @@ class ManyToManyReference extends Cog\Base {
 				return (new ByteString($this->objectDescriptionPlural))->title();
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
@@ -169,38 +164,33 @@ class ManyToManyReference extends Cog\Base {
 	 * @throws CogException
 	 */
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'keyName':
-					return $this->keyName = Type::cast($value, Type::STRING);
-				case 'table':
-					return $this->table = Type::cast($value, Type::STRING);
-				case 'column':
-					return $this->column = Type::cast($value, Type::STRING);
-				case 'oppositeColumn':
-					return $this->oppositeColumn = Type::cast($value, Type::STRING);
-				case 'oppositeVariableType':
-					return $this->oppositeVariableType = Type::cast($value, Type::STRING);
-				case 'oppositePropertyName':
-					return $this->oppositePropertyName = Type::cast($value, Type::STRING);
-				case 'oppositeObjectDescription':
-					return $this->oppositeObjectDescription = Type::cast($value, Type::STRING);
-				case 'associatedTable':
-					return $this->associatedTable = Type::cast($value, Type::STRING);
-				case 'variableType':
-					return $this->variableType = Type::cast($value, Type::STRING);
-				case 'objectDescription':
-					return $this->objectDescription = Type::cast($value, Type::STRING);
-				case 'objectDescriptionPlural':
-					return $this->objectDescriptionPlural = Type::cast($value, Type::STRING);
-				case 'columnArray':
-					return $this->columnArray = Type::cast($value, Type::ARRAY);
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		switch ($name) {
+			case 'keyName':
+				return $this->keyName = Type::cast($value, Type::STRING);
+			case 'table':
+				return $this->table = Type::cast($value, Type::STRING);
+			case 'column':
+				return $this->column = Type::cast($value, Type::STRING);
+			case 'oppositeColumn':
+				return $this->oppositeColumn = Type::cast($value, Type::STRING);
+			case 'oppositeVariableType':
+				return $this->oppositeVariableType = Type::cast($value, Type::STRING);
+			case 'oppositePropertyName':
+				return $this->oppositePropertyName = Type::cast($value, Type::STRING);
+			case 'oppositeObjectDescription':
+				return $this->oppositeObjectDescription = Type::cast($value, Type::STRING);
+			case 'associatedTable':
+				return $this->associatedTable = Type::cast($value, Type::STRING);
+			case 'variableType':
+				return $this->variableType = Type::cast($value, Type::STRING);
+			case 'objectDescription':
+				return $this->objectDescription = Type::cast($value, Type::STRING);
+			case 'objectDescriptionPlural':
+				return $this->objectDescriptionPlural = Type::cast($value, Type::STRING);
+			case 'columnArray':
+				return $this->columnArray = Type::cast($value, Type::ARRAY);
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

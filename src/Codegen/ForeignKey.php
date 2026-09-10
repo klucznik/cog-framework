@@ -38,12 +38,7 @@ class ForeignKey extends Cog\Base {
 			case 'referenceColumnNameArray':
 				return $this->referenceColumnNameArray;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

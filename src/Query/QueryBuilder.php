@@ -43,7 +43,7 @@ class QueryBuilder extends Cog\Base {
 	protected array $havingArray = [];
 	/** @var QQSubQueryNode[] keyed by lowercased virtual node name */
 	protected array $virtualNodeArray = [];
-	/** The LIMIT clause, as either "count" or "offset,count". */
+	/** The LIMIT clause, as either "count" or "offset,count". Tested against null, never for truthiness: "0" is a limit. */
 	protected ?string $limitInfo = null;
 
 	protected bool $distinctFlag = false;
@@ -167,14 +167,9 @@ class QueryBuilder extends Cog\Base {
 			$this->escapeIdentifierBegin, $linkedColumnName, $this->escapeIdentifierEnd);
 
 		$joinIndex = $joinItem;
-		try {
-			$conditionClause = null;
-			if ($joinCondition && $conditionClause = $joinCondition->getWhereClause($this, false)) {
-				$joinItem .= ' AND ' . $conditionClause;
-			}
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+		$conditionClause = null;
+		if ($joinCondition && $conditionClause = $joinCondition->getWhereClause($this, false)) {
+			$joinItem .= ' AND ' . $conditionClause;
 		}
 
 		/* If this table has already been joined, then we need to check for the following:
@@ -341,7 +336,7 @@ class QueryBuilder extends Cog\Base {
 				$sql = "SELECT DISTINCT\r\n";
 			}
 
-			if ($this->limitInfo) {
+			if ($this->limitInfo !== null) {
 				$sql .= $this->database->sqlLimitVariablePrefix($this->limitInfo) . "\r\n";
 			}
 			$sql .= '    ' . implode(",\r\n    ", $this->selectArray);
@@ -379,7 +374,7 @@ class QueryBuilder extends Cog\Base {
 		}
 
 		// Limit Suffix (if applicable)
-		if ($this->limitInfo) {
+		if ($this->limitInfo !== null) {
 			$sql .= "\r\n" . $this->database->sqlLimitVariableSuffix($this->limitInfo);
 		}
 
@@ -406,12 +401,7 @@ class QueryBuilder extends Cog\Base {
 				return $this->aggregationFlag && $this->database->onlyFullGroupBy;
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (Cog\Exceptions\CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

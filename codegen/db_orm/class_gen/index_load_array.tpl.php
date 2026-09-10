@@ -21,22 +21,17 @@
 		$optionalClauses = Utils::extendArray(<?= $table->className ?>::getDefaultOptionalClauses(), $optionalClauses);
 
 		// Call <?= $table->className ?>::queryArray to perform the loadArrayBy<?= $codegen->implodeObjectArray('', '', '', 'propertyNameUppercase', $columnArray) ?> query
-		try {
-			return <?= $table->className ?>::queryArray(
+		return <?= $table->className ?>::queryArray(
 <?php if (count($columnArray) > 1) { ?>
-				QQ::andCondition(
+			QQ::andCondition(
 <?php } ?>
 <?php foreach ($columnArray as $column) { ?>
-				QQ::equal((new QQNode<?= $table->className ?>)-><?= $column->propertyName ?>, $<?= $column->propertyName ?>),
+			QQ::equal((new QQNode<?= $table->className ?>)-><?= $column->propertyName ?>, $<?= $column->propertyName ?>),
 <?php } ?><?php \Cog\Codegen\Utils::goBack(2); ?>
 <?php if (count($columnArray) > 1) { ?>
-				)
+			)
 <?php } ?>,
-				$optionalClauses);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+			$optionalClauses);
 	}
 
 	/**

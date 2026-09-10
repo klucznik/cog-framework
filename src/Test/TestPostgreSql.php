@@ -302,12 +302,18 @@ class TestPostgreSql extends TestCase {
 		$this->assertNull($this->database->sqlLimitVariablePrefix('1,2'));
 		$this->assertSame('LIMIT 2 OFFSET 1', $this->database->sqlLimitVariableSuffix('1,2'));
 		$this->assertSame('LIMIT 1', $this->database->sqlLimitVariableSuffix('1'));
+		$this->assertSame('LIMIT 0', $this->database->sqlLimitVariableSuffix('0'), 'a count of 0 is a limit');
 		$this->assertNull($this->database->sqlLimitVariableSuffix(''));
 	}
 
 	public function testLimitRejectsInjection(): void {
 		$this->expectException(\Exception::class);
 		$this->database->sqlLimitVariableSuffix('1; DROP TABLE person');
+	}
+
+	public function testLimitRejectsANegativeCount(): void {
+		$this->expectException(\Exception::class);
+		$this->database->sqlLimitVariableSuffix('-1');
 	}
 
 	public function testLimitApplies(): void {
@@ -334,27 +340,40 @@ class TestPostgreSql extends TestCase {
 		)->fetchRow()[0]);
 	}
 
+	/**
+	 * The committed row outlives the connection, and tag.name is unique, so it is removed whether
+	 * or not the assertion holds - and cleared first, in case a run from before that left one behind.
+	 * An INSERT that fails inside the transaction commits nothing: tearDown() closes the connection.
+	 */
 	public function testTransactionCommit(): void {
+		$this->database->nonQuery("DELETE FROM tag WHERE name = 'commit-me'");
+
 		$this->database->transactionBegin();
 		$this->database->nonQuery("INSERT INTO tag (name) VALUES ('commit-me')");
 		$this->database->transactionCommit();
 
-		$this->assertSame('1', $this->database->query(
-			"SELECT count(*) FROM tag WHERE name = 'commit-me'"
-		)->fetchRow()[0]);
-
-		$this->database->nonQuery("DELETE FROM tag WHERE name = 'commit-me'");
+		try {
+			$this->assertSame('1', $this->database->query(
+				"SELECT count(*) FROM tag WHERE name = 'commit-me'"
+			)->fetchRow()[0]);
+		} finally {
+			$this->database->nonQuery("DELETE FROM tag WHERE name = 'commit-me'");
+		}
 	}
 
+	/** Cleaned up by name rather than id, so the row goes even when insertId() is what failed. */
 	public function testInsertId(): void {
+		$this->database->nonQuery("DELETE FROM tag WHERE name = 'insert-id-test'");
 		$this->database->nonQuery("INSERT INTO tag (name) VALUES ('insert-id-test')");
 
-		$insertId = $this->database->insertId('tag', 'id');
-		$this->assertIsInt($insertId);
-		$this->assertGreaterThan(3, $insertId);
-		$this->assertSame($insertId, $this->database->insertId(), 'lastval() is the no-argument fallback');
-
-		$this->database->nonQuery('DELETE FROM tag WHERE id = ' . $insertId);
+		try {
+			$insertId = $this->database->insertId('tag', 'id');
+			$this->assertIsInt($insertId);
+			$this->assertGreaterThan(3, $insertId);
+			$this->assertSame($insertId, $this->database->insertId(), 'lastval() is the no-argument fallback');
+		} finally {
+			$this->database->nonQuery("DELETE FROM tag WHERE name = 'insert-id-test'");
+		}
 	}
 
 	public function testFailedQueryCarriesTheQuery(): void {

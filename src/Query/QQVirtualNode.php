@@ -32,13 +32,7 @@ class QQVirtualNode extends QQNode {
 			return $this->subQueryDefinition->getColumnAlias($queryBuilder);
 		}
 
-		try {
-			return $queryBuilder->getVirtualNode($this->name)->getColumnAlias($queryBuilder);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		return $queryBuilder->getVirtualNode($this->name)->getColumnAlias($queryBuilder);
 	}
 
 	/**

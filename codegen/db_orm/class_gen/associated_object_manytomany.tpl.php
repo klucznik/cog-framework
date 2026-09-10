@@ -24,12 +24,7 @@
 			return [];
 		}
 
-		try {
-			return <?= $manyToManyReference->variableType ?>::loadArrayBy<?= $manyToManyReference->oppositeObjectDescription ?>($this-><?= $table->primaryKeyColumnArray[0]->propertyName ?>, $optionalClauses, $parameterArray);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		return <?= $manyToManyReference->variableType ?>::loadArrayBy<?= $manyToManyReference->oppositeObjectDescription ?>($this-><?= $table->primaryKeyColumnArray[0]->propertyName ?>, $optionalClauses, $parameterArray);
 	}
 
 	/**

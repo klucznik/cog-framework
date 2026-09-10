@@ -14,7 +14,7 @@ abstract class Base {
 	/**
 	 * Override method to perform a property "Get" This will get the value of $name
 	 * All inherited objects that call __get() should always fall through
-	 * to calling parent::__get() in a try/catch statement catching for CallerExceptions.
+	 * to calling parent::__get().
 	 *
 	 * @param string $name Name of the property to get
 	 * @return mixed the returned property
@@ -33,7 +33,7 @@ abstract class Base {
 	 * Override method to perform a property "set"
 	 * This will set the property $name to be $value
 	 * All inherited objects that call __set() should always fall through
-	 * to calling parent::__set() in a try/catch statement catching for CallerExceptions.
+	 * to calling parent::__set().
 	 *
 	 * @param string $name Name of the property to set
 	 * @param mixed $value New value of the property

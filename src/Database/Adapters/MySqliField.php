@@ -4,6 +4,7 @@ namespace Cog\Database\Adapters;
 
 use Cog;
 use Cog\Database\FieldType;
+use Cog\Exceptions\CogException;
 
 class MySqliField extends Cog\Database\FieldBase {
 
@@ -41,7 +42,7 @@ class MySqliField extends Cog\Database\FieldBase {
 						}
 
 						if (!is_numeric($this->maxLength)) {
-							throw new \Exception('Not a valid Column Length: ' . $row['Type']);
+							throw new CogException('Not a valid Column Length: ' . $row['Type']);
 						}
 					}
 
@@ -138,7 +139,7 @@ class MySqliField extends Cog\Database\FieldBase {
 			// unsupported types below included - instead of the message meant for it.
 
 			case MYSQLI_TYPE_NULL:
-				throw new \Exception('MySqli library: MYSQLI_TYPE_NULL is not supported');
+				throw new CogException('MySqli library: MYSQLI_TYPE_NULL is not supported');
 				break;
 
 			case MYSQLI_TYPE_YEAR:
@@ -146,23 +147,23 @@ class MySqliField extends Cog\Database\FieldBase {
 				break;
 
 			case MYSQLI_TYPE_NEWDATE:
-				throw new \Exception('MySqli library: MYSQLI_TYPE_NEWDATE is not supported');
+				throw new CogException('MySqli library: MYSQLI_TYPE_NEWDATE is not supported');
 				break;
 
 			case MYSQLI_TYPE_ENUM:
-				throw new \Exception('MySqli library: MYSQLI_TYPE_ENUM is not supported. Use TypeTables instead.');
+				throw new CogException('MySqli library: MYSQLI_TYPE_ENUM is not supported. Use TypeTables instead.');
 				break;
 
 			case MYSQLI_TYPE_SET:
-				throw new \Exception('MySqli library: MYSQLI_TYPE_SET is not supported. Use TypeTables instead.');
+				throw new CogException('MySqli library: MYSQLI_TYPE_SET is not supported. Use TypeTables instead.');
 				break;
 
 			case MYSQLI_TYPE_GEOMETRY:
-				throw new \Exception('MySqli library: MYSQLI_TYPE_GEOMETRY is not supported');
+				throw new CogException('MySqli library: MYSQLI_TYPE_GEOMETRY is not supported');
 				break;
 
 			default:
-				throw new \Exception('Unable to determine MySqli Field Type: ' . $mySqlFieldType);
+				throw new CogException('Unable to determine MySqli Field Type: ' . $mySqlFieldType);
 				break;
 		}
 	}

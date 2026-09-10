@@ -75,14 +75,14 @@ abstract class CodeGen extends Base {
 	 * @param string $templatePrefix the prefix of the templates you want to generate against
 	 * @param array $argumentArray array of arguments to send to EvaluateTemplate
 	 * @return boolean success/failure on whether all the files generated successfully
-	 * @throws Exception
+	 * @throws CogException
 	 */
 	public function generateFiles(string $templatePrefix, array $argumentArray): bool {
 		// Make sure at least one of the configured template paths provides the prefix
 		$prefixDirs = Utils::templateDirs($this->docroot, $this->templatesPaths, $templatePrefix);
 
 		if ($prefixDirs === []) {
-			throw new Exception(sprintf(
+			throw new CogException(sprintf(
 				"CodeGen found no template directory for '%s'. Tried:\r\n%s",
 				$templatePrefix,
 				Utils::templateDirCandidates($this->docroot, $this->templatesPaths, $templatePrefix)
@@ -138,7 +138,7 @@ abstract class CodeGen extends Base {
 	 *
 	 * @return string | bool returns the evaluated template or boolean save success.
 	 *
-	 * @throws Exception
+	 * @throws CogException
 	 * @throws CogException
 	 */
 	public function generateFile(string $moduleName, string $filename, array $argumentArray, bool $save = true): bool|string {
@@ -173,7 +173,7 @@ abstract class CodeGen extends Base {
 		// Parse out the first line (which contains path and overwriting information)
 		$position = strpos($template, "\n");
 		if ($position === false) {
-			throw new Exception($error);
+			throw new CogException($error);
 		}
 
 		$firstLine = trim(substr($template, 0, $position));
@@ -187,7 +187,7 @@ abstract class CodeGen extends Base {
 		} catch (Exception $exception) {}
 
 		if ($templateXml === null || !$templateXml instanceof SimpleXMLElement) {
-			throw new Exception($error);
+			throw new CogException($error);
 		}
 
 		$overwriteFlag = Type::cast($templateXml['OverwriteFlag'], Type::BOOLEAN);
@@ -197,7 +197,7 @@ abstract class CodeGen extends Base {
 		$targetFileName = Type::cast($templateXml['TargetFileName'], Type::STRING);
 
 		if ($overwriteFlag === null || $targetFileName === null || $targetDirectory === null || $directorySuffix === null || $docrootFlag === null) {
-			throw new Exception($error);
+			throw new CogException($error);
 		}
 
 		if ($save && $targetDirectory) {
@@ -214,7 +214,7 @@ abstract class CodeGen extends Base {
 			if (is_dir($targetDirectory) === false) {
 				$mkdirResult = mkdir($targetDirectory, 0777, true);
 				if ($mkdirResult === false && is_dir($targetDirectory) === false) {
-					throw new Exception('Unable to mkdir ' . $targetDirectory);
+					throw new CogException('Unable to mkdir ' . $targetDirectory);
 				}
 			}
 
@@ -265,29 +265,19 @@ abstract class CodeGen extends Base {
 				return $this->warnings;
 
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 
 	public function __set($name, $value) {
-		try {
-			switch ($name) {
-				case 'errors':
-					return $this->errors = Type::cast($value, Type::STRING);
-				case 'warnings':
-					return $this->warnings = Type::cast($value, Type::STRING);
+		switch ($name) {
+			case 'errors':
+				return $this->errors = Type::cast($value, Type::STRING);
+			case 'warnings':
+				return $this->warnings = Type::cast($value, Type::STRING);
 
-				default:
-					return parent::__set($name, $value);
-			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
+			default:
+				return parent::__set($name, $value);
 		}
 	}
 }

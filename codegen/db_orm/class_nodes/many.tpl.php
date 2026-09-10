@@ -46,12 +46,7 @@ class QQNode<?= $table->className ?><?= $reference->objectDescriptionUppercase ?
 			case '_childTableNode':
 				return new QQNode<?= $reference->variableType ?>('<?= $reference->oppositeColumn ?>', '<?= $reference->oppositePropertyName ?>', '<?= $reference->oppositeVariableType ?>', $this);
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }

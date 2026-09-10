@@ -15,12 +15,7 @@ class QQConditionNot extends QQCondition {
 	/** @inheritdoc */
 	public function updateQueryBuilder(QueryBuilder $queryBuilder): void {
 		$queryBuilder->addWhereItem('(NOT');
-		try {
-			$this->condition->updateQueryBuilder($queryBuilder);
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$this->condition->updateQueryBuilder($queryBuilder);
 		$queryBuilder->addWhereItem(')');
 	}
 }

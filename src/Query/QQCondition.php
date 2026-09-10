@@ -41,14 +41,8 @@ abstract class QQCondition extends Cog\Base {
 
 		$this->processed = true;
 
-		try {
-			$conditionBuilder = new PartialQueryBuilder($queryBuilder);
-			$this->updateQueryBuilder($conditionBuilder);
-			return $conditionBuilder->getWhereStatement();
-		} catch (Cog\Exceptions\CogException $exception) {
-			$exception->incrementOffset();
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$conditionBuilder = new PartialQueryBuilder($queryBuilder);
+		$this->updateQueryBuilder($conditionBuilder);
+		return $conditionBuilder->getWhereStatement();
 	}
 }

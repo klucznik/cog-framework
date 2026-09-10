@@ -55,12 +55,7 @@ class QQNode extends QQBaseNode {
 				$toReturn = '!= ';
 			}
 
-			try {
-				return $toReturn . $value->getColumnAlias($queryBuilder);
-			} catch (CogException $exception) {
-				$exception->incrementOffset();
-				throw $exception;
-			}
+			return $toReturn . $value->getColumnAlias($queryBuilder);
 		} else {
 			if ($equalityType === null) {
 				$includeEquality = false;
@@ -72,14 +67,6 @@ class QQNode extends QQBaseNode {
 					$reverseEquality = false;
 				}
 			}
-
-//			try {
-//				return $queryBuilder->database->sqlVariable(Type::cast($value, $this->type), $includeEquality, $reverseEquality);
-//			} catch (\Cog\CogException\CogException $exception) {
-//		        $exception->incrementOffset();
-//			   	$exception->incrementOffset();
-//				throw $exception;
-//			}
 
 			return $queryBuilder->database->sqlVariable($value, $includeEquality, $reverseEquality);
 		}
@@ -103,21 +90,16 @@ class QQNode extends QQBaseNode {
 		}
 
 		// Use the Helper to Iterate Through the Parent Chain and get the Parent Alias
-		try {
-			$parentAlias = $this->parentNode->getColumnAliasHelper($queryBuilder, $expandSelection, $select ? QQ::select() : null);
+		$parentAlias = $this->parentNode->getColumnAliasHelper($queryBuilder, $expandSelection, $select ? QQ::select() : null);
 
-			if ($this->tableName) {
-				$joinTableAlias = $parentAlias . '__' . ($this->alias ?: $this->name);
-				// Next, Join the Appropriate Table
-				$this->addJoinTable($queryBuilder, $joinTableAlias, $parentAlias, $joinCondition);
+		if ($this->tableName) {
+			$joinTableAlias = $parentAlias . '__' . ($this->alias ?: $this->name);
+			// Next, Join the Appropriate Table
+			$this->addJoinTable($queryBuilder, $joinTableAlias, $parentAlias, $joinCondition);
 
-				if ($expandSelection && !$queryBuilder->suppressSelectExpansion) {
-					call_user_func([$this->classNameQualified, 'getSelectFields'], $queryBuilder, $joinTableAlias, $select);
-				}
+			if ($expandSelection && !$queryBuilder->suppressSelectExpansion) {
+				call_user_func([$this->classNameQualified, 'getSelectFields'], $queryBuilder, $joinTableAlias, $select);
 			}
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
 		}
 
 		return $parentAlias;
@@ -160,17 +142,12 @@ class QQNode extends QQBaseNode {
 			return $this->name;
 		}
 
-		try {
-			// No -- First get the Parent Alias
-			$parentAlias = $this->parentNode->getColumnAliasHelper($queryBuilder, $expandSelection, $select ? QQ::select() : null);
+		// No -- First get the Parent Alias
+		$parentAlias = $this->parentNode->getColumnAliasHelper($queryBuilder, $expandSelection, $select ? QQ::select() : null);
 
-			$joinTableAlias = $parentAlias . '__' . $this->alias;
-			// Next, Join the Appropriate Table
-			$this->addJoinTable($queryBuilder, $joinTableAlias, $parentAlias);
-		} catch (CogException $exception) {
-			$exception->incrementOffset();
-			throw $exception;
-		}
+		$joinTableAlias = $parentAlias . '__' . $this->alias;
+		// Next, Join the Appropriate Table
+		$this->addJoinTable($queryBuilder, $joinTableAlias, $parentAlias);
 
 		// Next, Expand the Selection Fields for this Table (if applicable)
 		if ($expandSelection && !$queryBuilder->suppressSelectExpansion) {

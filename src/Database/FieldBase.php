@@ -68,12 +68,7 @@ abstract class FieldBase extends Cog\Base {
 			case 'comment':
 				return $this->comment;
 			default:
-				try {
-					return parent::__get($name);
-				} catch (CogException $exception) {
-					$exception->incrementOffset();
-					throw $exception;
-				}
+				return parent::__get($name);
 		}
 	}
 }
