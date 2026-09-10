@@ -302,6 +302,7 @@ class TestCodegenHelpers extends TestCase {
 		$this->assertSame(Type::STRING, $codegen->variableTypeFromDbType(FieldType::BLOB));
 		$this->assertSame(Type::STRING, $codegen->variableTypeFromDbType(FieldType::CHAR));
 		$this->assertSame(Type::STRING, $codegen->variableTypeFromDbType(FieldType::VARCHAR));
+		$this->assertSame(Type::STRING, $codegen->variableTypeFromDbType(FieldType::JSON), 'JSON is carried as its text');
 		$this->assertSame(Type::DATETIME, $codegen->variableTypeFromDbType(FieldType::DATE));
 		$this->assertSame(Type::DATETIME, $codegen->variableTypeFromDbType(FieldType::TIME));
 		$this->assertSame(Type::DATETIME, $codegen->variableTypeFromDbType(FieldType::DATETIME));
@@ -375,6 +376,32 @@ class TestCodegenHelpers extends TestCase {
 			"'it\\'s'",
 			$this->column('label', Type::STRING, ['default' => "it's"])->getDefaultAsString()
 		);
+	}
+
+	/**
+	 * A JSON column's property holds the JSON text, so a default is only a literal when it is
+	 * valid JSON itself. MySQL reports DEFAULT (json_array()) as the expression, and a JSON
+	 * column with no default must not start out as '', which is not JSON at all.
+	 */
+	public function testGetDefaultAsStringForJsonColumn() {
+		$json = ['dbType' => FieldType::JSON];
+
+		$this->assertSame('null', $this->column('settings', Type::STRING, $json)->getDefaultAsString());
+		$this->assertSame("'" . '{"theme":"dark"}' . "'", $this->column('settings', Type::STRING, $json + ['default' => '{"theme":"dark"}'])->getDefaultAsString());
+		$this->assertSame("'[]'", $this->column('settings', Type::STRING, $json + ['default' => '[]'])->getDefaultAsString());
+		$default = '{"quote":"it' . "'" . 's","path":"C:\\\\"}';
+		$emitted = $this->column('settings', Type::STRING, $json + ['default' => $default])->getDefaultAsString();
+		$this->assertSame($default, eval('return ' . $emitted . ';'), 'quotes and backslashes survive as a single-quoted literal');
+		$this->assertSame('null', $this->column('settings', Type::STRING, $json + ['default' => 'json_array()'])->getDefaultAsString());
+	}
+
+	public function testJsonColumnNames() {
+		$column = $this->column('user_settings', Type::STRING, ['dbType' => FieldType::JSON]);
+
+		$this->assertTrue($column->json);
+		$this->assertSame('userSettingsDecoded', $column->decodedPropertyName);
+		$this->assertFalse($this->column('name', Type::STRING, ['dbType' => FieldType::VARCHAR])->json);
+		$this->assertFalse($this->column('name')->json, 'a column with no db type yet is not JSON');
 	}
 
 	/**

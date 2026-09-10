@@ -13,4 +13,5 @@ abstract class FieldType {
 	public const string FLOAT = 'Float';
 	public const string BIT = 'Bit';
 	public const string TIMESTAMP = 'Timestamp';
+	public const string JSON = 'Json';
 }

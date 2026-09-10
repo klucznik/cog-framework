@@ -1008,6 +1008,19 @@ class DatabaseCodeGen extends DatabaseCodeGenBase {
 				return;
 			}
 		}
+
+		// A JSON column gets a decoded accessor beside its property, so that name has to be free
+		$propertyNames = [];
+		foreach ($table->columnArray as $column) {
+			$propertyNames[] = $column->propertyName;
+		}
+		foreach ($table->columnArray as $column) {
+			if ($column->json && in_array($column->decodedPropertyName, $propertyNames, true)) {
+				$this->errors .= sprintf("Table '%s' has JSON column '%s', whose decoded accessor %s collides with another column's property\r\n", $table->name, $column->name, $column->decodedPropertyName);
+				unset($this->tableArray[strtolower($table->name)]);
+				return;
+			}
+		}
 	}
 
 	protected function verifyTablePrimaryKey(TableBase $table): void {

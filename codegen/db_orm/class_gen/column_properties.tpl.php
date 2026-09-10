@@ -12,7 +12,7 @@ use Cog\Type;
 	///////////////////////////////////////////////////////////////////////
 
 <?php foreach ($table->columnArray as $column) { ?>
-<?php if (($column->variableType === Type::STRING) && is_numeric($column->length)) { ?>
+<?php if (($column->variableType === Type::STRING) && !$column->json && is_numeric($column->length)) { ?>
 	public const int <?= $column->constantPropertyName ?>_MAX_LENGTH = <?= $column->length ?>;
 <?php } ?>
 	/**
@@ -45,6 +45,21 @@ use Cog\Type;
 	}
 <?php } else { ?>
 	<?= $visibility ?> ?<?= $column->variableTyped ?> $<?= $column->propertyName ?> = <?= $default ?>;
+<?php } ?>
+<?php if ($column->json) { ?>
+
+	/**
+	 * <?= $table->name ?>.<?= $column->name ?> decoded. A JSON object comes back as a stdClass, so {} and [] stay
+	 * distinct, and an integer too large for PHP comes back as a string. It is decoded afresh on every read,
+	 * so changing what it returns changes nothing: assign the whole value back. Assigning null stores
+	 * SQL NULL; to store the JSON literal null, assign 'null' to <?= $column->propertyName ?> itself.
+	 */
+	public mixed $<?= $column->decodedPropertyName ?> {
+		get => Utils::decodeJsonColumn($this-><?= $column->propertyName ?>);
+		set {
+			$this-><?= $column->propertyName ?> = Utils::encodeJsonColumn($value);
+		}
+	}
 <?php } ?>
 <?php if (!$column->identity && $column->primaryKey) { ?>
 

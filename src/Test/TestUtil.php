@@ -6,6 +6,7 @@ use Cog\Util\Utils;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
+use JsonException;
 use PHPUnit\Framework\TestCase;
 
 class TestUtil extends TestCase {
@@ -97,5 +98,40 @@ class TestUtil extends TestCase {
 
 		$this->assertSame('2020-07-02T01:04:05.000000Z', Utils::dateTimeToJson($mutable));
 		$this->assertSame('+02:00', $mutable->getTimezone()->getName());
+	}
+
+	/**
+	 * Generated classes decode JSON columns through this. Objects stay objects so {} and []
+	 * survive being encoded again, and big integers keep their digits.
+	 */
+	public function testDecodeJsonColumn() {
+		$this->assertNull(Utils::decodeJsonColumn(null));
+		$this->assertSame('{"a":{},"b":[]}', json_encode(Utils::decodeJsonColumn('{"a":{},"b":[]}')));
+		$this->assertInstanceOf(\stdClass::class, Utils::decodeJsonColumn('{"theme":"dark"}'));
+		$this->assertSame('dark', Utils::decodeJsonColumn('{"theme":"dark"}')->theme);
+		$this->assertSame('123456789012345678901234567890', Utils::decodeJsonColumn('123456789012345678901234567890'), 'an integer too large for PHP keeps its digits');
+		$this->assertNull(Utils::decodeJsonColumn('null'), 'the JSON literal null decodes to null as well');
+	}
+
+	public function testDecodeJsonColumnRejectsInvalidJson() {
+		$this->expectException(JsonException::class);
+
+		Utils::decodeJsonColumn('{not json');
+	}
+
+	/** null is SQL NULL rather than the JSON literal, slashes and unicode are stored as-is, and floats keep their fraction. */
+	public function testEncodeJsonColumn() {
+		$this->assertNull(Utils::encodeJsonColumn(null));
+		$this->assertSame(
+			"{\"url\":\"https://example.com/\u{17C}\",\"ratio\":1.0,\"list\":[1,2]}",
+			Utils::encodeJsonColumn(['url' => "https://example.com/\u{17C}", 'ratio' => 1.0, 'list' => [1, 2]])
+		);
+		$this->assertSame('{}', Utils::encodeJsonColumn(new \stdClass()));
+	}
+
+	public function testEncodeJsonColumnRejectsUnencodableValues() {
+		$this->expectException(JsonException::class);
+
+		Utils::encodeJsonColumn(NAN);
 	}
 }

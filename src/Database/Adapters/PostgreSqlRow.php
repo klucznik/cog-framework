@@ -39,6 +39,8 @@ class PostgreSqlRow extends Cog\Database\RowBase {
 
 			case FieldType::CHAR:
 			case FieldType::VARCHAR:
+			// JSON comes back as the text the database stored; generated classes decode it on demand
+			case FieldType::JSON:
 				return Type::cast($this->columnArray[$columnName], Type::STRING);
 
 			case FieldType::DATE:

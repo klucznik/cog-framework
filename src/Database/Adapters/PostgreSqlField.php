@@ -128,11 +128,14 @@ class PostgreSqlField extends Cog\Database\FieldBase {
 			case 'text':
 			case 'name':
 			case 'uuid':
-			case 'json':
-			case 'jsonb':
 			case 'inet':
 			case 'cidr':
 				$this->type = FieldType::VARCHAR;
+				break;
+
+			case 'json':
+			case 'jsonb':
+				$this->type = FieldType::JSON;
 				break;
 
 			case 'date':

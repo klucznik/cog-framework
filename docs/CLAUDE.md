@@ -79,6 +79,13 @@ typo in a property name lands in its `UndefinedPropertyException` instead of cre
 Two consequences: `isset()` and `??` on a reference run its `get` hook, so they load it (once); and
 `??` on an undeclared name fetches through `Cog\Base::__get`, so a typo under `??` throws too.
 
+A JSON column (`FieldType::JSON`, from MySQL `JSON` and PostgreSQL `json`/`jsonb`) is the one column with
+two properties. The column property is the raw text, a `?string`, so hydration, `save()` and `clone()` move it
+untouched and an unmodified value round-trips as stored. Beside it `column_properties.tpl.php` emits a virtual
+hooked `<property>Decoded` whose `get`/`set` go through `Utils::decodeJsonColumn()`/`encodeJsonColumn()`, and
+`getIterator()` emits the decoded value. Objects decode to `stdClass`, never arrays, so `{}` and `[]` stay
+distinct. Another column whose property takes the accessor's name is a generator error.
+
 ## Codegen templates
 
 Templates live in `codegen/<prefix>/<module>/`, where prefix is `db_orm` or `db_type` and module is

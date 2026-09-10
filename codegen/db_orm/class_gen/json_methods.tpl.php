@@ -10,13 +10,16 @@
 
 	/**
 	 * this function is required for objects that implement the IteratorAggregate interface
-	 * Datetime columns are emitted as ISO-8601 UTC strings, so the iterator can be handed to json_encode as is
+	 * Datetime columns are emitted as ISO-8601 UTC strings and JSON columns as their decoded value,
+	 * so the iterator can be handed to json_encode as is
 	 * @return ArrayIterator
 	*/
 	public function getIterator(): ArrayIterator {
 <?php foreach ($table->columnArray as $column) { ?>
 <?php if ($column->variableType === \Cog\Type::DATETIME) { ?>
 		$iArray['<?= $column->propertyName ?>'] = Utils::dateTimeToJson($this-><?= $column->propertyName ?>);
+<?php } elseif ($column->json) { ?>
+		$iArray['<?= $column->propertyName ?>'] = Utils::decodeJsonColumn($this-><?= $column->propertyName ?>);
 <?php } else { ?>
 		$iArray['<?= $column->propertyName ?>'] = $this-><?= $column->propertyName ?>;
 <?php } ?>

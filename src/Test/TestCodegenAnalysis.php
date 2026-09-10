@@ -110,6 +110,11 @@ class TestCodegenAnalysis extends TestCase {
 		return new FakeSchemaField($name, FieldType::VARCHAR, primaryKey: $primaryKey, notNull: true, unique: $unique, maxLength: 100);
 	}
 
+	/** A nullable JSON column, with the byte limit MySQL reports for one as its length. */
+	private static function json(string $name): FakeSchemaField {
+		return new FakeSchemaField($name, FieldType::JSON, maxLength: 4294967295);
+	}
+
 	private static function index(string $keyName, array $columnNames, bool $unique = false, bool $primaryKey = false): Index {
 		$index = new Index($keyName);
 		$index->columnNameArray = $columnNames;
@@ -771,5 +776,53 @@ class TestCodegenAnalysis extends TestCase {
 		$this->assertStringContainsString('<namespace data="App\Data" type="App\Type"/>', $xml);
 		$this->assertStringContainsString('<typeTableIdentifier suffix="_type,_enum"/>', $xml);
 		$this->assertStringContainsString('<excludeTables pattern="^tmp_" list=""/>', $xml);
+	}
+
+	//
+	// JSON columns
+	//
+
+	/**
+	 * A JSON column keeps its text in the column property, so loading and saving never
+	 * re-encode it, and gains a decoded accessor beside it. getIterator() emits the decoded
+	 * value, or getJson() would hand clients a string of escaped JSON.
+	 */
+	public function testJsonColumnGetsADecodedAccessor() {
+		$schema = self::schema()
+			->addTable('document', [self::id(), self::json('settings')]);
+		$codegen = $this->analyze($schema, [], $this->scratchDocroot());
+
+		$this->assertSame('', $codegen->errors);
+		$this->assertTrue($codegen->generateTable($codegen->getTable('document')));
+
+		$file = $this->docroot . '/generated/Data/DocumentGen.php';
+		$source = file_get_contents($file);
+		$this->assertStringContainsString('public ?string $settings = null;', $source);
+		$this->assertStringContainsString('public mixed $settingsDecoded {', $source);
+		$this->assertStringContainsString("\$iArray['settings'] = Utils::decodeJsonColumn(\$this->settings);", $source);
+		$this->assertStringNotContainsString('SETTINGS_MAX_LENGTH', $source, 'the byte limit MySQL reports for JSON is not a length');
+
+		exec(sprintf('%s -l %s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($file)), $output, $status);
+		$this->assertSame(0, $status, "the generated class does not lint:\n" . implode("\n", $output));
+
+		require_once $file;
+		$document = new \Generated\Data\DocumentGen();
+
+		$document->settingsDecoded = ['theme' => 'dark', 'panels' => new \stdClass()];
+		$this->assertSame('{"theme":"dark","panels":{}}', $document->settings, 'assigning the accessor writes the text');
+
+		$document->settings = '{"theme":"light","panels":[]}';
+		$this->assertSame('light', $document->settingsDecoded->theme, 'reading the accessor decodes the text');
+		$this->assertSame('{"id":null,"settings":{"theme":"light","panels":[]}}', $document->getJson(), 'the JSON is nested, not an escaped string');
+
+		$document->settingsDecoded = null;
+		$this->assertNull($document->settings, 'null is SQL NULL');
+	}
+
+	public function testJsonAccessorNameTakenByAnotherColumnIsAnError() {
+		$codegen = $this->analyze(self::schema()->addTable('document', [self::id(), self::json('settings'), self::varchar('settings_decoded')]));
+
+		$this->assertStringContainsString("Table 'document' has JSON column 'settings', whose decoded accessor settingsDecoded collides with another column's property", $codegen->errors);
+		$this->assertSame([], $codegen->tableArray);
 	}
 }

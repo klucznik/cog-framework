@@ -335,7 +335,8 @@ abstract class DatabaseCodeGenBase extends CodeGen {
 	public function variableTypeFromDbType(string $dbType): string {
 		return match ($dbType) {
 			FieldType::BIT => Type::BOOLEAN,
-			FieldType::BLOB, FieldType::CHAR, FieldType::VARCHAR => Type::STRING,
+			// JSON is carried as its text; the generated class decodes it through a separate accessor
+			FieldType::BLOB, FieldType::CHAR, FieldType::VARCHAR, FieldType::JSON => Type::STRING,
 			FieldType::DATE, FieldType::TIME, FieldType::DATETIME, FieldType::TIMESTAMP => Type::DATETIME,
 			FieldType::FLOAT => Type::FLOAT,
 			FieldType::INTEGER => Type::INTEGER,

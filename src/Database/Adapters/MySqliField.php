@@ -124,6 +124,10 @@ class MySqliField extends Cog\Database\FieldBase {
 				$this->type = FieldType::VARCHAR;
 				break;
 
+			case MYSQLI_TYPE_JSON:
+				$this->type = FieldType::JSON;
+				break;
+
 			case MYSQLI_TYPE_CHAR:
 				$this->type = FieldType::CHAR;
 				break;

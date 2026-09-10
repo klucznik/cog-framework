@@ -4,6 +4,7 @@ namespace Cog\Codegen;
 
 use Cog;
 use Cog\Base;
+use Cog\Database\FieldType;
 use Cog\Exceptions\CogException;
 use Cog\Type;
 use Cog\Util\ConvertNotation;
@@ -36,6 +37,8 @@ use Symfony\Component\String\ByteString;
  *
  * @property-read string $propertyNameUppercase
  * @property-read string $constantPropertyName
+ * @property-read bool $json Whether the column holds JSON, which the generated class carries as its text
+ * @property-read string $decodedPropertyName The generated accessor that decodes a JSON column: the property name with Decoded appended
  */
 class Column extends Base {
 
@@ -86,6 +89,15 @@ class Column extends Base {
 
 
 	function getDefaultAsString(): string {
+		if ($this->json) {
+			// The property holds the JSON text, so a default is only a literal when it is valid JSON
+			// itself. MySQL reports DEFAULT (json_array()) as the expression, and a column without a
+			// default must not start out as '', which is not JSON at all.
+			if (is_string($this->default) && json_validate($this->default)) {
+				return "'" . str_replace(['\\', "'"], ['\\\\', "\\'"], $this->default) . "'";
+			}
+			return 'null';
+		}
 		if (null === $this->default && $this->variableType === Type::STRING) {
 			return "''";
 		} elseif ($this->timestamp) {
@@ -227,6 +239,10 @@ class Column extends Base {
 				return (new ByteString($this->propertyName))->title();
 			case 'constantPropertyName':
 				return strtoupper(ConvertNotation::snakeCase($this->propertyName));
+			case 'json':
+				return isset($this->dbType) && $this->dbType === FieldType::JSON;
+			case 'decodedPropertyName':
+				return $this->propertyName . 'Decoded';
 
 			default:
 				try {

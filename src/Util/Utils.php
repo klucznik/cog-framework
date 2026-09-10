@@ -6,6 +6,7 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use JsonException;
 
 /**
  * Other helpful functions
@@ -60,6 +61,37 @@ abstract class Utils {
 		}
 
 		return DateTimeImmutable::createFromInterface($dateTime)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z');
+	}
+
+	/**
+	 * Decodes the text of a JSON column for a generated class. A JSON object stays a stdClass
+	 * rather than becoming an array, so {} and [] survive being encoded again, and an integer
+	 * too large for PHP becomes a string instead of losing digits. SQL NULL stays null.
+	 * @param ?string $json
+	 * @return mixed
+	 * @throws JsonException when the text is not valid JSON
+	 */
+	public static function decodeJsonColumn(?string $json): mixed {
+		if ($json === null) {
+			return null;
+		}
+
+		return json_decode($json, false, 512, JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+	}
+
+	/**
+	 * Encodes a value as the text of a JSON column. null is SQL NULL, not the JSON literal null,
+	 * and a float keeps its fraction, so 1.0 is not stored as the integer 1.
+	 * @param mixed $value
+	 * @return ?string
+	 * @throws JsonException when the value cannot be encoded
+	 */
+	public static function encodeJsonColumn(mixed $value): ?string {
+		if ($value === null) {
+			return null;
+		}
+
+		return json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
 	}
 
 	public static function isHost(string $needle): bool {

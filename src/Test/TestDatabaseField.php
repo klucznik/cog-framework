@@ -3,6 +3,9 @@
 namespace Cog\Test;
 
 use Cog\Database\Adapters\MySqliField;
+use Cog\Database\Adapters\MySqliRow;
+use Cog\Database\Adapters\PostgreSqlField;
+use Cog\Database\Adapters\PostgreSqlRow;
 use Cog\Database\FieldType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -62,6 +65,7 @@ class TestDatabaseField extends TestCase {
 			'blob' => [MYSQLI_TYPE_BLOB, FieldType::BLOB],
 			'string' => [MYSQLI_TYPE_STRING, FieldType::VARCHAR],
 			'varstring' => [MYSQLI_TYPE_VAR_STRING, FieldType::VARCHAR],
+			'json' => [MYSQLI_TYPE_JSON, FieldType::JSON],
 		];
 	}
 
@@ -198,5 +202,28 @@ class TestDatabaseField extends TestCase {
 		$this->assertNull($field->maxLength);
 		$this->assertSame('', $field->comment);
 		$this->assertSame('person', $field->table);
+	}
+
+	//
+	// JSON, the same on both adapters
+	//
+
+	/** PostgreSQL's json and jsonb map to the type MySQL's JSON does, so both generate the same class. */
+	public function testPostgreSqlJsonTypesMapToJson() {
+		foreach (['json', 'jsonb'] as $udtName) {
+			$field = new PostgreSqlField(['name' => 'settings', 'udtName' => $udtName]);
+
+			$this->assertSame(FieldType::JSON, $field->type, $udtName);
+		}
+	}
+
+	/** A row hands JSON back as the text the database stored; decoding is the generated class's job. */
+	public function testRowsReturnJsonAsItsText() {
+		$json = '{"a":{},"b":[]}';
+
+		$this->assertSame($json, (new MySqliRow(['settings' => $json]))->getColumn('settings', FieldType::JSON));
+		$this->assertSame($json, (new PostgreSqlRow(['settings' => $json]))->getColumn('settings', FieldType::JSON));
+		$this->assertNull((new MySqliRow(['settings' => null]))->getColumn('settings', FieldType::JSON));
+		$this->assertNull((new PostgreSqlRow(['settings' => null]))->getColumn('settings', FieldType::JSON));
 	}
 }
