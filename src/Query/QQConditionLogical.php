@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 
 abstract class QQConditionLogical extends QQCondition {
 
@@ -16,7 +17,7 @@ abstract class QQConditionLogical extends QQCondition {
 	/**
 	 * @param $parameterArray
 	 * @return QQCondition[]
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	protected function collapseConditions($parameterArray): array {
 
@@ -31,7 +32,7 @@ abstract class QQConditionLogical extends QQCondition {
 
 		foreach ($conditionArray as $condition) {
 			if (!($condition instanceof QQCondition)) {
-				throw new Cog\Exceptions\CogException('Logical Or/And clause parameters must all be QQCondition objects', 3);
+				throw new CogException('Logical Or/And clause parameters must all be QQCondition objects', 3);
 			}
 		}
 
@@ -39,7 +40,7 @@ abstract class QQConditionLogical extends QQCondition {
 			return $conditionArray;
 		}
 
-		throw new Cog\Exceptions\CogException('No parameters passed in to logical Or/And clause', 3);
+		throw new CogException('No parameters passed in to logical Or/And clause', 3);
 	}
 
 	/** @inheritdoc */
@@ -51,7 +52,7 @@ abstract class QQConditionLogical extends QQCondition {
 
 			for ($i = 0; $i < $length; $i++) {
 				if (!($this->conditionArray[$i] instanceof QQCondition)) {
-					throw new Cog\Exceptions\CogException($this->operator . ' clause has elements that are not Conditions');
+					throw new CogException($this->operator . ' clause has elements that are not Conditions');
 				}
 
 				$this->conditionArray[$i]->updateQueryBuilder($queryBuilder);

@@ -48,19 +48,15 @@ class TestExceptions extends TestCase {
 	}
 
 	public function testDatabaseExceptionProperties() {
-		$exception = new MySqliException('boom', 1064, 'SELECT 1');
+		$driver = new RuntimeException('driver says no');
+		$exception = new MySqliException('boom', 1064, 'SELECT 1', $driver);
 
 		$this->assertInstanceOf(CogException::class, $exception);
+		$this->assertSame('MySqli Error: boom', $exception->getMessage());
 		$this->assertSame(1064, $exception->errorNumber);
 		$this->assertSame(1064, $exception->getCode());
 		$this->assertSame('SELECT 1', $exception->query);
-	}
-
-	public function testDatabaseExceptionUndefinedProperty() {
-		$exception = new MySqliException('boom', 1064, 'SELECT 1');
-
-		$this->expectException(UndefinedPropertyException::class);
-		$exception->missingProperty;
+		$this->assertSame($driver, $exception->getPrevious());
 	}
 
 	public function testRedirectException() {

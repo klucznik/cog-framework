@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 use Cog\Type;
 
 /**
@@ -21,7 +22,7 @@ class QQLimitInfo extends QQClause {
 	 * QQLimitInfo constructor.
 	 * @param int $maxRowCount
 	 * @param int $offset
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function __construct($maxRowCount, $offset = 0) {
 		$this->maxRowCount = Type::cast($maxRowCount, Type::INTEGER);

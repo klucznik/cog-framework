@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 use Cog\Type;
 
 /**
@@ -68,7 +69,7 @@ abstract class QQBaseNode extends Cog\Base {
 	/**
 	 * @param string $name
 	 * @return mixed
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function __get($name): mixed {
 		switch ($name) {
@@ -153,7 +154,7 @@ abstract class QQBaseNode extends Cog\Base {
 	 * expansion nodes, as well as the leaf nodes.
 	 *
 	 * @param QQBaseNode $newNode
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function mergeExpansionNode(QQBaseNode $newNode): void {
 		if (!$newNode || 0 === \count($newNode->childNodeArray)) {
@@ -161,7 +162,7 @@ abstract class QQBaseNode extends Cog\Base {
 		}
 
 		if ($newNode->name !== $this->name) {
-			throw new Cog\Exceptions\CogException('Expansion node tables must match.');
+			throw new CogException('Expansion node tables must match.');
 		}
 
 		if (!$this->childNodeArray) {

@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 
 class QQExpandAsArray extends QQClause {
 
@@ -13,7 +14,7 @@ class QQExpandAsArray extends QQClause {
 	public function __construct($node, ?QQSelect $select = null) {
 		// Ensure that this is an Cog\Query\QQAssociationNode
 		if (!$node instanceof QQAssociationNode && !$node instanceof QQReverseReferenceNode) {
-			throw new Cog\Exceptions\CogException('ExpandAsArray clause parameter must be an Association Table-based QQNode', 2);
+			throw new CogException('ExpandAsArray clause parameter must be an Association Table-based QQNode', 2);
 		}
 
 		$this->node = $node;

@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 use Cog\Exceptions\InvalidCastException;
 
 class QQGroupBy extends QQClause {
@@ -18,7 +19,7 @@ class QQGroupBy extends QQClause {
 	/**
 	 * @param $parameterArray
 	 * @return array
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 * @throws InvalidCastException
 	 */
 	protected function collapseNodes($parameterArray): array {
@@ -36,11 +37,11 @@ class QQGroupBy extends QQClause {
 		foreach ($nodeArray as $node) {
 			/** @var QQBaseNode $node */
 			if ($node instanceof QQAssociationNode) {
-				throw new Cog\Exceptions\CogException('GroupBy clause parameter cannot be an association table\'s QQNode, itself', 3);
+				throw new CogException('GroupBy clause parameter cannot be an association table\'s QQNode, itself', 3);
 			}
 
 			if (!($node instanceof QQNode)) {
-				throw new Cog\Exceptions\CogException('GroupBy clause parameters must all be QQNode objects', 3);
+				throw new CogException('GroupBy clause parameters must all be QQNode objects', 3);
 			}
 
 			if (!$node->isColumnBased()) {
@@ -58,7 +59,7 @@ class QQGroupBy extends QQClause {
 			return $finalNodeArray;
 		}
 
-		throw new Cog\Exceptions\CogException('No parameters passed in to Expand clause', 3);
+		throw new CogException('No parameters passed in to Expand clause', 3);
 	}
 
 	/**

@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 
 class QQReverseReferenceNode extends QQNode {
 
@@ -15,7 +16,7 @@ class QQReverseReferenceNode extends QQNode {
 	 * @param string $type
 	 * @param QQBaseNode|null $foreignKey
 	 * @param string|null $propertyName
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function __construct( QQBaseNode $parentNode, $name, $type, $foreignKey, $propertyName = null) {
 
@@ -23,7 +24,7 @@ class QQReverseReferenceNode extends QQNode {
 		if ($parentNode) {
 			$this->rootTableName = $parentNode->rootTableName;
 		} else {
-			throw new Cog\Exceptions\CogException('ReverseReferenceNodes must have a Parent Node');
+			throw new CogException('ReverseReferenceNodes must have a Parent Node');
 		}
 		$this->name = $name;
 		$parentNode->childNodeArray[$name] = $this;

@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 use Cog\Exceptions\InvalidCastException;
 
 class QQExpand extends QQClause {
@@ -18,17 +19,17 @@ class QQExpand extends QQClause {
 	 * @param QQNode $node
 	 * @param QQCondition|null $joinCondition
 	 * @param QQSelect|null $select
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 * @throws InvalidCastException
 	 */
 	public function __construct($node, ?QQCondition $joinCondition = null, ?QQSelect $select = null) {
 		// Check against root and table QQNodes
 		if ($node instanceof QQAssociationNode) {
-			throw new Cog\Exceptions\CogException('Expand clause parameter cannot be the association table\'s QQNode, itself', 2);
+			throw new CogException('Expand clause parameter cannot be the association table\'s QQNode, itself', 2);
 		}
 
 		if (!($node instanceof QQNode)) {
-			throw new Cog\Exceptions\CogException('Expand clause parameter must be a QQNode object', 2);
+			throw new CogException('Expand clause parameter must be a QQNode object', 2);
 		}
 
 		if (!$node->isColumnBased()) {

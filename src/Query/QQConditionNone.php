@@ -3,12 +3,13 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 
 class QQConditionNone extends QQCondition {
 
 	public function __construct($parameterArray) {
 		if (\count($parameterArray)) {
-			throw new Cog\Exceptions\CogException('None clause takes in no parameters', 3);
+			throw new CogException('None clause takes in no parameters', 3);
 		}
 	}
 

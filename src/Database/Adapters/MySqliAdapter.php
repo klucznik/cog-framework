@@ -81,15 +81,15 @@ class MySqliAdapter extends Cog\Database\Base {
 		try {
 			$this->mySqli = new MySqli($this->server, $this->username, $this->password, $this->database, $this->port);
 		} catch (\mysqli_sql_exception $exception) {
-			throw new MySqliException($exception->getMessage(), $exception->getCode(), '');
+			throw new MySqliException($exception->getMessage(), $exception->getCode(), '', $exception);
 		}
 
 		if (!$this->mySqli) {
-			throw new MySqliException('Unable to connect to Database', -1, null);
+			throw new MySqliException('Unable to connect to Database', -1, '');
 		}
 
 		if ($this->mySqli->error) {
-			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, null);
+			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, '');
 		}
 
 		$this->connectedFlag = true; // Update "Connected" Flag
@@ -101,7 +101,7 @@ class MySqliAdapter extends Cog\Database\Base {
 			try {
 				$this->mySqli->set_charset($this->configArray['encoding']);
 			} catch (\mysqli_sql_exception $exception) {
-				throw new MySqliException($exception->getMessage(), $exception->getCode(), '');
+				throw new MySqliException($exception->getMessage(), $exception->getCode(), '', $exception);
 			}
 		}
 
@@ -143,7 +143,7 @@ class MySqliAdapter extends Cog\Database\Base {
 		try {
 			$result = $this->mySqli->query($query);
 		} catch (\mysqli_sql_exception $exception) {
-			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, $query);
+			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, $query, $exception);
 		}
 
 		if ($this->mySqli->error || $result === false) { // check uf the query errored
@@ -169,7 +169,7 @@ class MySqliAdapter extends Cog\Database\Base {
 		try {
 			$this->mySqli->query($sql);
 		} catch (\mysqli_sql_exception $e) {
-			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, $sql);
+			throw new MySqliException($this->mySqli->error, $this->mySqli->errno, $sql, $e);
 		}
 
 		if ($this->mySqli->error) {

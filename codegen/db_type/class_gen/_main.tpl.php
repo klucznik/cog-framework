@@ -7,6 +7,7 @@
 namespace Generated\Type;
 
 use Cog\Base;
+use Cog\Exceptions\CogException;
 
 /**
  * The <?= $typeTable->className ?> class defined here contains
@@ -72,7 +73,7 @@ foreach ($typeTable->tokenArray as $key => $value) { ?>
 	/**
 	 * @param int $<?= $typeTable->classNameCamelCase ?>Id
 	 * @return string
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public static function ToString($<?= $typeTable->classNameCamelCase ?>Id): string {
 		switch ($<?= $typeTable->classNameCamelCase ?>Id) {
@@ -80,14 +81,14 @@ foreach ($typeTable->tokenArray as $key => $value) { ?>
 			case <?= $key ?>: return '<?= $value ?>';
 <?php } ?>
 			default:
-				throw new \Cog\Exceptions\CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
+				throw new CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
 		}
 	}
 
 	/**
 	 * @param int $<?= $typeTable->classNameCamelCase ?>Id
 	 * @return string
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public static function ToToken($<?= $typeTable->classNameCamelCase ?>Id): string {
 		switch ($<?= $typeTable->classNameCamelCase ?>Id) {
@@ -95,7 +96,7 @@ foreach ($typeTable->tokenArray as $key => $value) { ?>
 			case <?= $key ?>: return '<?= strtoupper($value) ?>';
 <?php } ?>
 			default:
-				throw new \Cog\Exceptions\CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
+				throw new CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
 		}
 	}
 
@@ -103,13 +104,13 @@ foreach ($typeTable->tokenArray as $key => $value) { ?>
 	/**
 	 * @param int $<?= $typeTable->classNameCamelCase ?>Id
 	 * @return string
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public static function To<?= ucfirst($strColName) ?>($<?= $typeTable->classNameCamelCase ?>Id): string {
 		if (\array_key_exists($<?= $typeTable->classNameCamelCase ?>Id, self::$ExtraColumnValuesArray))
 			return self::$ExtraColumnValuesArray[$<?= $typeTable->classNameCamelCase ?>Id]['<?= $strColName ?>'];
 		else
-			throw new \Cog\Exceptions\CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
+			throw new CogException(sprintf('Invalid <?= $typeTable->className ?>: %s', $<?= $typeTable->classNameCamelCase ?>Id));
 	}
 
 <?php } ?>

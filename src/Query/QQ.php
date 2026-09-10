@@ -2,6 +2,8 @@
 
 namespace Cog\Query;
 
+use Cog\Exceptions\CogException;
+
 /**
  * Class QQ
  * QQ Class to simplify the creation of SQL statements.
@@ -134,7 +136,7 @@ class QQ {
 			case 'not between':
 				return self::notBetween($queryNode, $value, $valueTwo);
 			default:
-				throw new \Cog\Exceptions\CogException('Unknown Query Comparison Operation: ' . $symbol, 0);
+				throw new CogException('Unknown Query Comparison Operation: ' . $symbol, 0);
 		}
 	}
 
@@ -155,7 +157,7 @@ class QQ {
 		foreach (func_get_args() as $clause) {
 			if ($clause) {
 				if (!($clause instanceof QQClause)) {
-					throw new \Cog\Exceptions\CogException('Non Cog\Query\QQClause object was passed in to Cog\Query\QQ::Clause');
+					throw new CogException('Non Cog\Query\QQClause object was passed in to Cog\Query\QQ::Clause');
 				}
 
 				$clauseArray[] = $clause;

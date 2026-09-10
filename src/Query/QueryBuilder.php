@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 
 /**
  * Cog\Query\QueryBuilder class
@@ -153,7 +154,7 @@ class QueryBuilder extends Cog\Base {
 	 * @param string $columnName
 	 * @param string $linkedColumnName
 	 * @param QQCondition|null $joinCondition
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function addJoinItem($joinTableName, $joinTableAlias, $tableName, $columnName, $linkedColumnName, ?QQCondition $joinCondition = null): void {
 		$joinItem = sprintf('LEFT JOIN %s%s%s AS %s%s%s ON %s%s%s.%s%s%s = %s%s%s.%s%s%s',
@@ -211,7 +212,7 @@ class QueryBuilder extends Cog\Base {
 			}
 
 			// Case 5
-			throw new Cog\Exceptions\CogException('You have two different Join Conditions on the same Expanded Table: ' . $joinIndex . "\r\n[" . $this->joinConditionArray[$joinIndex] . ']   vs.   [' . $conditionClause . ']');
+			throw new CogException('You have two different Join Conditions on the same Expanded Table: ' . $joinIndex . "\r\n[" . $this->joinConditionArray[$joinIndex] . ']   vs.   [' . $conditionClause . ']');
 		}
 
 		// Create the new JoinItem in the JoinArray
@@ -287,20 +288,20 @@ class QueryBuilder extends Cog\Base {
 
 	/**
 	 * @param string $name
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function getVirtualNode($name): QQSubQueryNode {
 		$name = strtolower(trim($name));
 		if (array_key_exists($name, $this->virtualNodeArray)) {
 			return $this->virtualNodeArray[$name];
 		}
-		throw new Cog\Exceptions\CogException('Undefined Virtual Node: ' . $name);
+		throw new CogException('Undefined Virtual Node: ' . $name);
 	}
 
 
 	/**
 	 * @param QQReverseReferenceNode|QQAssociationNode|QQBaseNode $node
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function addExpandAsArrayNode($node): void {
 

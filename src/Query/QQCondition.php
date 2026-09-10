@@ -3,6 +3,7 @@
 namespace Cog\Query;
 
 use Cog;
+use Cog\Exceptions\CogException;
 
 abstract class QQCondition extends Cog\Base {
 
@@ -14,7 +15,7 @@ abstract class QQCondition extends Cog\Base {
 	/**
 	 * @param QueryBuilder $queryBuilder
 	 * @return void
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	abstract public function updateQueryBuilder(QueryBuilder $queryBuilder): void;
 
@@ -32,7 +33,7 @@ abstract class QQCondition extends Cog\Base {
 	 * @param QueryBuilder $queryBuilder
 	 * @param boolean $processOnce
 	 * @return string|null
-	 * @throws \Cog\Exceptions\CogException
+	 * @throws CogException
 	 */
 	public function getWhereClause(QueryBuilder $queryBuilder, $processOnce = false): ?string {
 		if ($processOnce && $this->processed) {

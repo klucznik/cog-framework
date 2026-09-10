@@ -3,22 +3,22 @@
 namespace Cog\Database\Exceptions;
 
 use Cog;
-use Cog\Exceptions\UndefinedPropertyException;
+use Throwable;
 
-/**
- * @property-read int $errorNumber The number of error provided by the SQL server
- * @property-read string $query The query caused the error
- * @package DatabaseAdapters
- */
 abstract class DatabaseExceptionBase extends Cog\Exceptions\CogException {
-	protected int $errorNumber;
-	protected string $query;
 
-	public function __get(string $name): mixed {
-		return match ($name) {
-			'errorNumber' => $this->errorNumber,
-			'query' => $this->query,
-			default => throw new UndefinedPropertyException('GET', static::class, $name),
-		};
+	/**
+	 * @param string $message
+	 * @param int $errorNumber the error number reported by the SQL server, also exposed as the exception code
+	 * @param string $query the query that caused the error, empty when there is none
+	 * @param Throwable|null $previous the driver exception this one translates, if any
+	 */
+	public function __construct(
+		string $message,
+		public readonly int $errorNumber,
+		public readonly string $query,
+		?Throwable $previous = null,
+	) {
+		parent::__construct($message, $errorNumber, $previous);
 	}
 }

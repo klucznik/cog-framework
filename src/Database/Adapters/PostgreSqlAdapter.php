@@ -42,7 +42,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 		$connection = @pg_connect($connectionString);
 
 		if ($connection === false) {
-			throw new PostgreSqlException('Unable to connect to Database', -1, '');
+			throw new PostgreSqlException('Unable to connect to Database', 0, '');
 		}
 
 		$this->postgreSql = $connection;
@@ -83,7 +83,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 		$result = @pg_query($this->postgreSql, $query);
 
 		if ($result === false) {
-			throw new PostgreSqlException(pg_last_error($this->postgreSql), -1, $query);
+			throw new PostgreSqlException(pg_last_error($this->postgreSql), 0, $query);
 		}
 
 		$this->lastResult = $result;
@@ -100,7 +100,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 		$result = @pg_query($this->postgreSql, $sql);
 
 		if ($result === false) {
-			throw new PostgreSqlException(pg_last_error($this->postgreSql), -1, $sql);
+			throw new PostgreSqlException(pg_last_error($this->postgreSql), 0, $sql);
 		}
 
 		$this->lastResult = $result;
@@ -172,7 +172,7 @@ class PostgreSqlAdapter extends Cog\Database\Base {
 
 	public function transactionBegin(): void {
 		if ($this->inTransaction) {
-			throw new PostgreSqlException('Nested transactions are not supported: a transaction is already open', -1, 'BEGIN');
+			throw new PostgreSqlException('Nested transactions are not supported: a transaction is already open', 0, 'BEGIN');
 		}
 		$this->nonQuery('BEGIN;');
 		$this->inTransaction = true;
