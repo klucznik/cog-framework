@@ -6,6 +6,7 @@ use Cog\BaseApplication;
 use Cog\BaseConfig;
 use Cog\Enum\Environment;
 use Cog\Enum\Runtime;
+use Cog\EventListener\RedirectExceptionListener;
 use Cog\Kernel;
 use Cog\Util\Url;
 use League\Container\Argument\Literal\ArrayArgument;
@@ -297,6 +298,7 @@ class TestBaseApplication extends TestCase {
 
 		$this->assertContains(RouterListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::REQUEST)));
 		$this->assertContains(ResponseListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::RESPONSE)));
+		$this->assertContains(RedirectExceptionListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
 	}
 
 	/** The response listener is built with the application's encoding type as its charset. */

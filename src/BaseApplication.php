@@ -6,6 +6,7 @@ use Cog\Controller\AttributeRouteControllerLoader;
 use Cog\Database\Database;
 use Cog\Enum\Environment;
 use Cog\Enum\Runtime;
+use Cog\EventListener\RedirectExceptionListener;
 use Cog\Util\StringUtils;
 use Cog\Util\Url;
 use Exception;
@@ -208,10 +209,13 @@ abstract class BaseApplication {
 		$container->addShared('listener.router', RouterListener::class)
 			->addArguments(['router', 'request_stack']);
 
+		$container->addShared('listener.redirect', RedirectExceptionListener::class);
+
 		$container->addShared('dispatcher', EventDispatcher::class)
 			->addMethodCall('addSubscriber', ['listener.router'])
 			->addMethodCall('addSubscriber', ['listener.session'])
-			->addMethodCall('addSubscriber', ['listener.response']);
+			->addMethodCall('addSubscriber', ['listener.response'])
+			->addMethodCall('addSubscriber', ['listener.redirect']);
 
 		$container->addShared('routes_loader_closure', ClosureLoader::class);
 

@@ -2,6 +2,7 @@
 
 namespace Cog\Test;
 
+use Cog\EventListener\RedirectExceptionListener;
 use Cog\Kernel;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -57,6 +58,7 @@ class TestKernel extends TestCase {
 		$this->dispatcher = new EventDispatcher();
 		$this->dispatcher->addSubscriber(new RouterListener($router, $this->requestStack));
 		$this->dispatcher->addSubscriber(new ResponseListener('UTF-8'));
+		$this->dispatcher->addSubscriber(new RedirectExceptionListener());
 	}
 
 	public function tearDown(): void {

@@ -2,7 +2,6 @@
 
 namespace Cog;
 
-use Cog\Exceptions\RedirectException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -116,8 +115,6 @@ class Kernel implements HttpKernelInterface {
 			}
 		} catch (Exception\ResourceNotFoundException|Exception\MethodNotAllowedException) {
 			$response = self::getNotFoundPage($request);
-		} catch (RedirectException $e) {
-			$response = new RedirectResponse($e->location, $e->status);
 		}
 
 		return $this->filterResponse($response, $request, $type);

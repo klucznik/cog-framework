@@ -3,6 +3,7 @@
 namespace Cog\Test;
 
 use Cog\Database\Database;
+use Cog\EventListener\RedirectExceptionListener;
 use Cog\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -50,6 +51,7 @@ class TestDevProfile extends TestCase {
 		$this->dispatcher = new EventDispatcher();
 		$this->dispatcher->addSubscriber(new RouterListener($this->router(), $this->requestStack));
 		$this->dispatcher->addSubscriber(new ResponseListener('UTF-8'));
+		$this->dispatcher->addSubscriber(new RedirectExceptionListener());
 
 		// the page prints the connection's own settings, so it needs a real one. Index 0, since the
 		// suite closes every connection between tests.
