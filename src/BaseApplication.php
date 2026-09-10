@@ -5,6 +5,7 @@ namespace Cog;
 use Cog\Controller\AttributeRouteControllerLoader;
 use Cog\Database\Database;
 use Cog\Enum\Environment;
+use Cog\Enum\Runtime;
 use Cog\Util\StringUtils;
 use Cog\Util\Url;
 use Exception;
@@ -117,7 +118,7 @@ abstract class BaseApplication extends Base {
 			$docroot . '/cache',
 			$docroot . '/templates',
 
-			array_key_exists('SERVER_PROTOCOL', $_SERVER) === false
+			array_key_exists('SERVER_PROTOCOL', $_SERVER) ? Runtime::WEB : Runtime::CLI
 		);
 	}
 

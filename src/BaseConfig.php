@@ -3,6 +3,7 @@
 namespace Cog;
 
 use Cog\Enum\Environment;
+use Cog\Enum\Runtime;
 use ReflectionObject;
 
 class BaseConfig {
@@ -17,7 +18,7 @@ class BaseConfig {
 		public readonly string $dirCache = '',
 		public readonly string $dirTemplates = '',
 
-		public readonly bool $isCli = false,
+		public readonly Runtime $runtime = Runtime::WEB,
 	) {}
 
 	public function dump(): array {

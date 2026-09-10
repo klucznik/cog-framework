@@ -5,6 +5,7 @@ namespace Cog\Test;
 use Cog\BaseApplication;
 use Cog\BaseConfig;
 use Cog\Enum\Environment;
+use Cog\Enum\Runtime;
 use Cog\Kernel;
 use Cog\Util\Url;
 use League\Container\Argument\Literal\ArrayArgument;
@@ -123,7 +124,7 @@ class TestBaseApplication extends TestCase {
 		$this->assertSame($docroot . '/cache', $config->dirCache);
 		$this->assertSame($docroot . '/templates', $config->dirTemplates);
 		$this->assertDirectoryDoesNotExist($config->dirCache);
-		$this->assertTrue($config->isCli);
+		$this->assertSame(Runtime::CLI, $config->runtime);
 	}
 
 	/**
@@ -134,23 +135,23 @@ class TestBaseApplication extends TestCase {
 	public function testCreateConfigFlagsCliWhenServerProtocolIsAbsent() {
 		unset($_SERVER['SERVER_PROTOCOL']);
 
-		$this->assertTrue(MockedApplication::callCreateConfig(Environment::TEST)->isCli);
+		$this->assertSame(Runtime::CLI, MockedApplication::callCreateConfig(Environment::TEST)->runtime);
 	}
 
 	public function testCreateConfigFlagsWebWhenServerProtocolIsPresent() {
 		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 
-		$this->assertFalse(MockedApplication::callCreateConfig(Environment::TEST)->isCli);
+		$this->assertSame(Runtime::WEB, MockedApplication::callCreateConfig(Environment::TEST)->runtime);
 	}
 
-	/** The flag is a snapshot: a later $_SERVER change does not reach an existing config. */
-	public function testIsCliIsNotReSniffedAfterTheConfigIsBuilt() {
+	/** The runtime is a snapshot: a later $_SERVER change does not reach an existing config. */
+	public function testRuntimeIsNotReSniffedAfterTheConfigIsBuilt() {
 		unset($_SERVER['SERVER_PROTOCOL']);
 		$config = MockedApplication::callCreateConfig(Environment::TEST);
 
 		$_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 
-		$this->assertTrue($config->isCli);
+		$this->assertSame(Runtime::CLI, $config->runtime);
 	}
 
 	/** No default carries a '..' segment, so the paths need no further normalizing. */
