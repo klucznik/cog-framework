@@ -2,6 +2,7 @@
 
 namespace Cog\Test;
 
+use Cog\EventListener\HttpExceptionListener;
 use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
 use PHPUnit\Framework\TestCase;
@@ -19,6 +20,7 @@ use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\ControllerDoesNotReturnResponseException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\EventListener\ErrorListener;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
 use Symfony\Component\HttpKernel\HttpKernel;
@@ -63,6 +65,8 @@ class TestKernel extends TestCase {
 		$this->dispatcher->addSubscriber(new RedirectExceptionListener());
 		$this->notFoundListener = new NotFoundExceptionListener();
 		$this->dispatcher->addSubscriber($this->notFoundListener);
+		$this->dispatcher->addSubscriber(new ErrorListener(null));
+		$this->dispatcher->addSubscriber(new HttpExceptionListener());
 	}
 
 	public function tearDown(): void {
@@ -217,6 +221,30 @@ class TestKernel extends TestCase {
 		$response = $this->handle(Request::create('/no/such/path'));
 
 		$this->assertSame('custom: /no/such/path', $response->getContent());
+	}
+
+	/** With nobody rendering a body, an HttpException becomes an empty response of its status, headers included. */
+	public function testHttpExceptionGetsABareResponseOfItsStatus() {
+		$response = $this->handle(Request::create('/kernel/conflict'));
+
+		$this->assertSame(409, $response->getStatusCode());
+		$this->assertSame('yes', $response->headers->get('X-Conflict'));
+		$this->assertSame('', $response->getContent());
+	}
+
+	/** An exception marked #[WithHttpStatus] is treated as the HttpException it names. */
+	public function testWithHttpStatusAttributeSetsTheStatusAndHeaders() {
+		$response = $this->handle(Request::create('/kernel/teapot'));
+
+		$this->assertSame(418, $response->getStatusCode());
+		$this->assertSame('earl grey', $response->headers->get('X-Tea'));
+	}
+
+	/** The not-found listener still gets the 404s ahead of the bare-status fallback. */
+	public function testNotFoundStillGetsThePageNotABareStatus() {
+		$response = $this->handle(Request::create('/no/such/path'));
+
+		$this->assertSame('404', $response->getContent());
 	}
 
 	/** Listeners registered at the default priority run before the not-found fallback. */

@@ -6,6 +6,7 @@ use Cog\Controller\AttributeRouteControllerLoader;
 use Cog\Database\Database;
 use Cog\Enum\Environment;
 use Cog\Enum\Runtime;
+use Cog\EventListener\HttpExceptionListener;
 use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
 use Cog\Util\StringUtils;
@@ -36,6 +37,7 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolver\SessionValueResolve
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
+use Symfony\Component\HttpKernel\EventListener\ErrorListener;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
 use Symfony\Component\HttpKernel\EventListener\SessionListener;
@@ -214,15 +216,22 @@ abstract class BaseApplication {
 		$container->addShared('listener.router', RouterListener::class)
 			->addArguments(['router', 'request_stack']);
 
+		// Without an error controller Symfony's ErrorListener only turns an exception
+		// marked #[WithHttpStatus] into the matching HttpException, so the listeners
+		// below it see the status the exception asked for.
+		$container->addShared('listener.error', static fn() => new ErrorListener(null));
 		$container->addShared('listener.redirect', RedirectExceptionListener::class);
 		$container->addShared('listener.not_found', NotFoundExceptionListener::class);
+		$container->addShared('listener.http_exception', HttpExceptionListener::class);
 
 		$container->addShared('dispatcher', EventDispatcher::class)
 			->addMethodCall('addSubscriber', ['listener.router'])
 			->addMethodCall('addSubscriber', ['listener.session'])
 			->addMethodCall('addSubscriber', ['listener.response'])
+			->addMethodCall('addSubscriber', ['listener.error'])
 			->addMethodCall('addSubscriber', ['listener.redirect'])
-			->addMethodCall('addSubscriber', ['listener.not_found']);
+			->addMethodCall('addSubscriber', ['listener.not_found'])
+			->addMethodCall('addSubscriber', ['listener.http_exception']);
 
 		$container->addShared('routes_loader_closure', ClosureLoader::class);
 

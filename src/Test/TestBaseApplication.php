@@ -6,6 +6,7 @@ use Cog\BaseApplication;
 use Cog\BaseConfig;
 use Cog\Enum\Environment;
 use Cog\Enum\Runtime;
+use Cog\EventListener\HttpExceptionListener;
 use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
 use Cog\Util\Url;
@@ -26,6 +27,7 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolve
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\SessionValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\EventListener\ErrorListener;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -301,6 +303,8 @@ class TestBaseApplication extends TestCase {
 		$this->assertContains(ResponseListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::RESPONSE)));
 		$this->assertContains(RedirectExceptionListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
 		$this->assertContains(NotFoundExceptionListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
+		$this->assertContains(ErrorListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
+		$this->assertContains(HttpExceptionListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
 	}
 
 	/** The response listener is built with the application's encoding type as its charset. */

@@ -95,4 +95,9 @@ class KernelFixtureController extends ControllerBase {
 	public function missingAction(): Response {
 		throw new NotFoundHttpException('no such thing');
 	}
+
+	#[Route('/kernel/teapot', name: 'kernelTeapot')]
+	public function teapotAction(): Response {
+		throw new TeapotException('short and stout');
+	}
 }
