@@ -6,6 +6,7 @@ use Cog\BaseApplication;
 use Cog\BaseConfig;
 use Cog\Enum\Environment;
 use Cog\Enum\Runtime;
+use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
 use Cog\Kernel;
 use Cog\Util\Url;
@@ -299,6 +300,7 @@ class TestBaseApplication extends TestCase {
 		$this->assertContains(RouterListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::REQUEST)));
 		$this->assertContains(ResponseListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::RESPONSE)));
 		$this->assertContains(RedirectExceptionListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
+		$this->assertContains(NotFoundExceptionListener::class, $listenerClasses($dispatcher->getListeners(KernelEvents::EXCEPTION)));
 	}
 
 	/** The response listener is built with the application's encoding type as its charset. */
@@ -326,14 +328,13 @@ class TestBaseApplication extends TestCase {
 	}
 
 	/**
-	 * The router listener turns a routing miss into NotFoundHttpException before the
-	 * kernel reaches its own 404 fallback, and with no exception listener it escapes
-	 * to the error handler registered by initialize().
+	 * The router listener turns a routing miss into NotFoundHttpException and the
+	 * not-found listener answers it with the 404 page.
 	 */
-	public function testKernelThrowsNotFoundForAnUnknownPath() {
-		$this->expectException(NotFoundHttpException::class);
+	public function testKernelServesTheNotFoundPageForAnUnknownPath() {
+		$response = $this->buildContainer()->get('kernel')->handle(Request::create('/no/such/route'));
 
-		$this->buildContainer()->get('kernel')->handle(Request::create('/no/such/route'));
+		$this->assertSame(404, $response->getStatusCode());
 	}
 
 	/** Interfaces are not registered: services are fetched by their string id only. */

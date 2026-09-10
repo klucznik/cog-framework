@@ -8,6 +8,7 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -88,5 +89,10 @@ class KernelFixtureController extends ControllerBase {
 	#[Route('/kernel/conflict', name: 'kernelConflict')]
 	public function conflictAction(): Response {
 		throw new ConflictHttpException('nope', headers: ['X-Conflict' => 'yes']);
+	}
+
+	#[Route('/kernel/missing', name: 'kernelMissing')]
+	public function missingAction(): Response {
+		throw new NotFoundHttpException('no such thing');
 	}
 }

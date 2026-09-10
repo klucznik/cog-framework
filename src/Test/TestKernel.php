@@ -2,6 +2,7 @@
 
 namespace Cog\Test;
 
+use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
 use Cog\Kernel;
 use PHPUnit\Framework\TestCase;
@@ -40,6 +41,7 @@ class TestKernel extends TestCase {
 
 	private RequestStack $requestStack;
 	private EventDispatcher $dispatcher;
+	private NotFoundExceptionListener $notFoundListener;
 	private array $routesDirs;
 
 	public function setUp(): void {
@@ -59,6 +61,8 @@ class TestKernel extends TestCase {
 		$this->dispatcher->addSubscriber(new RouterListener($router, $this->requestStack));
 		$this->dispatcher->addSubscriber(new ResponseListener('UTF-8'));
 		$this->dispatcher->addSubscriber(new RedirectExceptionListener());
+		$this->notFoundListener = new NotFoundExceptionListener();
+		$this->dispatcher->addSubscriber($this->notFoundListener);
 	}
 
 	public function tearDown(): void {
@@ -183,10 +187,46 @@ class TestKernel extends TestCase {
 		$this->assertSame('viewed: not a response', $response->getContent());
 	}
 
-	public function testUnroutableRequestThrowsNotFound() {
-		$this->expectException(NotFoundHttpException::class);
+	/** The router listener turns a routing miss into NotFoundHttpException, which the not-found listener answers. */
+	public function testUnroutableRequestGetsTheNotFoundResponse() {
+		$response = $this->handle(Request::create('/no/such/path'));
 
-		$this->handle(Request::create('/no/such/path'));
+		$this->assertSame(404, $response->getStatusCode());
+		$this->assertSame('404', $response->getContent());
+		$this->assertNull($this->requestStack->getCurrentRequest());
+	}
+
+	/** A controller that throws NotFoundHttpException itself gets the same page. */
+	public function testControllerThrowingNotFoundGetsTheNotFoundResponse() {
+		$response = $this->handle(Request::create('/kernel/missing'));
+
+		$this->assertSame(404, $response->getStatusCode());
+		$this->assertSame('404', $response->getContent());
+	}
+
+	/** An app customises the page by overriding notFoundResponse() on the listener it registers instead of the stock one. */
+	public function testNotFoundResponseIsOverridable() {
+		$this->dispatcher->removeSubscriber($this->notFoundListener);
+		$this->dispatcher->addSubscriber(new class extends NotFoundExceptionListener {
+			protected function notFoundResponse(Request $request, NotFoundHttpException $exception): Response {
+				return new Response('custom: ' . $request->getPathInfo(), 404);
+			}
+		});
+
+		$response = $this->handle(Request::create('/no/such/path'));
+
+		$this->assertSame('custom: /no/such/path', $response->getContent());
+	}
+
+	/** Listeners registered at the default priority run before the not-found fallback. */
+	public function testAnAppExceptionListenerWinsOverTheNotFoundFallback() {
+		$this->dispatcher->addListener(KernelEvents::EXCEPTION, static function (ExceptionEvent $event) {
+			$event->setResponse(new Response('{"error":404}', 404, ['Content-Type' => 'application/json']));
+		});
+
+		$response = $this->handle(Request::create('/no/such/path'));
+
+		$this->assertSame('{"error":404}', $response->getContent());
 	}
 
 	/** With no EXCEPTION listener willing to answer, the throwable is rethrown. */

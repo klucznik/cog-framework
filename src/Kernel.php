@@ -22,7 +22,6 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Routing\Exception;
 
 class Kernel implements HttpKernelInterface {
 
@@ -69,52 +68,44 @@ class Kernel implements HttpKernelInterface {
 			return $this->filterResponse($event->getResponse(), $request, $type);
 		}
 
-		try {
-			// load controller
-			if (false === $controller = $this->resolver->getController($request)) {
-				throw new NotFoundHttpException(sprintf('Unable to find the controller for path "%s". The route is wrongly configured.', $request->getPathInfo()));
-			}
+		// load controller
+		if (false === $controller = $this->resolver->getController($request)) {
+			throw new NotFoundHttpException(sprintf('Unable to find the controller for path "%s". The route is wrongly configured.', $request->getPathInfo()));
+		}
 
-			$event = new ControllerEvent($this, $controller, $request, $type);
-//			dump($event);
-			$this->dispatcher->dispatch($event, KernelEvents::CONTROLLER);
-			$controller = $event->getController();
+		$event = new ControllerEvent($this, $controller, $request, $type);
+		$this->dispatcher->dispatch($event, KernelEvents::CONTROLLER);
+		$controller = $event->getController();
 
-			// controller arguments
-			$arguments = $this->argumentResolver->getArguments($request, $controller, $event->getControllerReflector());
+		// controller arguments
+		$arguments = $this->argumentResolver->getArguments($request, $controller, $event->getControllerReflector());
 
-			$event = new ControllerArgumentsEvent($this, $event, $arguments, $request, $type);
-			$this->dispatcher->dispatch($event, KernelEvents::CONTROLLER_ARGUMENTS);
+		$event = new ControllerArgumentsEvent($this, $event, $arguments, $request, $type);
+		$this->dispatcher->dispatch($event, KernelEvents::CONTROLLER_ARGUMENTS);
 
-			$controller = $event->getController();
-			$arguments = $event->getArguments();
+		$controller = $event->getController();
+		$arguments = $event->getArguments();
 
-//			dump($controller);
-//			dump($arguments);
+		// call controller
+		$response = call_user_func_array($controller, $arguments);
 
-			// call controller
-			$response = call_user_func_array($controller, $arguments);
+		// view
+		if (!$response instanceof Response) {
+			$event = new ViewEvent($this, $request, $type, $response, $event);
+			$this->dispatcher->dispatch($event, KernelEvents::VIEW);
 
-			// view
-			if (!$response instanceof Response) {
-				$event = new ViewEvent($this, $request, $type, $response, $event);
-				$this->dispatcher->dispatch($event, KernelEvents::VIEW);
+			if ($event->hasResponse()) {
+				$response = $event->getResponse();
+			} else {
+				$msg = sprintf('The controller must return a "Symfony\Component\HttpFoundation\Response" object but it returned %s.', $this->varToString($response));
 
-				if ($event->hasResponse()) {
-					$response = $event->getResponse();
-				} else {
-					$msg = sprintf('The controller must return a "Symfony\Component\HttpFoundation\Response" object but it returned %s.', $this->varToString($response));
-
-					// the user may have forgotten to return something
-					if (null === $response) {
-						$msg .= ' Did you forget to add a return statement somewhere in your controller?';
-					}
-
-					throw new ControllerDoesNotReturnResponseException($msg, $controller, __FILE__, __LINE__ - 17);
+				// the user may have forgotten to return something
+				if (null === $response) {
+					$msg .= ' Did you forget to add a return statement somewhere in your controller?';
 				}
+
+				throw new ControllerDoesNotReturnResponseException($msg, $controller, __FILE__, __LINE__ - 17);
 			}
-		} catch (Exception\ResourceNotFoundException|Exception\MethodNotAllowedException) {
-			$response = self::getNotFoundPage($request);
 		}
 
 		return $this->filterResponse($response, $request, $type);
@@ -215,14 +206,5 @@ class Kernel implements HttpKernelInterface {
 	private function finishRequest(Request $request, int $type): void {
 		$this->dispatcher->dispatch(new FinishRequestEvent($this, $request, $type), KernelEvents::FINISH_REQUEST);
 		$this->requestStack->pop();
-	}
-
-	/**
-	 * Responds with 404 response
-	 * @param Request $request
-	 * @return Response
-	 */
-	protected static function getNotFoundPage(Request $request): Response {
-		return new Response('404', 404);
 	}
 }
