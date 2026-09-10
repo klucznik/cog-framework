@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * One action per branch of Cog\Kernel::handleRaw(). Kept in its own directory so
+ * One action per branch of HttpKernel::handleRaw(). Kept in its own directory so
  * that the route collection TestKernel builds stays independent of the one
  * TestBaseApplication asserts against.
  */

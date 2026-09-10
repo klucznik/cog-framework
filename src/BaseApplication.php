@@ -12,6 +12,7 @@ use Cog\Util\StringUtils;
 use Cog\Util\Url;
 use Exception;
 use League\Container\Argument\Literal\ArrayArgument;
+use League\Container\Argument\Literal\BooleanArgument;
 use League\Container\Argument\Literal\CallableArgument;
 use League\Container\Argument\Literal\StringArgument;
 use League\Container\Container;
@@ -38,6 +39,7 @@ use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
 use Symfony\Component\HttpKernel\EventListener\SessionListener;
+use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\Mime\MimeTypes;
 use Symfony\Component\Routing\Loader\AttributeDirectoryLoader;
 use Symfony\Component\Routing\Loader\ClosureLoader;
@@ -166,8 +168,10 @@ abstract class BaseApplication {
 		// the container itself, for the services that look other services up at runtime
 		$container->addShared('service_container', static fn() => $container);
 
-		$container->addShared('kernel', Kernel::class)
-			->addArguments(['dispatcher', 'controller_resolver', 'argument_resolver', 'request_stack']);
+		// handleAllThrowables: an \Error reaches the exception listeners like any
+		// exception does, instead of bypassing them on its way to the error handler
+		$container->addShared('kernel', HttpKernel::class)
+			->addArguments(['dispatcher', 'controller_resolver', 'request_stack', 'argument_resolver', new BooleanArgument(true)]);
 
 		$container->addShared('context', RequestContext::class);
 		$container->addShared('request_stack', RequestStack::class);

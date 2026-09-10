@@ -8,7 +8,6 @@ use Cog\Enum\Environment;
 use Cog\Enum\Runtime;
 use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
-use Cog\Kernel;
 use Cog\Util\Url;
 use League\Container\Argument\Literal\ArrayArgument;
 use League\Container\Argument\Literal\CallableArgument;
@@ -30,6 +29,7 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Mime\MimeTypes;
@@ -224,7 +224,7 @@ class TestBaseApplication extends TestCase {
 		$container = $this->buildContainer();
 
 		$expected = [
-			'kernel' => Kernel::class,
+			'kernel' => HttpKernel::class,
 			'request_stack' => RequestStack::class,
 			'router' => Router::class,
 			'inflector' => EnglishInflector::class,

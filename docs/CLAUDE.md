@@ -25,7 +25,7 @@ is additionally pulled in through composer's `files` autoload.
 | --- | --- |
 | `src/Base.php` | Root class for nearly everything; the magic property pattern below |
 | `src/BaseApplication.php` | Lifecycle: error handler, service container, routing, command dirs |
-| `src/Kernel.php` | Hand-rolled `HttpKernelInterface`: request → controller → response |
+| `src/EventListener/` | Kernel event subscribers: redirect-exception and not-found responses |
 | `src/Path.php` | Static registry of web/app roots, CLI-vs-web detection |
 | `src/Type.php` | Type string constants and `Type::cast()` |
 | `src/Codegen/` | The schema → ORM generator and its schema value objects |

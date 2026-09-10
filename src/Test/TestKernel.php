@@ -4,7 +4,6 @@ namespace Cog\Test;
 
 use Cog\EventListener\NotFoundExceptionListener;
 use Cog\EventListener\RedirectExceptionListener;
-use Cog\Kernel;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -22,6 +21,7 @@ use Symfony\Component\HttpKernel\Exception\ControllerDoesNotReturnResponseExcept
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
+use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Loader\ClosureLoader;
@@ -29,7 +29,7 @@ use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Router;
 
 /**
- * Drives Cog\Kernel with the collaborators it is wired to in
+ * Drives Symfony's HttpKernel with the collaborators it is wired to in
  * BaseApplication::buildContainer() - a RouterListener, a ResponseListener, the
  * stock controller and argument resolvers - rather than with test doubles, so
  * what is asserted here is the request path an application actually gets.
@@ -69,12 +69,13 @@ class TestKernel extends TestCase {
 		MockedApplication::$routesDirs = $this->routesDirs;
 	}
 
-	private function kernel(): Kernel {
-		return new Kernel(
+	private function kernel(): HttpKernel {
+		return new HttpKernel(
 			$this->dispatcher,
 			new ControllerResolver(),
+			$this->requestStack,
 			new ArgumentResolver(),
-			$this->requestStack
+			handleAllThrowables: true
 		);
 	}
 

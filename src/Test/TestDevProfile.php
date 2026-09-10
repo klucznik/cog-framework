@@ -4,7 +4,6 @@ namespace Cog\Test;
 
 use Cog\Database\Database;
 use Cog\EventListener\RedirectExceptionListener;
-use Cog\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +13,7 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\HttpKernel\EventListener\ResponseListener;
 use Symfony\Component\HttpKernel\EventListener\RouterListener;
+use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\Routing\Loader\ClosureLoader;
 use Symfony\Component\Routing\RequestContext;
@@ -114,12 +114,13 @@ class TestDevProfile extends TestCase {
 		]);
 	}
 
-	private function kernel(): Kernel {
-		return new Kernel(
+	private function kernel(): HttpKernel {
+		return new HttpKernel(
 			$this->dispatcher,
 			new ControllerResolver(),
+			$this->requestStack,
 			new ArgumentResolver(),
-			$this->requestStack
+			handleAllThrowables: true
 		);
 	}
 
